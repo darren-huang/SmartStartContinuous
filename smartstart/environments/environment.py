@@ -65,6 +65,7 @@ class Visualizer(metaclass=ABCMeta):
     LIVE_AGENT = 1
     VALUE_FUNCTION = 2
     DENSITY = 3
+    SMART_STATE_DENSITY = 4
 
     @abstractmethod
     def add_visualizer(self, *args):

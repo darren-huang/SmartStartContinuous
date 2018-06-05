@@ -273,7 +273,7 @@ class TDLearning(Counter, metaclass=ABCMeta):
 
         return summary
 
-    def take_step(self, obs, action, episode, render=False):
+    def take_step(self, obs, action, episode, render=False, smart_state_density_map=None):
         """Takes a step and updates
         
         Action action is executed and response is observed. Response is then
@@ -307,7 +307,8 @@ class TDLearning(Counter, metaclass=ABCMeta):
             value_map = self.Q.copy()
             value_map = np.max(value_map, axis=2)
             render = self.env.render(value_map=value_map,
-                                     density_map=self.get_density_map())
+                                     density_map=self.get_density_map(),
+                                     smart_state_density_map=smart_state_density_map)
 
         _, action_tp1 = self.update_q_value(obs, action, reward, obs_tp1, done)
 

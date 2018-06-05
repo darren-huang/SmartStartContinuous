@@ -1,11 +1,11 @@
-smartstart\.smartexploration package
-====================================
+smartstart.smartexploration package
+===================================
 
 Submodules
 ----------
 
-smartstart\.smartexploration\.smartexploration module
------------------------------------------------------
+smartstart.smartexploration.smartexploration module
+---------------------------------------------------
 
 .. automodule:: smartstart.smartexploration.smartexploration
     :members:

@@ -96,7 +96,8 @@ class GridWorldVisualizer(Visualizer):
         for arg in args:
             self.active_visualizers.add(arg)
 
-    def render(self, value_map=None, density_map=None, message=None, close=False):
+    def render(self, value_map=None, density_map=None, message=None, close=False,
+               smart_state_density_map=None):
         """Render the current state of the GridWorld
 
         Parameters
@@ -120,8 +121,11 @@ class GridWorldVisualizer(Visualizer):
             w, h = 1, 1
             if len(self.active_visualizers) > 1:
                 w = 2
+                if len(self.active_visualizers) > 4:
+                    w = 3
                 if len(self.active_visualizers) > 2:
                     h = 2
+
             size = (self.size[0] * w + self.spacing, self.size[1] * h + self.spacing)
             self.screen = pygame.display.set_mode(size, 0, 32)
             pygame.display.set_caption(self.name)
@@ -152,7 +156,7 @@ class GridWorldVisualizer(Visualizer):
 
         # Render agent, value map, density map and console
         self.grid = self.env.get_grid()
-        positions = [(1, 1), (0, 1), (1, 0), (0, 0)]
+        positions = [(2, 1), (1, 1), (0, 1), (1, 0), (0, 0)]
         if self.LIVE_AGENT in self.active_visualizers:
             pos = positions.pop()
             self._render_walls(pos=pos)
@@ -170,6 +174,13 @@ class GridWorldVisualizer(Visualizer):
             self._render_elements("goal", "start", pos=pos)
         if self.CONSOLE in self.active_visualizers:
             self._render_console(pos=positions.pop(), message=message)
+
+        #SMART_STATE_DENSITY
+        if self.SMART_STATE_DENSITY in self.active_visualizers and smart_state_density_map is not None:
+            pos = positions.pop()
+            self._render_walls(pos=pos)
+            self._render_value_map(smart_state_density_map, pos=pos)
+            self._render_elements("goal", "start", pos=pos)
 
         pygame.display.flip()
         self.clock.tick(self.fps)

@@ -19,7 +19,8 @@ visualizer = GridWorldVisualizer(grid_world)
 visualizer.add_visualizer(GridWorldVisualizer.LIVE_AGENT,
                           GridWorldVisualizer.CONSOLE,
                           GridWorldVisualizer.VALUE_FUNCTION,
-                          GridWorldVisualizer.DENSITY)
+                          GridWorldVisualizer.DENSITY,
+                          GridWorldVisualizer.SMART_STATE_DENSITY)
 
 # Initialize agent, see class for available parameters
 agent = generate_smartstart_object(QLearning,

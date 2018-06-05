@@ -130,6 +130,9 @@ def generate_smartstart_object(base, env, *args, **kwargs):
             self.policy = ValueIteration(self.env, vi_gamma, vi_min_error,
                                          vi_max_itr)
 
+            # counting the spots that have been chosen as smart_states
+            self.smart_state_count = np.zeros((self.env.h, self.env.w), dtype=np.int)
+
         def get_start(self):
             """Determines the smart start state
 
@@ -170,6 +173,28 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                     max_ucb = ucb
             return smart_start
 
+        def get_smart_state_density_map(self):
+            """Returns smart state density map for environment
+
+            Density-map will be a numpy array equal to the width (w) and height (h)
+            of the environment. Each entry (state) will hold the density
+            associated with that smart state.
+
+            Note:
+                Only works for 2D-environments that have a w and h attribute.
+
+            Returns
+            -------
+            :obj:`np.ndarray`
+                Density map
+
+            """
+            count_map = self.smart_state_count
+            total_sum = np.sum(count_map)
+            if total_sum == 0:
+                return count_map
+            return count_map / total_sum
+
         def train(self, render=False, render_episode=False, print_results=True):
             """Runs a training experiment
 
@@ -209,6 +234,9 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                     # Step 1: Choose smart start
                     start_state = self.get_start()
 
+                    #update self.smart_state_count
+                    self.smart_state_count[start_state[0]][start_state[1]] += 1
+
                     # Step 2: Guide to smart start
                     self.dynamic_programming(start_state)
 
@@ -216,7 +244,8 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                     for i in range(self.max_steps):
                         action = self.policy.get_action(obs)
                         obs, _, done, render = self.take_step(obs, action,
-                                                              episode, render)
+                                                              episode, render,
+                                                              smart_state_density_map=self.get_smart_state_density_map())
 
                         if np.array_equal(obs, start_state):
                             break
@@ -234,13 +263,15 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                     value_map = self.Q.copy()
                     value_map = np.max(value_map, axis=2)
                     render_episode = self.env.render(value_map=value_map,
-                                                     density_map=self.get_density_map())
+                                                     density_map=self.get_density_map(),
+                                                     smart_state_density_map=self.get_smart_state_density_map())
 
                 # Perform normal reinforcement learning
                 action = self.get_action(obs)
                 for step in range(max_steps):
                     obs, action, done, render = self.take_step(obs, action,
-                                                               episode, render)
+                                                               episode, render,
+                                                               smart_state_density_map=self.get_smart_state_density_map())
 
                     if done:
                         break
@@ -253,7 +284,8 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                     value_map = np.max(value_map, axis=2)
                     render_episode = self.env.render(value_map=value_map,
                                                      density_map=self.get_density_map(),
-                                                     message=message)
+                                                     message=message,
+                                                     smart_state_density_map=self.get_smart_state_density_map())
                 if print_results:
                     print(message)
                 summary.append(episode)
@@ -262,7 +294,8 @@ def generate_smartstart_object(base, env, *args, **kwargs):
                 value_map = self.Q.copy()
                 value_map = np.max(value_map, axis=2)
                 render = self.env.render(value_map=value_map,
-                                         density_map=self.get_density_map())
+                                         density_map=self.get_density_map(),
+                                         smart_state_density_map=self.get_smart_state_density_map())
 
             return summary
 

@@ -1,43 +1,43 @@
-smartstart\.algorithms package
-==============================
+smartstart.algorithms package
+=============================
 
 Submodules
 ----------
 
-smartstart\.algorithms\.counter module
---------------------------------------
+smartstart.algorithms.counter module
+------------------------------------
 
 .. automodule:: smartstart.algorithms.counter
     :members:
     :undoc-members:
     :show-inheritance:
 
-smartstart\.algorithms\.qlearning module
-----------------------------------------
+smartstart.algorithms.qlearning module
+--------------------------------------
 
 .. automodule:: smartstart.algorithms.qlearning
     :members:
     :undoc-members:
     :show-inheritance:
 
-smartstart\.algorithms\.sarsa module
-------------------------------------
+smartstart.algorithms.sarsa module
+----------------------------------
 
 .. automodule:: smartstart.algorithms.sarsa
     :members:
     :undoc-members:
     :show-inheritance:
 
-smartstart\.algorithms\.tdlearning module
------------------------------------------
+smartstart.algorithms.tdlearning module
+---------------------------------------
 
 .. automodule:: smartstart.algorithms.tdlearning
     :members:
     :undoc-members:
     :show-inheritance:
 
-smartstart\.algorithms\.valueiteration module
----------------------------------------------
+smartstart.algorithms.valueiteration module
+-------------------------------------------
 
 .. automodule:: smartstart.algorithms.valueiteration
     :members:
