@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from smartstart.algorithms.qlearning import QLearning
+from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
 from smartstart.smartexploration.smartexploration import generate_smartstart_object
 from smartstart.environments.gridworld import GridWorld
 from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
@@ -14,7 +14,7 @@ random.seed()
 np.random.seed()
 
 # Create environment and visualizer
-grid_world = GridWorld.generate(GridWorld.EASY)
+grid_world = GridWorld.generate(GridWorld.MEDIUM)
 visualizer = GridWorldVisualizer(grid_world)
 visualizer.add_visualizer(GridWorldVisualizer.LIVE_AGENT,
                           GridWorldVisualizer.CONSOLE,

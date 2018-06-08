@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from smartstart.algorithms.qlearning import QLearning
+from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
 from smartstart.smartexploration.smartexploration import generate_smartstart_object
 from smartstart.environments.gridworld import GridWorld
 from smartstart.utilities.experimenter import run_experiment
@@ -57,4 +57,5 @@ param_grid = {
     'use_smart_start': [True, False]
 }
 
-run_experiment(param_grid, n_processes=-1)
+if __name__ == '__main__':
+    run_experiment(param_grid, n_processes=-1)

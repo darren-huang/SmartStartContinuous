@@ -5,7 +5,7 @@ Module defining classes for SARSA and SARSA(lambda).
 See 'Reinforcement Learning: An Introduction by Richard S. Sutton and
 Andrew G. Barto for more information.
 """
-from smartstart.algorithms import TDLearning, TDLearningLambda
+from smartstart.RLDiscreteAlgorithms import TDLearning, TDLearningLambda
 
 
 class SARSA(TDLearning):
@@ -13,12 +13,12 @@ class SARSA(TDLearning):
 
     Parameters
     ----------
-    env : :obj:`~smartstart.algorithms.tdlearning.TDLearning`
+    env : :obj:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning`
         environment
     *args :
-        see parent :class:`~smartstart.algorithms.tdlearning.TDLearning`
+        see parent :class:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning`
     **kwargs :
-        see parent :class:`~smartstart.algorithms.tdlearning.TDLearning`
+        see parent :class:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning`
     """
 
     def __init__(self, env, *args, **kwargs):
@@ -57,13 +57,13 @@ class SARSALambda(TDLearningLambda):
 
     Parameters
     ----------
-    env : :obj:`~smartstart.algorithms.tdlearning.TDLearning`
+    env : :obj:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning`
         environment
     *args :
-        see parent :class:`~smartstart.algorithms.tdlearning
+        see parent :class:`~smartstart.RLDiscreteAlgorithms.tdlearning
         .TDLearningLambda`
     **kwargs :
-        see parent :class:`~smartstart.algorithms.tdlearning
+        see parent :class:`~smartstart.RLDiscreteAlgorithms.tdlearning
         .TDLearningLambda`
     """
 

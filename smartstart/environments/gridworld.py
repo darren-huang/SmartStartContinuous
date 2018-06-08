@@ -103,7 +103,7 @@ class GridWorld(Environment):
 
         Creates a the transition model and reward function for the gridworld
         and transition probability. Can be used by dynamic programming, like
-        :class:`~smartstart.algorithms.valueiteration.ValueIteration`.
+        :class:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`.
 
         Returns
         -------

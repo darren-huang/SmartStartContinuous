@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from smartstart.algorithms.qlearning import QLearning
+from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
 from smartstart.environments.gridworld import GridWorld
 from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
 from smartstart.utilities.plot import plot_summary, show_plot, \

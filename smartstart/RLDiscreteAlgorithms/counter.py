@@ -1,6 +1,6 @@
 """Counter module
 
-Describes Counter base class for TD-learning algorithms
+Describes Counter base class for TD-learning RLDiscreteAlgorithms
 """
 from collections import defaultdict
 
@@ -11,7 +11,7 @@ class Counter(object):
     """Base class for visitation counts.
     
     Base class for keeping track of obs-action-obs_tp1 visitation counts in
-    discrete state and discrete action reinforcement learning algorithms.
+    discrete state and discrete action reinforcement learning RLDiscreteAlgorithms.
 
     Parameters
     ----------

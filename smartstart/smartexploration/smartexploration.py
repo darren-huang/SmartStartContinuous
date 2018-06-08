@@ -5,7 +5,7 @@ SmartStart object will be a subclass of the original algorithm object.
 """
 import numpy as np
 
-from smartstart.algorithms import ValueIteration
+from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
 
 
@@ -13,7 +13,7 @@ def generate_smartstart_object(base, env, *args, **kwargs):
     """Generates SmartStart object
 
     Algorithms derived from
-    :class:`~smartstart.algorithms.tdlearning.TDLearning` can be used to
+    :class:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning` can be used to
     construct a SmartStart object. SmartStart becomes a direct subclass from
     the specified base class and inherits all their methods. SmartStart
     objects can be used in the same way as the original base class.
@@ -25,7 +25,7 @@ def generate_smartstart_object(base, env, *args, **kwargs):
 
     Parameters
     ----------
-    base : :obj:`~smartstart.algorithms.tdlearning.TDLearning`
+    base : :obj:`~smartstart.RLDiscreteAlgorithms.tdlearning.TDLearning`
         base algorithm to convert to SmartStart algorithm
     env : :obj:`~smartstart.environments.environment.Environment`
         environment
@@ -63,7 +63,7 @@ def generate_smartstart_object(base, env, *args, **kwargs):
         Subsequently this transition model and the reward function are
         used to find a optimal policy using dynamic programming. This
         implementation uses
-        :class:`~smartstart.algorithms.valueiteration.ValueIteration`.
+        :class:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`.
 
         After reaching the smart start the agent will continue with the
         normal reinforcement learning as described by the base class.
@@ -105,7 +105,7 @@ def generate_smartstart_object(base, env, *args, **kwargs):
         m : :obj:`int`
             number of state-action visitation counts needed before the
             state-action pair is used in fitting the transition model.
-        policy: :obj:`~smartstart.algorithms.valueiteration.ValueIteration`
+        policy: :obj:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`
             policy used for guiding to the smart start
         """
 
@@ -345,7 +345,7 @@ def generate_smartstart_object(base, env, *args, **kwargs):
 if __name__ == "__main__":
     from smartstart.environments.gridworld import GridWorld
     from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
-    from smartstart.algorithms import SARSALambda
+    from smartstart.RLDiscreteAlgorithms import SARSALambda
 
     directory = '/home/bartkeulen/repositories/smartstart/data/tmp'
 
