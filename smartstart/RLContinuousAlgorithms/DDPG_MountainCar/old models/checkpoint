@@ -1,0 +1,2 @@
+model_checkpoint_path: "C:\\Users\\Darren Huang\\PythonProjects\\smartstart\\smartstart\\RLContinuousAlgorithms\\DDPG_MountainCar\\actor_model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\Darren Huang\\PythonProjects\\smartstart\\smartstart\\RLContinuousAlgorithms\\DDPG_MountainCar\\actor_model.ckpt"
