@@ -10,6 +10,8 @@ from smartstart.environments.environment import Environment
 from smartstart.environments.generate_gridworld import generate_gridworld
 from smartstart.environments.presets import *
 
+from gym.envs.registration import EnvSpec
+
 
 class GridWorld(Environment):
     """GridWorld environment
@@ -81,6 +83,8 @@ class GridWorld(Environment):
         self.grid_world, self.start_state, self.goal_state = grid_world, start_state, goal_state
 
         self.wall_reset = wall_reset
+
+        self.spec = EnvSpec(self.__class__.__name__ + name)
 
     def get_all_states(self):
         """Return all the states of the gridworld

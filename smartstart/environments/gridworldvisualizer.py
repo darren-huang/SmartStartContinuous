@@ -97,7 +97,7 @@ class GridWorldVisualizer(Visualizer):
             self.active_visualizers.add(arg)
 
     def render(self, value_map=None, density_map=None, message=None, close=False,
-               smart_state_density_map=None):
+               smart_start_state_density_map=None):
         """Render the current state of the GridWorld
 
         Parameters
@@ -176,10 +176,10 @@ class GridWorldVisualizer(Visualizer):
             self._render_console(pos=positions.pop(), message=message)
 
         #SMART_STATE_DENSITY
-        if self.SMART_STATE_DENSITY in self.active_visualizers and smart_state_density_map is not None:
+        if self.SMART_STATE_DENSITY in self.active_visualizers and smart_start_state_density_map is not None:
             pos = positions.pop()
             self._render_walls(pos=pos)
-            self._render_value_map(smart_state_density_map, pos=pos)
+            self._render_value_map(smart_start_state_density_map, pos=pos)
             self._render_elements("goal", "start", pos=pos)
 
         pygame.display.flip()

@@ -94,8 +94,8 @@ def take_step(agent, env, obs, action, episode, render=False, smart_state_densit
         value_map = agent.Q.copy()
         value_map = np.max(value_map, axis=2)
         render = env.render(value_map=value_map,
-                                 density_map=agent.get_density_map(),
-                                 smart_state_density_map=smart_state_density_map)
+                            density_map=agent.get_density_map(),
+                            smart_start_state_density_map=smart_state_density_map)
 
     _, action_tp1 = agent.update_q_value(obs, action, reward, obs_tp1, done)
 
@@ -165,5 +165,109 @@ def trainTDLearningLambda(agent, env, render=False, render_episode=False, print_
         value_map = np.max(value_map, axis=2)
         render = env.render(value_map=value_map,
                                  density_map=agent.get_density_map())
+
+    return summary
+
+def train_smart_start(self, render=False, render_episode=False, print_results=True):
+    """Runs a training experiment
+
+    Training experiment runs for self.num_episodes and each episode
+    takes a maximum of self.max_steps.
+
+    At the start of each episode there is a eta change of using smart
+    start. When smart start is not used the agent will use normal
+    reinforcement learning as described by the base class.
+
+    Parameters
+    ----------
+    render : :obj:`bool`
+        True when rendering every time-step (Default value = False)
+    render_episode : :obj:`bool`
+        True when rendering every episode (Default value = False)
+    print_results : :obj:`bool`
+        True when printing results to console (Default value = True)
+
+    Returns
+    -------
+    :class:`~smartexploration.utilities.datacontainers.Summary`
+        Summary Object containing the training data
+
+    """
+    summary = Summary(self.__class__.__name__ + "_" + self.env.name)
+
+    for i_episode in range(self.num_episodes):
+        episode = Episode()
+
+        obs = self.env.reset()
+
+        max_steps = self.max_steps
+
+        # eta probability of using smart start
+        if i_episode > 0 and np.random.rand() <= self.eta:
+            # Step 1: Choose smart start
+            start_state = self.get_start()
+
+            # update self.smart_state_count
+            self.smart_state_count[start_state[0]][start_state[1]] += 1
+
+            # Step 2: Guide to smart start
+            self.dynamic_programming(start_state)
+
+            finished = False
+            for i in range(self.max_steps):
+                action = self.policy.get_action(obs)
+                obs, _, done, render = self.take_step(obs, action,
+                                                      episode, render,
+                                                      smart_state_density_map=self.get_smart_state_density_map())
+
+                if np.array_equal(obs, start_state):
+                    break
+
+                if done:
+                    finished = True
+                    break
+
+            max_steps = self.max_steps - len(episode)
+
+            if finished:
+                max_steps = 0
+
+        if render or render_episode:
+            value_map = self.Q.copy()
+            value_map = np.max(value_map, axis=2)
+            render_episode = self.env.render(value_map=value_map,
+                                             density_map=self.get_density_map(),
+                                             smart_start_state_density_map=self.get_smart_state_density_map())
+
+        # Perform normal reinforcement learning
+        action = self.get_action(obs)
+        for step in range(max_steps):
+            obs, action, done, render = self.take_step(obs, action,
+                                                       episode, render,
+                                                       smart_state_density_map=self.get_smart_state_density_map())
+
+            if done:
+                break
+
+        # Render and/or print results
+        message = "Episode: %d, steps: %d, reward: %.2f" % \
+                  (i_episode, len(episode), episode.total_reward())
+        if render or render_episode:
+            value_map = self.Q.copy()
+            value_map = np.max(value_map, axis=2)
+            render_episode = self.env.render(value_map=value_map,
+                                             density_map=self.get_density_map(),
+                                             message=message,
+                                             smart_start_state_density_map=self.get_smart_state_density_map())
+        if print_results:
+            print(message)
+        summary.append(episode)
+
+    while render:
+        value_map = self.Q.copy()
+        value_map = np.max(value_map, axis=2)
+        render = self.env.render(value_map=value_map,
+                                 density_map=self.get_density_map(),
+                                 smart_start_state_density_map=self.get_smart_state_density_map())
 
     return summary

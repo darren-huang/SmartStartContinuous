@@ -1,7 +1,9 @@
-from utilities.datacontainers import Summary, Episode
+from smartstart.utilities.datacontainers import Summary, Episode
 import numpy as np
 
-def train(agent, env, render=False, render_episode=False, print_results=True):
+def rlTrain(agent, env, render=False, render_episode=False, print_results=True, print_steps=True,
+            num_episodes=500,
+            max_steps=1000):
     """Runs a training experiment
 
     Training experiment runs for agent.num_episodes and each episode takes
@@ -27,16 +29,19 @@ def train(agent, env, render=False, render_episode=False, print_results=True):
 
     """
     #summary object
-    summary = Summary(agent.__class__.__name__ + "_" + env.name)
+    summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
+
+    # for printing
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
     #begin training episodes(1)
-    for i_episode in range(agent.num_episodes):
+    for i_episode in range(num_episodes):
         episode = Episode() #record the episode
         state = env.reset() #setup env
 
         # Step through the Episode
-        agent.start_new_episode()
-        for _ in range(agent.max_steps):
+        agent.start_new_episode() # only needed for smartStart
+        for step in range(max_steps):
             #rendering
             if render:
                 render = agent.render(env)
@@ -47,6 +52,10 @@ def train(agent, env, render=False, render_episode=False, print_results=True):
             #environment processing
             new_state, reward, done, _ = env.step(action) # also returns emtpy dict (to match openAI)
 
+            #printing the step
+            if print_steps:
+                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, state, action, new_state, reward).replace("\n", ""))
+
             #agent update model// observe new state
             agent.observe(state, action, reward, new_state, done)
 
@@ -56,13 +65,16 @@ def train(agent, env, render=False, render_episode=False, print_results=True):
             #check terminal state
             if done:
                 break
+            else:
+                state = new_state #increment local state
+        agent.end_episode() # needed for continuous stuffs
         # Episode over
 
         # Final Render and/or print results
         if render or render_episode:
             message = "Episode: %d, steps: %d, reward: %.2f" % (
                 i_episode, len(episode), episode.average_reward())
-            render = agent.render(env, message=message)
+            render_episode = agent.render(env, message=message)
         if print_results:
             print("Episode: %d, steps: %d, reward: %.2f" % (
                 i_episode, len(episode), episode.average_reward()))

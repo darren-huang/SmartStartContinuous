@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
-from smartstart.smartexploration.smartexploration import generate_smartstart_object
+from smartstart.smartexploration.smartexplorationdiscrete import generate_smartstart_object
 from smartstart.environments.gridworld import GridWorld
 from smartstart.utilities.experimenter import run_experiment
 from smartstart.utilities.utilities import get_data_directory

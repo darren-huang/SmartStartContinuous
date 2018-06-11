@@ -12,11 +12,10 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from smartstart.utilities.scheduler import Scheduler
 
-from smartstart.utilities.datacontainers import Summary, Episode
-from .counter import Counter
+from reinforcementLearningCore.agents import ValueFuncAndCountMapRLAgent
 
 
-class TDLearning(Counter, metaclass=ABCMeta):
+class TDLearning(ValueFuncAndCountMapRLAgent, metaclass=ABCMeta):
     """Base class for temporal-difference methods
     
     Base class for temporal difference methods Q-Learning, SARSA,
@@ -87,8 +86,8 @@ class TDLearning(Counter, metaclass=ABCMeta):
 
     def __init__(self,
                  env,
-                 num_episodes=1000,
-                 max_steps=1000,
+                 # num_episodes=1000,
+                 # max_steps=1000,
                  alpha=0.1,
                  gamma=0.99,
                  init_q_value=0.,
@@ -98,8 +97,8 @@ class TDLearning(Counter, metaclass=ABCMeta):
                  beta=1.):
         super(TDLearning, self).__init__(env)
 
-        self.num_episodes = num_episodes
-        self.max_steps = max_steps
+        # self.num_episodes = num_episodes
+        # self.max_steps = max_steps
         self.alpha = alpha
         self.gamma = gamma
         self.init_q_value = init_q_value
@@ -116,6 +115,11 @@ class TDLearning(Counter, metaclass=ABCMeta):
         The Q-function is set to the initial q-value for very state-action pair.
         """
         self.Q.fill(self.init_q_value)
+
+    def get_state_value(self, state):
+        q_values, _ = self.get_q_values(state)
+        q_value = max(q_values)
+        return q_value
 
     def get_q_values(self, obs):
         """Returns Q-values and actions for observation obs
@@ -436,6 +440,28 @@ class TDLearning(Counter, metaclass=ABCMeta):
                 q_map[i, j] = int(max(q_values))
 
         return q_map
+
+    def observe(self, state, action, reward, new_state, done):
+        _, _ = self.update_q_value(state, action, reward, new_state, done)
+
+        self.increment(state, action, new_state)
+
+    def render(self, env, **kwargs):
+        value_map = self.Q.copy()
+        value_map = np.max(value_map, axis=2)
+        if 'message' in kwargs:
+            message = kwargs['message']
+        else:
+            message = None
+        if 'smart_start_state_density_map' in kwargs:
+            smart_start_state_density_map = kwargs['smart_start_state_density_map']
+        else:
+            smart_start_state_density_map = None
+        render = env.render(value_map=value_map,
+                            density_map=self.get_density_map(),
+                            message=message,
+                            smart_start_state_density_map = smart_start_state_density_map)
+        return render
 
 
 class TDLearningLambda(TDLearning):

@@ -2,11 +2,13 @@ import random
 
 import numpy as np
 
+
 from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
 from smartstart.environments.gridworld import GridWorld
 from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
 from smartstart.utilities.plot import plot_summary, show_plot, \
     mean_reward_episode, steps_episode
+from reinforcementLearningCore.rlTrain import rlTrain
 
 # Reset the seed for random number generation
 random.seed()
@@ -29,9 +31,9 @@ agent = QLearning(grid_world,
                   exploration=QLearning.E_GREEDY)
 
 # Train the agent, summary contains training data
-summary = agent.train(render=True,
-                      render_episode=False,
-                      print_results=True)
+summary = rlTrain(agent, grid_world, render=True,
+                  render_episode=False,
+                  print_results=True)
 
 # Plot results
 plot_summary(summary, mean_reward_episode, ma_window=5,
