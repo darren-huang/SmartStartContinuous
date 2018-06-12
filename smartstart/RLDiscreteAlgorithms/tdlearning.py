@@ -12,10 +12,10 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from smartstart.utilities.scheduler import Scheduler
 
-from reinforcementLearningCore.agents import ValueFuncAndCountMapRLAgent
+from reinforcementLearningCore.agents import ValueFuncAndCountRLAgent
 
 
-class TDLearning(ValueFuncAndCountMapRLAgent, metaclass=ABCMeta):
+class TDLearning(ValueFuncAndCountRLAgent, metaclass=ABCMeta):
     """Base class for temporal-difference methods
     
     Base class for temporal difference methods Q-Learning, SARSA,

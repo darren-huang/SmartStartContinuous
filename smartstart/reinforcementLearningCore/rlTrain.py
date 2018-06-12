@@ -40,7 +40,7 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
         state = env.reset() #setup env
 
         # Step through the Episode
-        agent.start_new_episode() # only needed for smartStart
+        agent.start_new_episode(state) # only needed for smartStart
         for step in range(max_steps):
             #rendering
             if render:

@@ -3,11 +3,15 @@
 Defines method for generating a SmartStart object from an algorithm object. The
 SmartStart object will be a subclass of the original algorithm object.
 """
+import random
+from queue import Queue
+from typing import Deque
+
 import numpy as np
 
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
-from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncAndCountMapRLAgent
+from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent
 
 
 class SmartStartContinuous(RLAgent):
@@ -77,7 +81,10 @@ class SmartStartContinuous(RLAgent):
     policy: :obj:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`
         policy used for guiding to the smart start
     """
-    agent = ...  # type: ValueFuncAndCountMapRLAgent
+    agent = ...  # type: ValueFuncRLAgent
+
+    def K(self, a):  # Gaussian Kernel with sigma = 1 // not normalized
+        return np.exp((-.5) * (a ** 2) / (self.sigma ** 2))
 
     def __init__(self,
                  agent,
@@ -88,27 +95,33 @@ class SmartStartContinuous(RLAgent):
                  m=1,
                  vi_gamma=0.99,
                  vi_min_error=1e-5,
-                 vi_max_itr=1000):
+                 vi_max_itr=1000,
+                 buffer_size=10000,
+                 n_ss = 1000,
+                 sigma = 1):
         self.__class__.__name__ = "SmartStart_" + agent.__class__.__name__
         self.exploitation_param = exploitation_param
         self.exploration_param = exploration_param
         self.eta = eta
         self.m = m
+        self.sigma = sigma
 
         # objects to interact with
         self.agent = agent
         self.env = env
 
-        # valueIteration object for pathing to smartStart
-        self.policy = ValueIteration(self.env, vi_gamma, vi_min_error,
-                                     vi_max_itr)
+        # SmartStart Trajectory Optimization
 
-        # counting the spots that have been chosen as smart_states
-        self.smart_state_count = np.zeros((self.env.h, self.env.w), dtype=np.int)
+        # keeps track of some distribution of all states visited
+        self.buffer = [] # random replacement !!! this keeps the density distributions roughly the same i think
+        self.buffer_size = buffer_size
+        self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
+
 
         # keep track of SmartStartPathing vs. NormalAgentPathing
         self.smart_start_pathing = False
-        self.smart_start_state = None # placeholder for smart_start_state to navigate to
+        self.smart_start_state = None  # placeholder for smart_start_state to navigate to
+
 
     @property
     def normal_agent_pathing(self):
@@ -133,47 +146,38 @@ class SmartStartContinuous(RLAgent):
         :obj:`np.ndarray`
             smart start
         """
-        count_map = self.agent.get_count_map()
-        if count_map is None:
+        if not self.buffer: # if buffer is emtpy, nothing to evaluate
             return None
-        possible_starts = np.asarray(np.where(count_map > 0))
-        if not possible_starts.any():
-            return None
+        if len(self.buffer) > self.n_ss: # if too many states in buffer, draw a sample
+            possible_starts = random.sample(self.buffer, self.n_ss)
+        else:
+            possible_starts = self.buffer # otherwise use all samples
 
         smart_start = None
         max_ucb = -float('inf')
-        for i in range(possible_starts.shape[1]):
-            obs = possible_starts[:, i]
-            state_value = self.agent.get_state_value(obs)
+
+        for state in possible_starts:
+            # state value
+            state_value = self.agent.get_state_value(state)
+
+            #C_hat calculation###############
+            C_hat = 0
+
+            #bandwith
+            h = ((4 / (3 * len(self.buffer))) ** (1/5)) * self.sigma
+
+            for state_j in self.buffer:
+                C_hat += self.K((np.linalg.norm(state - state_j)) / h)
+            C_hat = C_hat / h
+
+            #ucb calculation
             ucb = self.exploitation_param * state_value + \
                   np.sqrt((self.exploration_param *
-                           np.log(np.sum(count_map))) / count_map[tuple(obs)])
+                           np.log(len(self.buffer))) / C_hat)
             if ucb > max_ucb:
-                smart_start = obs
+                smart_start = state
                 max_ucb = ucb
         return smart_start
-
-    def get_smart_state_density_map(self):
-        """Returns smart state density map for environment
-
-        Density-map will be a numpy array equal to the width (w) and height (h)
-        of the environment. Each entry (state) will hold the density
-        associated with that smart state.
-
-        Note:
-            Only works for 2D-environments that have a w and h attribute.
-
-        Returns
-        -------
-        :obj:`np.ndarray`
-            Density map
-
-        """
-        count_map = self.smart_state_count
-        total_sum = np.sum(count_map)
-        if total_sum == 0:
-            return count_map
-        return count_map / total_sum
 
     def dynamic_programming(self, start_state):
         """Fits transition model, reward function and performs dynamic
@@ -214,7 +218,6 @@ class SmartStartContinuous(RLAgent):
         # Perform dynamic programming
         self.policy.optimize()
 
-
     def get_action(self, state):
         if self.smart_start_pathing:
             return self.policy.get_action(state)
@@ -222,19 +225,25 @@ class SmartStartContinuous(RLAgent):
             return self.agent.get_action(state)
 
     def observe(self, state, action, reward, new_state, done):
+        # new_state added (maybe) to buffer
+        self.state_to_buffer(new_state)
+
+        # agent observation
         self.agent.observe(state, action, reward, new_state, done)
 
+        # check if smart_start_state has been reached
         if self.smart_start_pathing and np.array_equal(new_state, self.smart_start_state):
             self.smart_start_pathing = False
 
+    def start_new_episode(self, state):
+        # new_state added (maybe) to buffer
+        self.state_to_buffer(state)
 
-    def start_new_episode(self):
-        self.agent.start_new_episode()
+        self.agent.start_new_episode(state)
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
             self.smart_start_state = self.get_start() # new state to navigate to
-            if self.smart_start_state is not None: #valid smart start
+            if self.smart_start_state is not None and not np.array_equal(self.smart_start_state, state): #valid smart start
                 self.smart_start_pathing = True
-                self.smart_state_count[self.smart_start_state[0]][self.smart_start_state[1]] += 1 # update self.smart_state_count
 
                 self.dynamic_programming(self.smart_start_state) #this will update the policy
 
@@ -242,6 +251,15 @@ class SmartStartContinuous(RLAgent):
     def render(self, env, **kwargs):
         kwargs['smart_start_state_density_map'] = self.get_smart_state_density_map()
         return self.agent.render(env, **kwargs)
+
+    #private method, adds (maybe -rnd) state to buffer
+    def state_to_buffer(self, new_state):
+        if len(self.buffer) < self.buffer_size: # still has capacity
+            self.buffer.append(new_state)
+        else: # buffer full -> random replacement
+            index = random.randint(0, self.buffer_size)
+            if index != self.buffer_size:
+                self.buffer[index] = new_state
 
 
 if __name__ == "__main__":

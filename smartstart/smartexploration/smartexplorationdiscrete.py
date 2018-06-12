@@ -7,7 +7,7 @@ import numpy as np
 
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
-from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncAndCountMapRLAgent
+from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncAndCountRLAgent
 
 
 class SmartStartDiscrete(RLAgent):
@@ -77,7 +77,7 @@ class SmartStartDiscrete(RLAgent):
     policy: :obj:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`
         policy used for guiding to the smart start
     """
-    agent = ...  # type: ValueFuncAndCountMapRLAgent
+    agent = ...  # type: ValueFuncAndCountRLAgent
 
     def __init__(self,
                  agent,
@@ -228,8 +228,8 @@ class SmartStartDiscrete(RLAgent):
             self.smart_start_pathing = False
 
 
-    def start_new_episode(self):
-        self.agent.start_new_episode()
+    def start_new_episode(self, state):
+        self.agent.start_new_episode(state)
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
             self.smart_start_state = self.get_start() # new state to navigate to
             if self.smart_start_state is not None: #valid smart start

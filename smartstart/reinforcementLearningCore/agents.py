@@ -32,7 +32,7 @@ class RLAgent(metaclass=abc.ABCMeta):
         :param env: the environment the agent is currently in
         """
 
-    def start_new_episode(self):
+    def start_new_episode(self, state):
         """
         tell the model that a new episode is beginning (really i think only smartStart needs this)
         """
@@ -44,10 +44,11 @@ class RLAgent(metaclass=abc.ABCMeta):
         """
         pass
 
-class ValueFuncAndCountMapRLAgent(RLAgent, Counter):
+class ValueFuncRLAgent(RLAgent):
     """
-    RLAgent who also is a Counter (see smartstart.RLDiscreteAlgorithms.counter.Counter)
-    """
+        RLAgent who has a value function
+        """
+
     @abc.abstractmethod
     def get_state_value(self, state):
         """
@@ -56,3 +57,8 @@ class ValueFuncAndCountMapRLAgent(RLAgent, Counter):
         :param state: observes state inside agent's environment
         :return: value of that state (usually a float)
         """
+
+class ValueFuncAndCountRLAgent(ValueFuncRLAgent, Counter):
+    """
+    RLAgent who also is a Counter (see smartstart.RLDiscreteAlgorithms.counter.Counter)
+    """
