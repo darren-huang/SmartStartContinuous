@@ -1,6 +1,0 @@
-#/bin/bash
-
-python experiment.py --environment Humanoid-v2 Reacher-v2 Pendulum-v0 MountainCarContinuous-v0 InvertedDoublePendulum-v2 InvertedPendulum-v2 --learning_rate 0.01 --episodes 2000 --hidden_size 16 32 200 --output results.txt
-python experiment.py --environment HalfCheetah-v2 --learning_rate 0.005 --episodes 2000 --hidden_size 16 32 200 --output results.txt --render --max_episode_steps 2000
-python experiment.py --environment HalfCheetah-v2 --learning_rate 0.005 --episodes 1 --hidden_size 16 32 200 --output results.txt --render --max_episode_steps 1 --graph
-python experiment.py --environment MountainCarContinuous-v0 --episodes 1000 --hidden_size 16 32 200 --output results.txt --max_episode_steps -1 --graph --render --learning_rate 0.05

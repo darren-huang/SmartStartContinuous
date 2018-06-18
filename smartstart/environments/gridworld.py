@@ -84,7 +84,7 @@ class GridWorld(Environment):
 
         self.wall_reset = wall_reset
 
-        self.spec = EnvSpec(self.__class__.__name__ + name)
+        self.spec = EnvSpec(self.__class__.__name__ + name+"-v0")
 
     def get_all_states(self):
         """Return all the states of the gridworld

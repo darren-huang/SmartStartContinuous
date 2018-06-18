@@ -213,7 +213,7 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
                 self.actor.update_target_network()
                 self.critic.update_target_network()
 
-    def start_new_episode(self):
+    def start_new_episode(self, state):
         self.epsilon -= (self.epsilon / self.EXPLORE)
         if self.epsilon < self.min_epsilon:
             self.epsilon = self.min_epsilon
@@ -243,17 +243,18 @@ if __name__ == "__main__":
 
 
 
+
     # Initialize agent, see class for available parameters
     agent = DDPG_agent(env)
 
     # Train the agent, summary contains training data
     summary = rlTrain(agent, env, render=True,
                       render_episode=True,
-                      print_results=True)
+                      print_results=True, num_episodes=1)
 
     # Plot results
     plot_summary(summary, mean_reward_episode, ma_window=5,
-                 title="Easy GridWorld Q-Learning Average Reward per Episode")
+                 title="MountainCarContinuous-v0 Q-Learning Average Reward per Episode")
     plot_summary(summary, steps_episode, ma_window=5,
-                 title="Easy GridWorld Q-Learning Steps per Episode")
+                 title="MountainCarContinuous-v0 Q-Learning Steps per Episode")
     show_plot()
