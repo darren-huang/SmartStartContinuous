@@ -44,6 +44,17 @@ class RLAgent(metaclass=abc.ABCMeta):
         """
         pass
 
+class NavigationRLAgent(RLAgent):
+    """
+    RL agent that at the beginning of an episode decides to plan it's trajectory
+    """
+    def start_new_episode_plan(self, state, desired_sates):
+        """
+        :param state: starting state for the episode
+        :param desired_sates: the desired states it should try to navigate to in order
+        """
+
+
 class ValueFuncRLAgent(RLAgent):
     """
         RLAgent who has a value function

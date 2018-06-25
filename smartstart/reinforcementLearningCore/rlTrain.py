@@ -37,36 +37,36 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
     #begin training episodes(1)
     for i_episode in range(num_episodes):
         episode = Episode() #record the episode
-        state = env.reset() #setup env
+        observation = env.reset() #setup env
 
         # Step through the Episode
-        agent.start_new_episode(state) # only needed for smartStart
+        agent.start_new_episode(observation) # only needed for smartStart
         for step in range(max_steps):
             #rendering
             if render:
                 render = agent.render(env)
 
             #agent action
-            action = agent.get_action(state)
+            action = agent.get_action(observation)
 
             #environment processing
-            new_state, reward, done, _ = env.step(action) # also returns emtpy dict (to match openAI)
+            new_observation, reward, done, _ = env.step(action) # also returns emtpy dict (to match openAI)
 
             #printing the step
             if print_steps:
-                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, state, action, new_state, reward).replace("\n", ""))
+                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, observation, action, new_observation, reward).replace("\n", ""))
 
-            #agent update model// observe new state
-            agent.observe(state, action, reward, new_state, done)
+            #agent update model// observe new observation
+            agent.observe(observation, action, reward, new_observation, done)
 
             #record results to episode object
-            episode.append(state, action, reward, new_state, done)
+            episode.append(observation, action, reward, new_observation, done)
 
-            #check terminal state
+            #check terminal observation
             if done:
                 break
             else:
-                state = new_state #increment local state
+                observation = new_observation #increment local observation
         agent.end_episode() # needed for continuous stuffs
         # Episode over
 
