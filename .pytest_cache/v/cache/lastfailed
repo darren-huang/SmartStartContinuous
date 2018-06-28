@@ -1,0 +1,3 @@
+{
+  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_add": true
+}

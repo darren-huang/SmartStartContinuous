@@ -346,7 +346,6 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
     def next_desired_state(self):
         return self.desired_states[min(self.current_desired_state_index, len(self.desired_states) - 1)]
 
-
     def get_best_sim_actions(self, curr_nn_state):
         #randomly sample N candidate action sequences
         all_samples = npr.uniform(self.env.action_space.low, self.env.action_space.high, (self.N, self.horizon, self.env.action_space.shape[0]))

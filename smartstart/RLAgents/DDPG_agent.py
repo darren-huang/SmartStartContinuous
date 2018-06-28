@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
 from reinforcementLearningCore.agents import RLAgent
-from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.replay_buffer import ReplayBuffer
+from RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise
@@ -79,8 +79,7 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
 
     def __init__(self,
                  env,
-                 # num_episodes=1000,
-                 # max_steps=1000,
+                 replay_buffer=None,
                  epochs=1000,
                  action_bound=None,
                  MINIBATCH_SIZE=40,
@@ -123,8 +122,12 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
         # Initialize target network weights
         self.actor.update_target_network()
         self.critic.update_target_network()
+
         # Initialize replay memory
-        self.replay_buffer = ReplayBuffer(BUFFER_SIZE, None) # currently leave replay_buffer as None idk waht that will do
+        if replay_buffer == None:
+            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)
+        else:
+            self.replay_buffer = replay_buffer
 
     def get_state_value(self, state):
         # q_values, _ = self.get_q_values(state)
@@ -175,7 +178,7 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
     def observe(self, state, action, reward, new_state, done):
         if self.train_indicator:
             # 3. Save in replay buffer:
-            self.replay_buffer.add(np.reshape(state, (self.actor.s_dim,)), np.reshape(action, (self.actor.a_dim,)), reward,
+            self.replay_buffer.add(self, np.reshape(state, (self.actor.s_dim,)), np.reshape(action, (self.actor.a_dim,)), reward,
                               done, np.reshape(new_state, (self.actor.s_dim,)))
 
             # Keep adding experience to the memory until
