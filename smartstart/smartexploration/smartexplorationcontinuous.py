@@ -9,6 +9,7 @@ from typing import Deque
 
 import numpy as np
 
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent
@@ -113,21 +114,22 @@ class SmartStartContinuous(RLAgent):
         # SmartStart Trajectory Optimization
 
         # keeps track of some distribution of all states visited
-        self.buffer = [] # random replacement !!! this keeps the density distributions roughly the same i think
-        self.buffer_size = buffer_size
+        #TODO CHANGE BUFFER
+        self.replay_buffer = ReplayBuffer(self, buffer_size) # FIFO replacement strategy
+
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
 
 
         # keep track of SmartStartPathing vs. NormalAgentPathing
         self.smart_start_pathing = False
-        self.smart_start_state = None  # placeholder for smart_start_state to navigate to
+        self.smart_start_path = None  # placeholder for smart_start_state to navigate to
 
 
     @property
     def normal_agent_pathing(self):
         return not self.smart_start_pathing
 
-    def get_start(self):
+    def get_smart_start_path(self):
         """Determines the smart start state
 
         The smart start is determined using the UCB1 algorithm. The UCB1
@@ -146,38 +148,44 @@ class SmartStartContinuous(RLAgent):
         :obj:`np.ndarray`
             smart start
         """
-        if not self.buffer: # if buffer is emtpy, nothing to evaluate
+        if not self.replay_buffer: # if buffer is emtpy, nothing to evaluate
             return None
-        if len(self.buffer) > self.n_ss: # if too many states in buffer, draw a sample
-            possible_starts = random.sample(self.buffer, self.n_ss)
-        else:
-            possible_starts = self.buffer # otherwise use all samples
 
-        smart_start = None
+        possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
+
+        smart_start_index = None
         max_ucb = -float('inf')
 
-        for state in possible_starts:
+        #find the smart_start state
+        for main_step_index in possible_start_indices:
             # state value
+            main_step = self.replay_buffer.buffer[main_step_index]
+            state = self.replay_buffer.step_to_s2(main_step)
             state_value = self.agent.get_state_value(state)
 
             #C_hat calculation###############
             C_hat = 0
 
             #bandwith
-            h = ((4 / (3 * len(self.buffer))) ** (1/5)) * self.sigma
+            h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma #silverman's rule of thumb
 
-            for state_j in self.buffer:
-                C_hat += self.K((np.linalg.norm(state - state_j)) / h)
+            #iterate over all states in replay buffer, calculated the kernel density estimation
+            other_state = self.replay_buffer.step_to_s(self.replay_buffer.buffer[0])
+            C_hat += self.K((np.linalg.norm(state - other_state)) / h)
+            for other_step in self.replay_buffer.buffer:
+                other_state = self.replay_buffer.step_to_s2(other_step)
+                C_hat += self.K((np.linalg.norm(state - other_state)) / h)
             C_hat = C_hat / h
 
             #ucb calculation
             ucb = self.exploitation_param * state_value + \
                   np.sqrt((self.exploration_param *
-                           np.log(len(self.buffer))) / C_hat)
+                           np.log(len(self.replay_buffer))) / C_hat)
             if ucb > max_ucb:
-                smart_start = state
+                smart_start_index = main_step_index
                 max_ucb = ucb
-        return smart_start
+
+        return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_index)
 
     def dynamic_programming(self, start_state):
         """Fits transition model, reward function and performs dynamic
@@ -232,7 +240,7 @@ class SmartStartContinuous(RLAgent):
         self.agent.observe(state, action, reward, new_state, done)
 
         # check if smart_start_state has been reached
-        if self.smart_start_pathing and np.array_equal(new_state, self.smart_start_state):
+        if self.smart_start_pathing and np.array_equal(new_state, self.smart_start_path):
             self.smart_start_pathing = False
 
     def start_new_episode(self, state):
@@ -241,11 +249,13 @@ class SmartStartContinuous(RLAgent):
 
         self.agent.start_new_episode(state)
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
-            self.smart_start_state = self.get_start() # new state to navigate to
-            if self.smart_start_state is not None and not np.array_equal(self.smart_start_state, state): #valid smart start
+            self.smart_start_path = self.get_smart_start_path() # new state to navigate to
+
+            #TODO: finish everything after this comment
+            if self.smart_start_path is not None and not np.array_equal(self.smart_start_path, state): #valid smart start
                 self.smart_start_pathing = True
 
-                self.dynamic_programming(self.smart_start_state) #this will update the policy
+                self.dynamic_programming(self.smart_start_path) #this will update the policy
 
 
     def render(self, env, **kwargs):
@@ -254,12 +264,13 @@ class SmartStartContinuous(RLAgent):
 
     #private method, adds (maybe -rnd) state to buffer
     def state_to_buffer(self, new_state):
-        if len(self.buffer) < self.buffer_size: # still has capacity
-            self.buffer.append(new_state)
+        # TODO CHANGE BUFFER
+        if len(self.replay_buffer) < self.buffer_size: # still has capacity
+            self.replay_buffer.append(new_state)
         else: # buffer full -> random replacement
             index = random.randint(0, self.buffer_size)
             if index != self.buffer_size:
-                self.buffer[index] = new_state
+                self.replay_buffer[index] = new_state
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import abc
-from reinforcementLearningCore.counter import Counter
+from smartstart.reinforcementLearningCore.counter import Counter
 
 class RLAgent(metaclass=abc.ABCMeta):
 

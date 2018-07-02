@@ -7,7 +7,7 @@ rev1
 import tensorflow as tf
 import numpy as np
 import gym
-from RLAgents.replay_buffer import ReplayBuffer
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise

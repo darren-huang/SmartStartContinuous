@@ -1,10 +1,13 @@
 from abc import ABCMeta
 
-from reinforcementLearningCore.agents import RLAgent
-from RLAgents.replay_buffer import ReplayBuffer
+from smartstart.utilities.plot import plot_best_path
+from smartstart.reinforcementLearningCore.agents import RLAgent
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise
+from smartstart.utilities.utilities import get_default_directory
+from smartstart.utilities.datacontainers import Summary
 import tensorflow as tf
 
 import numpy as np
@@ -246,20 +249,12 @@ if __name__ == "__main__":
     ENV_NAME = 'MountainCarContinuous-v0'
     env = gym.make(ENV_NAME)
 
-
-
-
     # Initialize agent, see class for available parameters
     agent = DDPG_agent(env)
 
     # Train the agent, summary contains training data
-    summary = rlTrain(agent, env, render=True,
-                      render_episode=True,
-                      print_results=True, num_episodes=1)
+    summary = rlTrain(agent, env, render=False,
+                      render_episode=False,
+                      print_results=True, num_episodes=1000)  # type: Summary
 
-    # Plot results
-    plot_summary(summary, mean_reward_episode, ma_window=5,
-                 title="MountainCarContinuous-v0 Q-Learning Average Reward per Episode")
-    plot_summary(summary, steps_episode, ma_window=5,
-                 title="MountainCarContinuous-v0 Q-Learning Steps per Episode")
-    show_plot()
+    summary.save(get_default_directory("ddpg_summaries"), extra_name_append="-1000ep")

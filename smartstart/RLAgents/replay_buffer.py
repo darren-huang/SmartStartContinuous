@@ -112,6 +112,70 @@ class ReplayBuffer(object):
         except: 
             print('there was no file to load')
 
+    def  get_possible_smart_start_indices(self, n_ss):
+        """
+        Gets possible smart start states indices corresponding to the buffer indices
+        note smart start state refers to the s2 variable of the step corresponding to the buffer index
+        NOTE: never picks a starting state, partially for convenience, also since it should be the case that the starting
+        states would be visited more
+        :param n_ss: the number of smart starts
+        :return: array of possible smart starts
+        """
+        if len(self.episode_starting_indices) == 0:
+            return []
+        #mainly has to ensure the whole episode containing the smartstart state is inside the buffer
+        first_buffer_index = self.episode_number_to_buffer_index(self.episode_starting_indices[0])
+        number_of_states = min(n_ss, len(self.buffer) - first_buffer_index) # max possible states to
+
+        # sample WITHOUT replacement
+        return random.sample(range(first_buffer_index, len(self.buffer)), number_of_states)
+
+    def get_episodic_path_to_buffer_index(self, buffer_index):
+        """
+        Search for the stored path taken to reach the buffer index (looks for the beginning of the corresponding
+        episode then returns the path to the buffer_index)
+        :param buffer_index: the index you want the path to
+        :return: array of States
+        """
+        if len(self.episode_starting_indices) == 0:
+            return ": ("
+        episode_index = self.buffer_index_to_episode_number(buffer_index)
+        episode_start_index = None
+
+        #find the
+        # shouldn't be a bottle neck because should be a small number of episodes (if it is a bottleneck can use binary search)
+        for i in range(len(self.episode_starting_indices) - 2):
+            if self.episode_starting_indices[i] <= episode_index and episode_index < self.episode_starting_indices[i+1]:
+                episode_start_index = self.episode_starting_indices[i]
+                break
+        if episode_start_index is None and self.episode_starting_indices[-1] <= self.episode_starting_indices:
+            episode_start_index = self.episode_starting_indices[-1]
+
+        buffer_start_index = self.episode_number_to_buffer_index(episode_start_index)
+        return [self.step_to_s(step) for step in list(self.buffer)[buffer_start_index:buffer_index + 1]] + \
+               [self.step_to_s2(self.buffer[buffer_index])]
+
+    def step_to_s(self, step):
+        return step[0]
+
+    def step_to_a(self, step):
+        return step[1]
+
+    def step_to_r(self, step):
+        return step[2]
+
+    def step_to_t(self, step):
+        return step[3]
+
+    def step_to_s2(self, step):
+        return step[4]
+
     # PRIVATE
-    def episode_number_to_buffer_index(self, episode_count_index):
-        return len(self.buffer) - (self.next_episode_number - episode_count_index) #extra (-1) cancels out in buffer and total_count
+    def episode_number_to_buffer_index(self, episode_number):
+        return len(self.buffer) - (self.next_episode_number - episode_number) #extra (-1) cancels out in buffer and total_count
+
+    def buffer_index_to_episode_number(self, buffer_index):
+        return buffer_index -  len(self.buffer) + self.next_episode_number
+
+    def __len__(self):
+        return len(self.buffer)

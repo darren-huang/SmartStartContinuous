@@ -4,11 +4,13 @@ Defines datacontainer classes training data.
 """
 import json
 import os
+import sys
 
 import numpy as np
 from google.cloud import storage
 
 from smartstart.utilities.utilities import DIR
+from collections import deque
 
 
 class Episode(object):
@@ -71,11 +73,14 @@ class Episode(object):
             
         done : :obj:`bool`
         """
-        self.obs.append(obs)
-        self.action.append(action)
+        self.obs.append(np.ravel(obs))
+        self.action.append(np.ravel(action))
         self.reward.append(reward)
-        self.obs_tp1.append(obs_tp1)
+        self.obs_tp1.append(np.ravel(obs_tp1))
         self.done.append(done)
+
+    def get_total_path(self):
+        return np.asarray(self.obs + [self.obs_tp1[-1]]).tolist()
 
     def to_json(self):
         """Convert episode data to json string
@@ -131,6 +136,8 @@ class Summary(object):
     ----------
     name : :obj:`str`
         name of the summary, used for saving the data (Default = None)
+    last_x : int
+        how many of the last few runs you want to save
 
     Attributes
     ----------
@@ -139,12 +146,19 @@ class Summary(object):
     episodes : :obj:`list` of :obj:`tuple` with episode data
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, last_x=5):
         super().__init__()
         self.name = name
         self.episodes = []
+        self.best_path = None
+        self.best_reward = -sys.maxsize
 
-    def append(self, episode):
+        # variables for memorizing the last 'x' episodes
+        self.last_x = max(last_x, 1) #makes sure it is > 0
+        self.last_paths = [[None]] * last_x #goes, 5th from last, 4th from last.... Last
+        self.last_rewards = [None] * last_x
+
+    def append(self, episode : Episode):
         """Adds the length and total reward of episode to summary
 
         Parameters
@@ -153,7 +167,18 @@ class Summary(object):
             episode object
 
         """
-        self.episodes.append((len(episode), episode.total_reward()))
+        total_reward = episode.total_reward()
+        self.episodes.append((len(episode), total_reward))
+
+        if total_reward > self.best_reward:
+            self.best_path = episode.get_total_path()
+            self.best_reward = total_reward
+
+        # saves the last_x episodes
+        self.last_paths = self.last_paths[1:]
+        self.last_paths.append(episode.get_total_path())
+        self.last_rewards = self.last_rewards[1:]
+        self.last_rewards.append(total_reward)
 
     def total_reward(self):
         """Total reward of all episodes
@@ -205,6 +230,9 @@ class Summary(object):
         """
         return [steps for steps, _ in self.episodes]
 
+    def get_best_path_and_reward(self):
+        return self.best_path, self.best_reward
+
     def to_json(self):
         """Convert summary data to JSON string
 
@@ -235,7 +263,7 @@ class Summary(object):
         summary.__dict__.update(data_dict)
         return summary
 
-    def save(self, directory=DIR, post_fix=None):
+    def save(self, directory=DIR, post_fix=None, extra_name_append = ""):
         """Save summary as json file
 
         The summary name is used as filename, an optional postfix can be
@@ -254,14 +282,23 @@ class Summary(object):
         :obj:`str`
             full filepath to the saved json summary
         """
-        name = self.name
+        name = self.name + extra_name_append
         if post_fix is not None:
             name += "_" + str(post_fix)
+        else:
+            post_fix = 0
         name += ".json"
-
         fp = os.path.join(directory, name)
 
-        with open(fp, 'w') as f:
+        # ensure file doesn't exist yet, if it does, create a new name
+        while (os.path.exists(fp)):
+            post_fix += 1
+            name = self.name + extra_name_append
+            name += "_" + str(post_fix)
+            name += ".json"
+            fp = os.path.join(directory, name)
+
+        with open(fp, 'x') as f:
             f.write(self.to_json())
 
         return fp

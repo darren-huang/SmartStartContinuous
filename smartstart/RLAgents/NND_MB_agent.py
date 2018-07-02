@@ -54,6 +54,7 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
 
     def __init__(self,
                  env,
+                 replay_buffer = None,
                  theta=1, # how close to the smart start state you want to navigate to
                  distance_function=euclidean_distance,
                  seed=0,
