@@ -25,11 +25,16 @@ from data_manipulation import get_indices
 from helper_funcs import perform_rollouts
 from helper_funcs import create_env
 from helper_funcs import visualize_rendering
+from mpc_controller import MPCController
 from helper_funcs import add_noise
 from dynamics_model import Dyn_Model
-from mpc_controller import MPCController
 
+from smartstart.utilities.datacontainers import Summary, Episode
 from smartstart.reinforcementLearningCore.agents import NavigationRLAgent
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
+from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states, \
+    get_start_waypoints_final_states_steps
+
 
 def make_save_directories(run_num):
     save_dir = 'run_' + str(run_num)
@@ -42,10 +47,12 @@ def make_save_directories(run_num):
         os.makedirs(save_dir + '/training_data')
     return save_dir
 
+
 def euclidean_distance(state, other_state):
     return np.linalg.norm(state - other_state)
 
-class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agent (NND_MB_agent)
+
+class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Agent (NND_MB_agent)
     tf_datatype = tf.float64
     noiseToSignal = 0.01
 
@@ -54,12 +61,13 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
 
     def __init__(self,
                  env,
-                 replay_buffer = None,
-                 theta=1, # how close to the smart start state you want to navigate to
+                 replay_buffer=None,
+                 theta=1,  # how close to the smart start state you want to navigate to
                  distance_function=euclidean_distance,
                  seed=0,
                  run_num=0,
                  use_existing_training_data=False,  # training data for dynamics model initialization
+                 BUFFER_SIZE=10000,
                  use_existing_dynamics_model=False,
                  desired_traj_type='straight',
                  num_rollouts_save_for_mf=60,
@@ -79,8 +87,7 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
                  fraction_use_new=0.9,
                  horizon=20,
                  num_control_samples=5000,
-                 num_aggregation_iters=6,
-                 num_trajectories_for_aggregation=10,
+                 num_episodes_for_aggregation=10,
                  rollouts_forTraining=9,
                  make_aggregated_dataset_noisy=True,
                  make_training_dataset_noisy=True,
@@ -118,7 +125,7 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
         :param horizon:
         :param num_control_samples:
         :param num_aggregation_iters:
-        :param num_trajectories_for_aggregation:
+        :param num_episodes_for_aggregation:
         :param rollouts_forTraining:
         :param make_aggregated_dataset_noisy:
         :param make_training_dataset_noisy:
@@ -138,25 +145,38 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
         self.env = env
         self.N = num_control_samples
         self.horizon = horizon
-        self.desired_states = None
-        self.current_desired_state_index = None #will start at 0 when a new episode begins otherwise error
-        self.distances_left = None # self.distances_left[x] will tell the distance from
-                                    # desired_states[x] to desired_states[x+1] + [x+1] to [x+2].... until the end
         self.distance_function = distance_function
-        self.theta = theta
+        self.theta = theta # minimum distance to get to desired state(s)
+        self.use_existing_dynamics_model = use_existing_dynamics_model
+        self.nEpochs = nEpoch
+        self.fraction_use_new = fraction_use_new
+        self.num_episodes_for_aggregation = num_episodes_for_aggregation
+        self.num_episodes_finished = 0
+        self.desired_states = None
+        self.current_desired_state_index = None  # will start at 0 when a new episode begins otherwise error
+        self.distances_left = None  # self.distances_left[x] will tell the distance from
+        #                             desired_states[x] to desired_states[x+1] + [x+1] to [x+2].... until the end
+
+        self.dt_from_xml = 0 #env.env.model.opt.timestep  # TODO: dt_from_xml seems to be only for rendering
+
+        self.save_dir = make_save_directories(run_num)  ### make directories for saving data ###
+
         if (noise_actions_during_MPC_rollouts):
             self.noise_amount = 0.005
         else:
             self.noise_amount = 0
 
-
-        save_dir = make_save_directories(run_num) ### make directories for saving data ###
-        if seed is not None: # set seeds
+        if seed is not None:  # set seeds
             npr.seed(seed)
             tf.set_random_seed(seed)
-        self.dt_from_xml = env.env.model.opt.timestep
-        random_policy = Policy_Random(env) # create random policy for data collection
-        self.sess = tf.Session() #TODO: decide if i need GPU options
+
+        self.sess = tf.Session()  # TODO: decide if i need GPU options
+
+        # Initialize replay memory
+        if replay_buffer == None:
+            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE) # type: ReplayBuffer
+        else:
+            self.replay_buffer = replay_buffer # type: ReplayBuffer
 
         ### Get Training Data  ###########################################################################
         if (use_existing_training_data):
@@ -165,14 +185,16 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
                 print("Retrieving training data & policy from saved files")
                 print("#####################################\n")
 
-            self.dataX = np.load(save_dir + '/training_data/dataX.npy')  # input1: state
-            self.dataY = np.load(save_dir + '/training_data/dataY.npy')  # input2: control
-            self.dataZ = np.load(save_dir + '/training_data/dataZ.npy')  # output: nextstate-state
-            self.states_val = np.load(save_dir + '/training_data/states_val.npy')
-            self.controls_val = np.load(save_dir + '/training_data/controls_val.npy')
-            self.forwardsim_x_true = np.load(save_dir + '/training_data/forwardsim_x_true.npy')
-            self.forwardsim_y = np.load(save_dir + '/training_data/forwardsim_y.npy')
+            self.dataX = np.load(self.save_dir + '/training_data/dataX.npy')  # input1: state
+            self.dataY = np.load(self.save_dir + '/training_data/dataY.npy')  # input2: control
+            self.dataZ = np.load(self.save_dir + '/training_data/dataZ.npy')  # output: nextstate-state
+            self.states_val = np.load(self.save_dir + '/training_data/states_val.npy')
+            self.controls_val = np.load(self.save_dir + '/training_data/controls_val.npy')
+            self.forwardsim_x_true = np.load(self.save_dir + '/training_data/forwardsim_x_true.npy')
+            self.forwardsim_y = np.load(self.save_dir + '/training_data/forwardsim_y.npy')
         else:
+            random_policy = Policy_Random(env)  # create random policy for data collection
+
             # data collection, either with or without multi-threading
             if (use_threading):
                 from collect_samples_threaded import CollectSamples
@@ -205,7 +227,7 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
             #     print("Convert from env observations to NN 'states' ")
             #     print("#####################################\n")
 
-            #DH - Don't think we need to change the observed state, maybe later
+            # DH - Don't think we need to change the observed state, maybe later
             # training
             # states = from_observation_to_usablestate(states, which_agent, False)
             # validation
@@ -238,20 +260,21 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
                                                                                  CollectSamples, env, dt_steps,
                                                                                  self.dt_from_xml)
             states_forwardsim = np.copy(from_observation_to_usablestate(states_forwardsim_orig, which_agent, False))
-            self.forwardsim_x_true, self.forwardsim_y = generate_training_data_inputs(states_forwardsim, controls_forwardsim)
+            self.forwardsim_x_true, self.forwardsim_y = generate_training_data_inputs(states_forwardsim,
+                                                                                      controls_forwardsim)
 
             if (not (print_minimal)):
                 print("\n#####################################")
                 print("Saving data")
                 print("#####################################\n")
 
-            np.save(save_dir + '/training_data/dataX.npy', self.dataX)
-            np.save(save_dir + '/training_data/dataY.npy', self.dataY)
-            np.save(save_dir + '/training_data/dataZ.npy', self.dataZ)
-            np.save(save_dir + '/training_data/states_val.npy', self.states_val)
-            np.save(save_dir + '/training_data/controls_val.npy', self.controls_val)
-            np.save(save_dir + '/training_data/forwardsim_x_true.npy', self.forwardsim_x_true)
-            np.save(save_dir + '/training_data/forwardsim_y.npy', self.forwardsim_y)
+            np.save(self.save_dir + '/training_data/dataX.npy', self.dataX)
+            np.save(self.save_dir + '/training_data/dataY.npy', self.dataY)
+            np.save(self.save_dir + '/training_data/dataZ.npy', self.dataZ)
+            np.save(self.save_dir + '/training_data/states_val.npy', self.states_val)
+            np.save(self.save_dir + '/training_data/controls_val.npy', self.controls_val)
+            np.save(self.save_dir + '/training_data/forwardsim_x_true.npy', self.forwardsim_x_true)
+            np.save(self.save_dir + '/training_data/forwardsim_y.npy', self.forwardsim_y)
 
         # XYZ variable data ##############################################################################
         # every component (i.e. x position) should become mean 0, std 1
@@ -274,15 +297,11 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
         self.inputs = np.concatenate((self.dataX, self.dataY), axis=1)
         self.outputs = np.copy(self.dataZ)
 
-        # Create Dynamics Model and MPC Controller objects ###############################################
+        # Create Dynamics Model ###############################################
         # dimensions
         assert self.inputs.shape[0] == self.outputs.shape[0]
         inputSize = self.inputs.shape[1]
         outputSize = self.outputs.shape[1]
-
-        dataX_new = np.zeros((0, self.dataX.shape[1]))
-        dataY_new = np.zeros((0, self.dataY.shape[1]))
-        dataZ_new = np.zeros((0, self.dataZ.shape[1]))
 
         # initialize dynamics model
         self.dyn_model = Dyn_Model(inputSize, outputSize, self.sess, lr, batchsize, num_fc_layers, depth_fc_layers,
@@ -291,6 +310,7 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
 
         # randomly initialize all vars
         self.sess.run(tf.global_variables_initializer())
+        self.saver = tf.train.Saver(max_to_keep=0)
 
         # TODO: ROLLOUTS FOR TRAINING DATA!!!!!
 
@@ -310,10 +330,9 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
         action_to_take = np.copy(best_action)
         if (noise_actions):
             noise = self.noise_amount * npr.normal(size=action_to_take.shape)  #
-            action_to_take = action_to_take + noise #no clip maybe go over bounds for action space
+            action_to_take = action_to_take + noise  # no clip maybe go over bounds for action space
 
         return action_to_take
-
 
     def observe(self, state, action, reward, new_state, done):
         # get distances to current and next waypoints
@@ -323,20 +342,73 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
 
         # TODO decide which one to use or to use both (theta, or distances to next<=current)
         if distance_to_current <= self.theta or distance_to_next <= distance_to_current:
-                # close enough to curr_waypoint, move on to next waypoint
-                self.current_desired_state_index = max(self.current_desired_state_index + 1,
-                                                       len(self.desired_states) - 1)
+            # close enough to curr_waypoint, move on to next waypoint
+            self.current_desired_state_index = max(self.current_desired_state_index + 1,
+                                                   len(self.desired_states) - 1)
 
     def start_new_episode_plan(self, starting_state, desired_states):
+        """
+        Called at the beginning of an episode.
+        :param starting_state: the starting state of the episode
+        :param desired_states: the states it wants to navigate through, agent will try to follow
+            route and end up within close proximity to the last state
+        """
         self.current_desired_state_index = 0
+        desired_states = np.asarray(desired_states)
         self.desired_states = desired_states
 
-        #calculate distances beforehand
+        # calculate distances for the MPC reward function
         if len(desired_states) >= 2:
             self.distances_left = \
-                [self.distance_function(desired_states[x-1], desired_states[x]) for x in range(1, len(desired_states))] + [0]
+                [self.distance_function(desired_states[x - 1], desired_states[x]) for x in
+                 range(1, len(desired_states))] + [0]
         else:
             self.distances_left = [0]
+
+        #train
+        if self.num_episodes_finished % self.num_episodes_for_aggregation == 0:
+            self.train_dynamics_model()
+        self.num_episodes_finished += 1
+
+    def render(self, env, **kwargs):
+        env.render()
+
+    def train_dynamics_model(self):
+        """
+        Feeds the aggregation data along with the initial training data to the neural net dynamics model
+        """
+        # s -> datax  || a -> datay || s2 -> dataz
+        if len(self.replay_buffer) == 0:
+            s_batch = np.zeros((0, self.dataX.shape[1]))
+            a_batch = np.zeros((0, self.dataY.shape[1]))
+            s2_batch = np.zeros((0, self.dataZ.shape[1]))
+        else:
+            s_batch, a_batch, _, _, s2_batch = self.replay_buffer.all_batch()
+        dataX_new_preprocessed = np.nan_to_num((s_batch - self.mean_x) / self.std_x)
+        dataY_new_preprocessed = np.nan_to_num((a_batch - self.mean_y) / self.std_y)
+        dataZ_new_preprocessed = np.nan_to_num((s2_batch - self.mean_z) / self.std_z)
+
+        ## concatenate state and action, to be used for training dynamics
+        inputs_new = np.concatenate((dataX_new_preprocessed, dataY_new_preprocessed), axis=1)
+        outputs_new = np.copy(dataZ_new_preprocessed)
+
+        # train model or restore model
+        if (self.use_existing_dynamics_model):
+            restore_path = self.save_dir + '/models/finalModel.ckpt'
+            self.saver.restore(self.sess, restore_path)
+            print("Model restored from ", restore_path)
+            training_loss = 0
+            old_loss = 0
+            new_loss = 0
+        else:
+            training_loss, old_loss, new_loss = self.dyn_model.train(self.inputs, self.outputs,
+                                                                     inputs_new, outputs_new,
+                                                                     self.nEpochs, self.save_dir,
+                                                                     self.fraction_use_new)
+
+        save_path = self.saver.save(self.sess, self.save_dir + '/models/model_numTrain' +
+                                    str(1 + (self.num_episodes_finished // self.num_episodes_for_aggregation)) + '.ckpt')
+        save_path = self.saver.save(self.sess, self.save_dir + '/models/finalModel.ckpt')
 
 
     @property
@@ -348,36 +420,37 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
         return self.desired_states[min(self.current_desired_state_index, len(self.desired_states) - 1)]
 
     def get_best_sim_actions(self, curr_nn_state):
-        #randomly sample N candidate action sequences
-        all_samples = npr.uniform(self.env.action_space.low, self.env.action_space.high, (self.N, self.horizon, self.env.action_space.shape[0]))
+        # randomly sample N candidate action sequences
+        all_samples = npr.uniform(self.env.action_space.low, self.env.action_space.high,
+                                  (self.N, self.horizon, self.env.action_space.shape[0]))
 
-        #forward simulate the action sequences (in parallel) to get resulting (predicted) trajectories
+        # forward simulate the action sequences (in parallel) to get resulting (predicted) trajectories
         many_in_parallel = True
         resulting_states = self.dyn_model.do_forward_sim([curr_nn_state, 0], np.copy(all_samples), many_in_parallel)
-        resulting_states = np.array(resulting_states) #this is [horizon+1, N, statesize]
+        resulting_states = np.array(resulting_states)  # this is [horizon+1, N, statesize]
 
-        #init vars to evaluate the trajectories
-        scores=np.zeros((self.N,))
+        # init vars to evaluate the trajectories
+        scores = np.zeros((self.N,))
 
         samples_desired_state_indices = np.tile(self.current_desired_state_index, (self.N,))
         samples_desired_state_indices = samples_desired_state_indices.astype(int)
-
 
         # moved_to_next = np.zeros((self.N,))
         # done_forever = np.zeros((self.N,))
         # prev_forward = np.zeros((self.N,))
         # prev_pt = resulting_states[0]
 
-        #accumulate reward over each timestep
+        # accumulate reward over each timestep
         for pt_number in range(resulting_states.shape[0]):
+            # array of "the point"... for each sim
+            pt = resulting_states[pt_number]  # N x state
 
-            #array of "the point"... for each sim
-            pt = resulting_states[pt_number] # N x state
-
-            #get distances to current and next waypoints
+            # get distances to current and next waypoints
             current_desired_states = self.desired_states[samples_desired_state_indices]
-            next_desired_states = self.desired_states[np.minimum(samples_desired_state_indices + 1, len(self.desired_states) - 1)]
-            distances_to_current = np.apply_along_axis(lambda x: self.distance_function(x, pt), 0, current_desired_states)
+            next_desired_states = self.desired_states[
+                np.minimum(samples_desired_state_indices + 1, len(self.desired_states) - 1)]
+            distances_to_current = np.apply_along_axis(lambda x: self.distance_function(x, pt), 0,
+                                                       current_desired_states)
             distances_to_next = np.apply_along_axis(lambda x: self.distance_function(x, pt), 0, next_desired_states)
 
             # boolean array, tells whether or not the sample moves to the next waypoint
@@ -387,14 +460,15 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
                 samples_desired_state_indices != len(self.desired_states) - 1)
 
             # update scores as the sum of distances left on path
-            scores[np.logical_not(move_to_next)] += self.distances_left[samples_desired_state_indices] + distances_to_current #TODO calculate distance maybe with reward function?
-            scores[move_to_next] += self.distances_left[samples_desired_state_indices + 1] + distances_to_next #TODO calculate distance maybe with reward function?
+            scores[np.logical_not(move_to_next)] += self.distances_left[
+                                                        samples_desired_state_indices] + distances_to_current  # TODO calculate distance maybe with reward function?
+            scores[move_to_next] += self.distances_left[
+                                        samples_desired_state_indices + 1] + distances_to_next  # TODO calculate distance maybe with reward function?
 
             # update next waypoint for each sample if necessary
-            samples_desired_state_indices[move_to_next] += 1 # if within theta of waypoint, increment waypoint
+            samples_desired_state_indices[move_to_next] += 1  # if within theta of waypoint, increment waypoint
 
-
-        #pick best action sequence
+        # pick best action sequence
         best_score = np.min(scores)
         best_sim_number = np.argmin(scores)
         best_sequence = all_samples[best_sim_number]
@@ -402,3 +476,99 @@ class NND_MB_agent(NavigationRLAgent): #Neural Network Dynamics Model Based Agen
 
         return best_action, best_sim_number, best_sequence
 
+if __name__ == "__main__":
+    import random
+    import gym
+    from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+    from smartstart.utilities.plot import plot_summary, show_plot, \
+        mean_reward_episode, steps_episode
+
+    # intialize variables
+    step_per_waypoint = 20
+    num_episodes = 2
+    max_steps = 1000
+    render = False
+    render_episode = False
+    print_steps = True
+    print_results = True
+    ENV_NAME = 'MountainCarContinuous-v0' # configuring environment
+    env = gym.make(ENV_NAME)
+    RANDOM_SEED = 1234 # Reset the seed for random number generation
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    tf.set_random_seed(RANDOM_SEED)
+
+    # Initialize agent, see class for available parameters
+    agent = NND_MB_agent(env, num_episodes_for_aggregation=1, horizon=20,
+                         use_existing_training_data=True)  # type: NND_MB_agent
+
+    #intializing the desired_states
+    target_default_directory = "ddpg_summaries"
+    target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
+    target_path = os.path.join(get_default_directory(target_default_directory), target_file_name)
+    target_summary = Summary.load(target_path) # type:Summary
+    desired_states = get_start_waypoints_final_states_steps(target_summary.best_path, step_per_waypoint)
+
+
+    # summary object
+    summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
+
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)}) # for printing
+
+    # begin training episodes(1)
+    for i_episode in range(num_episodes):
+        episode = Episode()  # record the episode
+        observation = env.reset()  # setup env
+
+        # Step through the Episode
+        agent.start_new_episode_plan(observation, desired_states)  # only needed for smartStart
+        for step in range(max_steps):
+            # rendering
+            if render:
+                render = agent.render(env)
+
+            # agent action
+            action = agent.get_action(observation)
+
+            # environment processing
+            new_observation, reward, done, _ = env.step(action)  # also returns emtpy dict (to match openAI)
+
+            # printing the step
+            if print_steps:
+                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, observation,
+                                                                                                  action,
+                                                                                                  new_observation,
+                                                                                                  reward).replace("\n",
+                                                                                                                  ""))
+
+            # agent update model// observe new observation
+            agent.observe(observation, action, reward, new_observation, done)
+
+            # record results to episode object
+            episode.append(observation, action, reward, new_observation, done)
+
+            # check terminal observation
+            if done:
+                break
+            else:
+                observation = new_observation  # increment local observation
+        agent.end_episode()  # needed for continuous stuffs
+        # Episode over
+
+        # Final Render and/or print results
+        if render or render_episode:
+            message = "Episode: %d, steps: %d, reward: %.2f" % (
+                i_episode, len(episode), episode.average_reward())
+            render_episode = agent.render(env, message=message)
+        if print_results:
+            print("Episode: %d, steps: %d, reward: %.2f" % (
+                i_episode, len(episode), episode.average_reward()))
+
+        # update summary
+        summary.append(episode)
+
+    # render results
+    while render:
+        render = agent.render(env)
+
+    summary.save(get_default_directory("nnd_mb_tests"), extra_name_append="")

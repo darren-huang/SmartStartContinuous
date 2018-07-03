@@ -22,6 +22,7 @@ import seaborn as sns
 
 from smartstart.utilities.numerical import moving_average
 from smartstart.utilities.datacontainers import Summary
+from smartstart.utilities.utilities import get_start_waypoints_final_states
 
 def cmap_map(function, cmap):
     """ Applies function (which should operate on vectors of shape 3: [r, g, b]), on colormap cmap.
@@ -327,32 +328,33 @@ def save_plot(output_dir, title, format="eps"):
                 dpi=1200,
                 bbox_inches="tight")
 
-def plot_best_path(best_path, dim=2, title=None, x_label=None, y_label=None, num_waypoints = 0, radii = [0,0],
-                   linewidth=3):
-    assert dim == 2
+def plot_path(path, title="", reward=None, x_label=None, y_label=None, num_waypoints=0, radii=[0, 0], linewidth=3):
+    assert len(path[0]) == 2
+
+    if reward is not None:
+        title += " | Total Reward: {0:.2f}".format(reward)
+    title += " | Steps: " + str(len(path) - 1)
 
     # a plot coloring the curve using a continuous colormap
     waypoint_collection = None
 
     # get x's and y's
-    x = [s[0] for s in best_path]
-    y = [s[1] for s in best_path]
+    x = [s[0] for s in path]
+    y = [s[1] for s in path]
 
     # color map variables to configure a gradient along the trajectory
-    color_num_scale = np.linspace(0.0, len(best_path), len(best_path))
+    color_num_scale = np.linspace(0.0, len(path), len(path))
     cmap = plt.get_cmap('gnuplot2_r')
-    norm = plt.Normalize(0, len(best_path))
+    norm = plt.Normalize(0, len(path))
 
     #draw trajectory
     line_collection = make_line_collection(x, y, color_num_scale, cmap=cmap, norm=norm, linewidth=linewidth)
 
     #maybe draw waypoints along trajectory
     if num_waypoints:
-        waypoint_indices = list(range(0, len(best_path)-2, int(len(best_path) // (num_waypoints + 1))))
-        waypoint_indices.append(len(best_path) - 1)
-        waypoint_centers = np.asarray(best_path)[waypoint_indices]
+        waypoint_centers = get_start_waypoints_final_states(path, num_waypoints)
         waypoint_cmap = plt.get_cmap('binary')
-        waypoint_color_num_scale = np.linspace(.2, .6, len(waypoint_indices))
+        waypoint_color_num_scale = np.linspace(.2, .6, len(waypoint_centers))
         waypoint_norm = plt.Normalize(0, 1.0)
         waypoint_collection = make_ellipse_collection(waypoint_centers, waypoint_color_num_scale,
                                                       x_radius=radii[0], y_radius=radii[1],

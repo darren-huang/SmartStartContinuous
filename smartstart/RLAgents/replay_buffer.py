@@ -83,6 +83,15 @@ class ReplayBuffer(object):
 
         return s_batch, a_batch, r_batch, t_batch, s2_batch
 
+    def all_batch(self):
+        s_batch = np.array([_[0] for _ in self.buffer])
+        a_batch = np.array([_[1] for _ in self.buffer])
+        r_batch = np.array([_[2] for _ in self.buffer])
+        t_batch = np.array([_[3] for _ in self.buffer])
+        s2_batch = np.array([_[4] for _ in self.buffer])
+
+        return s_batch, a_batch, r_batch, t_batch, s2_batch
+
     def clear(self):
         self.buffer.clear()
         self.next_episode_number = 0
@@ -112,7 +121,7 @@ class ReplayBuffer(object):
         except: 
             print('there was no file to load')
 
-    def  get_possible_smart_start_indices(self, n_ss):
+    def get_possible_smart_start_indices(self, n_ss):
         """
         Gets possible smart start states indices corresponding to the buffer indices
         note smart start state refers to the s2 variable of the step corresponding to the buffer index

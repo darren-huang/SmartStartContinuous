@@ -1,3 +1,7 @@
 [
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episode_number_to_buffer_index"
+  "tests/utilities/test_numerical.py::TestNumerical::test_means",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_one_dim",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim_moving",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim_nonzero"
 ]

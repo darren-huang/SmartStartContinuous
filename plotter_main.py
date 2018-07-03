@@ -1,5 +1,5 @@
 from smartstart.utilities.datacontainers import Summary
-from smartstart.utilities.plot import plot_best_path, plot_summary, \
+from smartstart.utilities.plot import plot_path, plot_summary, \
     mean_reward_episode, steps_episode, show_plot, total_rewards_episode, \
     plot_get_axes
 from smartstart.utilities.utilities import get_default_directory
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # Settings##############################
     # waypoint size
     linewidth = 2
-    num_stds = 2
+    num_stds = 1
     num_steps = 1
 
 
@@ -54,10 +54,14 @@ if __name__ == "__main__":
     radii = (path_means + (path_stds * num_stds)) * num_steps
 
     #last trajectory
-    plot_best_path(last_path(last_index), 2, str(last_index) + " From Last Path, Total Reward: {0:.2f}".format(
-        last_reward(last_index)) + " | Steps: " +
-                   str(len(last_path(last_index)) - 1), "x_pos", "x_velocity", linewidth=linewidth,
-                   num_waypoints=num_waypoints, radii=radii)
+    plot_path(last_path(last_index),
+              title=str(last_index) + " From Last Path",
+              reward=last_reward(last_index),
+              x_label="x_pos",
+              y_label="x_velocity",
+              num_waypoints=num_waypoints,
+              radii=radii,
+              linewidth=linewidth)
 
     #BEST Trajectory
     # number of waypoints for BEST PATH
@@ -70,9 +74,14 @@ if __name__ == "__main__":
     # Plot Paths/Trajectories
     radii = (path_means + (path_stds * num_stds)) * num_steps
     #best trajectory
-    plot_best_path(summary.best_path, 2, "Best Path, Total Reward: {0:.2f}".format(summary.best_reward) + " | Steps: " +
-                   str(len(summary.best_path) - 1), "x_pos", "x_velocity", linewidth=linewidth,
-                   num_waypoints=num_waypoints, radii=radii)
+    plot_path(summary.best_path,
+              title="Best Path",
+              reward=summary.best_reward,
+              x_label="x_pos",
+              y_label="x_velocity",
+              num_waypoints=num_waypoints,
+              radii=radii,
+              linewidth=linewidth)
 
 
     show_plot()

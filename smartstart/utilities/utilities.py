@@ -2,6 +2,7 @@
 
 """
 import os
+import numpy as np
 
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
                    'data/default')
@@ -36,3 +37,18 @@ def get_default_directory(foldername):
     if not os.path.exists(path):
         os.makedirs(path)
     return path
+
+def get_start_waypoints_final_states(path, num_waypoints):
+    """
+    Given a path, returns a list consisting of the first state, 'num_waypoints' of waypoints, and the final state
+    :param path: the paty to select waypoints from
+    :param num_waypoints: waypoints on the path
+    :return: list of states (includes start state and end state
+    """
+    return get_start_waypoints_final_states_steps(path, (len(path) - 1) // num_waypoints)
+
+
+def get_start_waypoints_final_states_steps(path, steps_per_waypoint):
+    waypoint_centers = path[:-1:steps_per_waypoint]
+    waypoint_centers.append(path[-1])
+    return waypoint_centers

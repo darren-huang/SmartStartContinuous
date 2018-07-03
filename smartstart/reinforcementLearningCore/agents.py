@@ -46,7 +46,8 @@ class RLAgent(metaclass=abc.ABCMeta):
 
 class NavigationRLAgent(RLAgent):
     """
-    RL agent that at the beginning of an episode decides to plan it's trajectory
+    RL agent that at the beginning of an episode decides to plan it's trajectory based on given
+    desired states
     """
     def start_new_episode_plan(self, state, desired_sates):
         """

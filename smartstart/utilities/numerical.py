@@ -57,4 +57,3 @@ def path_mean_and_std_per_state(path):
     means = np.asarray([np.mean(delta_arr) for delta_arr in individual_state_value_deltas])
 
     return stds, means
-
