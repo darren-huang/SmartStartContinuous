@@ -233,6 +233,12 @@ class Summary(object):
     def get_best_path_and_reward(self):
         return self.best_path, self.best_reward
 
+    def get_last_path(self, x): # x goes from 0 to last_x - 1
+        return self.last_paths[-(x + 1)]
+
+    def get_last_reward(self, x):# x goes from 0 to last_x - 1
+        return self.last_rewards[-(x + 1)]
+
     def to_json(self):
         """Convert summary data to JSON string
 

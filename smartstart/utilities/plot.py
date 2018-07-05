@@ -11,7 +11,7 @@ import glob
 import os
 
 import matplotlib.colorbar
-import matplotlib.colors
+from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.axes
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge, Polygon, Ellipse
@@ -328,7 +328,13 @@ def save_plot(output_dir, title, format="eps"):
                 dpi=1200,
                 bbox_inches="tight")
 
-def plot_path(path, title="", reward=None, x_label=None, y_label=None, num_waypoints=0, radii=[0, 0], linewidth=3):
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
+
+def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=None, num_waypoints=0, radii=[0, 0], linewidth=3):
     assert len(path[0]) == 2
 
     if reward is not None:
@@ -341,14 +347,27 @@ def plot_path(path, title="", reward=None, x_label=None, y_label=None, num_waypo
     # get x's and y's
     x = [s[0] for s in path]
     y = [s[1] for s in path]
-
     # color map variables to configure a gradient along the trajectory
-    color_num_scale = np.linspace(0.0, len(path), len(path))
-    cmap = plt.get_cmap('gnuplot2_r')
+    color_num_scale = np.linspace(0, len(path), len(path))
+    cmap = truncate_colormap(plt.get_cmap('gnuplot2_r'), minval=.1, maxval=.9)
     norm = plt.Normalize(0, len(path))
-
     #draw trajectory
     line_collection = make_line_collection(x, y, color_num_scale, cmap=cmap, norm=norm, linewidth=linewidth)
+    line_collection2 = None
+    cmap2 = None
+    norm2 = None
+    if path2:
+        # get x's and y's
+        x2 = [s[0] for s in path2]
+        y2 = [s[1] for s in path2]
+        # color map variables to configure a gradient along the trajectory
+        color_num_scale2 = np.linspace(0, len(path2), len(path2))
+        cmap2 = truncate_colormap(plt.get_cmap('cubehelix_r'), minval=.1, maxval=.9)
+        norm2 = plt.Normalize(0, len(path2))
+        # draw trajectory
+        line_collection2 = make_line_collection(x2, y2, color_num_scale2, cmap=cmap2, norm=norm2, linewidth=linewidth)
+        x += x2
+        y += y2
 
     #maybe draw waypoints along trajectory
     if num_waypoints:
@@ -360,7 +379,17 @@ def plot_path(path, title="", reward=None, x_label=None, y_label=None, num_waypo
                                                       x_radius=radii[0], y_radius=radii[1],
                                                       cmap=waypoint_cmap, norm=waypoint_norm)
     #place stuff on the actual plot
-    figure, (axis0, axis1) = plt.subplots(1,2, gridspec_kw = {'width_ratios':[12,1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+    if path2:
+        figure, (axis0, axis1, axis2) = plt.subplots(1,3, gridspec_kw = {
+            'width_ratios':[24,1,1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+        cb2 = matplotlib.colorbar.ColorbarBase(axis2, cmap=cmap2,
+                                               norm=norm2,
+                                               orientation='vertical')
+        cb2.set_label('Step')
+    else:
+        figure, (axis0, axis1) = plt.subplots(1, 2, gridspec_kw={
+            'width_ratios': [12, 1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+
     axis0.set_title(title)
     axis0.set_xlabel(x_label)
     axis0.set_ylabel(y_label)
@@ -368,14 +397,16 @@ def plot_path(path, title="", reward=None, x_label=None, y_label=None, num_waypo
     if num_waypoints:
         axis0.add_collection(waypoint_collection)
     axis0.add_collection(line_collection)
+    if path2:
+        axis0.add_collection(line_collection2)
 
     axis0.set_xlim(min(x) - radii[0], max(x) + radii[0])
     axis0.set_ylim(min(y) - radii[1], max(y) + radii[1])
-
     cb1 = matplotlib.colorbar.ColorbarBase(axis1, cmap=cmap,
-                                    norm=norm,
-                                    orientation='vertical')
+                                           norm=norm,
+                                           orientation='vertical')
     cb1.set_label('Step')
+    plt.tight_layout()
 
 
 def make_circle_collection(circle_centers, color_num_scale, radius=5,

@@ -16,10 +16,7 @@ if __name__ == "__main__":
     summary = Summary.load(target_path)
 
     print("Saved the last " + str(summary.last_x) + " episodes")
-    def last_path(x): # x goes from 0 to last_x - 1
-        return summary.last_paths[-(x + 1)]
-    def last_reward(x):# x goes from 0 to last_x - 1
-        return summary.last_rewards[-(x + 1)]
+
 
     # Settings##############################
     # waypoint size
@@ -45,23 +42,25 @@ if __name__ == "__main__":
     last_index = 0
     # number of waypoints for BEST PATH
     steps_per_waypoint = 20
-    num_waypoints = len(last_path(last_index)) // steps_per_waypoint
+    num_waypoints = len(summary.get_last_path(last_index)) // steps_per_waypoint
     # Get State Statistics
-    path_stds, path_means = path_mean_and_std_per_state(last_path(last_index))
+    path_stds, path_means = path_mean_and_std_per_state(summary.get_last_path(last_index))
     print("Last Traj: STD's: {}, Means: {}".format(path_stds, path_means))
 
     # Plot Paths/Trajectories
     radii = (path_means + (path_stds * num_stds)) * num_steps
 
     #last trajectory
-    plot_path(last_path(last_index),
+    plot_path(summary.get_last_path(last_index),
+              path2=summary.get_last_path(last_index + 1),
               title=str(last_index) + " From Last Path",
-              reward=last_reward(last_index),
+              reward=summary.get_last_reward(last_index),
               x_label="x_pos",
               y_label="x_velocity",
               num_waypoints=num_waypoints,
               radii=radii,
-              linewidth=linewidth)
+              linewidth=linewidth-1)
+
 
     #BEST Trajectory
     # number of waypoints for BEST PATH

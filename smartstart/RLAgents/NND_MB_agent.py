@@ -49,8 +49,14 @@ def make_save_directories(run_num):
 
 
 def euclidean_distance(state, other_state):
-    return np.linalg.norm(state - other_state)
+    """
 
+    :param state: state/list of states (numpy) EITHER 1D or 2D
+    :param other_state: state/list of states (numpy) EITHER 1D or 2D
+    :return: distance/ list of distances (numpy)
+    """
+    axis = max(len(state.shape), len(other_state.shape)) - 1
+    return np.sum((state - other_state) ** 2, axis=axis) ** 0.5
 
 class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Agent (NND_MB_agent)
     tf_datatype = tf.float64
@@ -59,53 +65,27 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
     # n is noisy, c is clean... 1st letter is what action's executed and 2nd letter is what action's aggregated
     actions_ag = 'nc'
 
-    def __init__(self,
-                 env,
-                 replay_buffer=None,
-                 theta=1,  # how close to the smart start state you want to navigate to
-                 distance_function=euclidean_distance,
-                 seed=0,
-                 run_num=0,
-                 use_existing_training_data=False,  # training data for dynamics model initialization
-                 BUFFER_SIZE=10000,
-                 use_existing_dynamics_model=False,
-                 desired_traj_type='straight',
-                 num_rollouts_save_for_mf=60,
-                 might_render=False,
-                 visualize_MPC_rollout=False,
-                 perform_forwardsim_for_vis=False,
-                 print_minimal=False,
-                 which_agent=2,
-                 use_threading=True,
-                 num_rollouts_train=25,
-                 num_rollouts_val=20,
-                 num_fc_layers=1,
-                 depth_fc_layers=500,
-                 batchsize=512,
-                 lr=0.001,
-                 nEpoch=30,
-                 fraction_use_new=0.9,
-                 horizon=20,
-                 num_control_samples=5000,
-                 num_episodes_for_aggregation=10,
-                 rollouts_forTraining=9,
-                 make_aggregated_dataset_noisy=True,
-                 make_training_dataset_noisy=True,
-                 noise_actions_during_MPC_rollouts=True,
-                 dt_steps=3,
-                 steps_per_episode=333,
-                 steps_per_rollout_train=333,
-                 steps_per_rollout_val=333,
-                 min_rew_for_saving=0,
-                 visualize_True=True,
-                 visualize_False=False):
+    def __init__(self, env, replay_buffer=None, BUFFER_SIZE=10000, theta=1, distance_function=euclidean_distance,
+                 seed=0, run_num=0, use_existing_training_data=False, use_existing_dynamics_model=False,
+                 desired_traj_type='straight', num_rollouts_save_for_mf=60, might_render=False,
+                 visualize_MPC_rollout=False, perform_forwardsim_for_vis=False, print_minimal=False, which_agent=2,
+                 use_threading=True, num_rollouts_train=25, num_rollouts_val=20, num_fc_layers=1, depth_fc_layers=500,
+                 batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9, horizon=20, num_control_samples=5000,
+                 num_episodes_for_aggregation=10, rollouts_forTraining=9, make_aggregated_dataset_noisy=True,
+                 make_training_dataset_noisy=True, noise_actions_during_MPC_rollouts=True, dt_steps=3,
+                 steps_per_episode=333, steps_per_rollout_train=333, steps_per_rollout_val=333, min_rew_for_saving=0,
+                 visualize_True=True, visualize_False=False):
         """
-
-        :param env:
-        :param seed:
-        :param run_num:
-        :param use_existing_training_data:
-        :param use_existing_dynamics_model:
+        :param env: the environment the agent is going to navigate
+        :param replay_buffer: the buffer that stores previous experiences (state, action, reward, terminal, next_state) tuples
+        :param BUFFER_SIZE: max size of the memory buffer
+        :param theta: the minimum distance for the agent to consider a waypoint "reached" - distance defined by distance function
+        :param distance_function: function that should hopefully have the metric property
+                - takes in 2 1D arrays (numpy) and returns a postiive integer, 0 if equal
+        :param seed: for the random packages
+        :param run_num: the number that labels the run, determines the name of the folder to save/load to/from
+        :param use_existing_training_data: whether or not to load the training data
+        :param use_existing_dynamics_model: whether or not to load the dynamics model
         :param desired_traj_type:
         :param num_rollouts_save_for_mf:
         :param might_render:
@@ -119,12 +99,11 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param num_fc_layers:
         :param depth_fc_layers:
         :param batchsize:
-        :param lr: learning rate
+        :param lr:
         :param nEpoch:
         :param fraction_use_new:
         :param horizon:
         :param num_control_samples:
-        :param num_aggregation_iters:
         :param num_episodes_for_aggregation:
         :param rollouts_forTraining:
         :param make_aggregated_dataset_noisy:
@@ -137,8 +116,6 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param min_rew_for_saving:
         :param visualize_True:
         :param visualize_False:
-
-        Will Reset Environment if Training Data is needed
         """
 
         ### Initial Variables ###################################################################
@@ -343,7 +320,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         # TODO decide which one to use or to use both (theta, or distances to next<=current)
         if distance_to_current <= self.theta or distance_to_next <= distance_to_current:
             # close enough to curr_waypoint, move on to next waypoint
-            self.current_desired_state_index = max(self.current_desired_state_index + 1,
+            self.current_desired_state_index = min(self.current_desired_state_index + 1,
                                                    len(self.desired_states) - 1)
 
     def start_new_episode_plan(self, starting_state, desired_states):
@@ -364,6 +341,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                  range(1, len(desired_states))] + [0]
         else:
             self.distances_left = [0]
+        self.distances_left = np.asarray(self.distances_left)
 
         #train
         if self.num_episodes_finished % self.num_episodes_for_aggregation == 0:
@@ -449,9 +427,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             current_desired_states = self.desired_states[samples_desired_state_indices]
             next_desired_states = self.desired_states[
                 np.minimum(samples_desired_state_indices + 1, len(self.desired_states) - 1)]
-            distances_to_current = np.apply_along_axis(lambda x: self.distance_function(x, pt), 0,
-                                                       current_desired_states)
-            distances_to_next = np.apply_along_axis(lambda x: self.distance_function(x, pt), 0, next_desired_states)
+            distances_to_current = self.distance_function(current_desired_states, pt)
+            distances_to_next = self.distance_function(next_desired_states, pt)
 
             # boolean array, tells whether or not the sample moves to the next waypoint
             # TODO decide which one to use or to use both( theta, or distances to next<=current)
@@ -460,10 +437,13 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                 samples_desired_state_indices != len(self.desired_states) - 1)
 
             # update scores as the sum of distances left on path
-            scores[np.logical_not(move_to_next)] += self.distances_left[
-                                                        samples_desired_state_indices] + distances_to_current  # TODO calculate distance maybe with reward function?
-            scores[move_to_next] += self.distances_left[
-                                        samples_desired_state_indices + 1] + distances_to_next  # TODO calculate distance maybe with reward function?
+            not_move_to_next = np.logical_not(move_to_next)
+            scores[not_move_to_next] += \
+                self.distances_left[samples_desired_state_indices[not_move_to_next]] + \
+                distances_to_current[not_move_to_next]  # TODO calculate distance maybe with reward function?
+            scores[move_to_next] += \
+                self.distances_left[samples_desired_state_indices[move_to_next] + 1] + \
+                distances_to_next[move_to_next]  # TODO calculate distance maybe with reward function?
 
             # update next waypoint for each sample if necessary
             samples_desired_state_indices[move_to_next] += 1  # if within theta of waypoint, increment waypoint
@@ -499,8 +479,8 @@ if __name__ == "__main__":
     tf.set_random_seed(RANDOM_SEED)
 
     # Initialize agent, see class for available parameters
-    agent = NND_MB_agent(env, num_episodes_for_aggregation=1, horizon=20,
-                         use_existing_training_data=True)  # type: NND_MB_agent
+    agent = NND_MB_agent(env, use_existing_training_data=True, horizon=20,
+                         num_episodes_for_aggregation=1)  # type: NND_MB_agent
 
     #intializing the desired_states
     target_default_directory = "ddpg_summaries"
@@ -513,7 +493,7 @@ if __name__ == "__main__":
     # summary object
     summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
 
-    np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)}) # for printing
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)}) # for printing
 
     # begin training episodes(1)
     for i_episode in range(num_episodes):
