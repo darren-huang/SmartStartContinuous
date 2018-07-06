@@ -27,7 +27,7 @@ def moving_average(values, window=10):
     return np.convolve(values, weights, 'valid')
 
 # path state changes standard deviation
-def path_mean_and_std_per_state(path):
+def path_deltas_stds_and_means_per_dim(path):
     """
     For each individual state value, calculates the standard deviation of delta's for that state (delta is the difference
     from one state value to the next)
@@ -57,3 +57,6 @@ def path_mean_and_std_per_state(path):
     means = np.asarray([np.mean(delta_arr) for delta_arr in individual_state_value_deltas])
 
     return stds, means
+
+def radiis(means, stds, num_means, num_stds, num_steps):
+    return ((num_means * means) + (num_stds * stds)) * num_steps

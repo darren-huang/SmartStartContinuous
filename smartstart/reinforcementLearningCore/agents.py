@@ -49,10 +49,11 @@ class NavigationRLAgent(RLAgent):
     RL agent that at the beginning of an episode decides to plan it's trajectory based on given
     desired states
     """
-    def start_new_episode_plan(self, state, desired_sates):
+    def start_new_episode_plan(self, state, path_to_follow):
         """
         :param state: starting state for the episode
-        :param desired_sates: the desired states it should try to navigate to in order
+        :param path_to_follow: the path that has been previously travelled that the agent should follow
+                (should be a sequence of states that each are 1 step apart)
         """
 
 

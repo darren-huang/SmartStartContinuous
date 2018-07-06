@@ -13,6 +13,7 @@ import os
 import matplotlib.colorbar
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.axes
+import matplotlib.figure
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge, Polygon, Ellipse
 from matplotlib.collections import PatchCollection
@@ -334,15 +335,15 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=None, num_waypoints=0, radii=[0, 0], linewidth=3):
+def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=[],
+              highlight_waypoint_index = None, radii=[0, 0], linewidth=3):
     assert len(path[0]) == 2
 
     if reward is not None:
         title += " | Total Reward: {0:.2f}".format(reward)
     title += " | Steps: " + str(len(path) - 1)
 
-    # a plot coloring the curve using a continuous colormap
-    waypoint_collection = None
+
 
     # get x's and y's
     x = [s[0] for s in path]
@@ -362,51 +363,79 @@ def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=Non
         y2 = [s[1] for s in path2]
         # color map variables to configure a gradient along the trajectory
         color_num_scale2 = np.linspace(0, len(path2), len(path2))
-        cmap2 = truncate_colormap(plt.get_cmap('cubehelix_r'), minval=.1, maxval=.9)
+        cmap2 = truncate_colormap(plt.get_cmap('cubehelix_r'), minval=.1, maxval=.8)
         norm2 = plt.Normalize(0, len(path2))
         # draw trajectory
         line_collection2 = make_line_collection(x2, y2, color_num_scale2, cmap=cmap2, norm=norm2, linewidth=linewidth)
         x += x2
         y += y2
 
+        figure, (axis0, axis1, axis2) = plt.subplots(1, 3, gridspec_kw={
+            'width_ratios': [24, 1, 1]})  # type: (matplotlib.figure.Figure, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+        cb2 = matplotlib.colorbar.ColorbarBase(axis2, cmap=cmap2,
+                                               norm=norm2,
+                                               orientation='vertical')
+        cb2.set_label('Step')
+        figure.set_size_inches(7.5, 5.15, forward=True)
+    else:
+        figure, (axis0, axis1) = plt.subplots(1, 2, gridspec_kw={
+            'width_ratios': [12, 1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+
     #maybe draw waypoints along trajectory
-    if num_waypoints:
-        waypoint_centers = get_start_waypoints_final_states(path, num_waypoints)
+    if waypoint_centers:
         waypoint_cmap = plt.get_cmap('binary')
         waypoint_color_num_scale = np.linspace(.2, .6, len(waypoint_centers))
         waypoint_norm = plt.Normalize(0, 1.0)
         waypoint_collection = make_ellipse_collection(waypoint_centers, waypoint_color_num_scale,
                                                       x_radius=radii[0], y_radius=radii[1],
                                                       cmap=waypoint_cmap, norm=waypoint_norm)
-    #place stuff on the actual plot
-    if path2:
-        figure, (axis0, axis1, axis2) = plt.subplots(1,3, gridspec_kw = {
-            'width_ratios':[24,1,1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
-        cb2 = matplotlib.colorbar.ColorbarBase(axis2, cmap=cmap2,
-                                               norm=norm2,
-                                               orientation='vertical')
-        cb2.set_label('Step')
-    else:
-        figure, (axis0, axis1) = plt.subplots(1, 2, gridspec_kw={
-            'width_ratios': [12, 1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+        axis0.add_collection(waypoint_collection)
 
-    axis0.set_title(title)
+    highlight = None
+    if highlight_waypoint_index is not None:
+        highlight_point = waypoint_centers[highlight_waypoint_index]
+        highlight = Ellipse((highlight_point[0], highlight_point[1]), radii[0] * 2, radii[1] * 2, 0,
+                            color="#ff8080")
+        axis0.add_patch(highlight)
+
+    axis0.set_title(title) #labels/titles
     axis0.set_xlabel(x_label)
     axis0.set_ylabel(y_label)
-    # plt.plot([state[0] for state in best_path], [state[1] for state in best_path], linewidth=1)
-    if num_waypoints:
-        axis0.add_collection(waypoint_collection)
-    axis0.add_collection(line_collection)
     if path2:
         axis0.add_collection(line_collection2)
-
-    axis0.set_xlim(min(x) - radii[0], max(x) + radii[0])
+    axis0.add_collection(line_collection) # add main path
+    axis0.set_xlim(min(x) - radii[0], max(x) + radii[0]) #set graph view cropping thingy
     axis0.set_ylim(min(y) - radii[1], max(y) + radii[1])
-    cb1 = matplotlib.colorbar.ColorbarBase(axis1, cmap=cmap,
+    cb1 = matplotlib.colorbar.ColorbarBase(axis1, cmap=cmap, #color bar
                                            norm=norm,
                                            orientation='vertical')
     cb1.set_label('Step')
     plt.tight_layout()
+
+    return axis0, line_collection, line_collection2, highlight
+
+def update_path(axis, old_line_collection, old_line_collection2, old_highlihgt, new_path, new_center, radii,
+                linewidth=3):
+    old_line_collection.remove()
+    old_line_collection2.remove()
+    old_highlihgt.remove()
+    new_highlight = Ellipse((new_center[0], new_center[1]), radii[0] * 2, radii[1] * 2, 0,
+                        color="#ff8080")
+    axis.add_patch(new_highlight)
+
+    axis.add_collection(old_line_collection)
+
+    # get x's and y's
+    x2 = [s[0] for s in new_path]
+    y2 = [s[1] for s in new_path]
+    # color map variables to configure a gradient along the trajectory
+    color_num_scale2 = np.linspace(0, len(new_path), len(new_path))
+    cmap2 = truncate_colormap(plt.get_cmap('cubehelix_r'), minval=.1, maxval=.8)
+    norm2 = plt.Normalize(0, len(new_path))
+    # draw trajectory
+    new_line_collection2 = make_line_collection(x2, y2, color_num_scale2, cmap=cmap2, norm=norm2, linewidth=linewidth)
+    axis.add_collection(new_line_collection2)
+    return new_line_collection2, new_highlight
 
 
 def make_circle_collection(circle_centers, color_num_scale, radius=5,
@@ -419,10 +448,13 @@ def make_circle_collection(circle_centers, color_num_scale, radius=5,
 
 def make_ellipse_collection(ellipse_centers, color_num_scale, x_radius=1, y_radius=1, angle=0,
                            cmap=plt.get_cmap('gnuplot2_r'),
-                           norm=plt.Normalize(0, 1.0)):
-    p = PatchCollection([Ellipse((c[0], c[1]), x_radius * 2, y_radius * 2, angle) for c in ellipse_centers],
+                           norm=plt.Normalize(0, 1.0),
+                            highlight_waypoint_index = None):
+    ellipses = [Ellipse((c[0], c[1]), x_radius * 2, y_radius * 2, angle) for c in ellipse_centers]
+    p = PatchCollection(ellipses,
                         cmap=cmap, norm=norm)
     p.set_array(color_num_scale)
+
     return p
 
 def make_line_collection(x, y, color_num_scale,
@@ -444,6 +476,12 @@ def make_line_collection(x, y, color_num_scale,
     lc.set_linewidth(linewidth)
     return lc
 
+def ion_plot():
+    """
+    makes interactive?
+    :return:
+    """
+    plt.ion()
 
 def show_plot():
     """Render the plots on screen
@@ -451,3 +489,10 @@ def show_plot():
     Must be run after initializing the plots to actually show them on screen.
     """
     plt.show()
+
+def pause_plot(interval):
+    """
+    pauses the plot?
+    :return:
+    """
+    plt.pause(interval)

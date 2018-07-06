@@ -1,39 +1,30 @@
 # imports
+import os
+import time
+import re
+
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
-import time
-import matplotlib.pyplot as plt
-import pickle
-import copy
-import os
-import sys
-from six.moves import cPickle
-# from rllab.rllab.envs.normalized_env import normalize
-import yaml
-import argparse
-import json
 
-# my imports
-from policy_random import Policy_Random
-from trajectories import make_trajectory
-from trajectories import get_trajfollow_params
+from data_manipulation import from_observation_to_usablestate
 from data_manipulation import generate_training_data_inputs
 from data_manipulation import generate_training_data_outputs
-from data_manipulation import from_observation_to_usablestate
-from data_manipulation import get_indices
-from helper_funcs import perform_rollouts
-from helper_funcs import create_env
-from helper_funcs import visualize_rendering
-from mpc_controller import MPCController
-from helper_funcs import add_noise
 from dynamics_model import Dyn_Model
-
-from smartstart.utilities.datacontainers import Summary, Episode
-from smartstart.reinforcementLearningCore.agents import NavigationRLAgent
+from helper_funcs import add_noise
+from helper_funcs import perform_rollouts
+# my imports
+from policy_random import Policy_Random
+# noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
-from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states, \
-    get_start_waypoints_final_states_steps
+from smartstart.reinforcementLearningCore.agents import NavigationRLAgent
+from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path
+from smartstart.utilities.datacontainers import Summary, Episode
+from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps
+from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim
+
+
+# from rllab.rllab.envs.normalized_env import normalize
 
 
 def make_save_directories(run_num):
@@ -58,6 +49,35 @@ def euclidean_distance(state, other_state):
     axis = max(len(state.shape), len(other_state.shape)) - 1
     return np.sum((state - other_state) ** 2, axis=axis) ** 0.5
 
+
+def elliptical_euclidean_distance_function_generator(radii):
+    """
+      __
+     / | \                    |
+    |  | | where the vertical | represents the y-radius
+    |  ._| and the horizontal _ represents the x-radius
+    |    | (distance function makes all points on that ellipse become distance 1 from the center
+     \__/
+    :param radii: for states of n-dimensions, radii is n - long specifying the elliptical radius along that axis
+    :return:
+    """
+    for i in radii:
+        assert i > 0
+    radii = np.asarray(radii)
+
+    def distance_func(state, other_state):
+        """
+
+        :param state: state/list of states (numpy) EITHER 1D or 2D
+        :param other_state: state/list of states (numpy) EITHER 1D or 2D
+        :return: distance/ list of distances (numpy)
+        """
+        axis = max(len(state.shape), len(other_state.shape)) - 1
+        return np.sum(((state - other_state) / radii) ** 2, axis=axis) ** 0.5
+
+    return distance_func
+
+
 class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Agent (NND_MB_agent)
     tf_datatype = tf.float64
     noiseToSignal = 0.01
@@ -65,23 +85,21 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
     # n is noisy, c is clean... 1st letter is what action's executed and 2nd letter is what action's aggregated
     actions_ag = 'nc'
 
-    def __init__(self, env, replay_buffer=None, BUFFER_SIZE=10000, theta=1, distance_function=euclidean_distance,
-                 seed=0, run_num=0, use_existing_training_data=False, use_existing_dynamics_model=False,
-                 desired_traj_type='straight', num_rollouts_save_for_mf=60, might_render=False,
-                 visualize_MPC_rollout=False, perform_forwardsim_for_vis=False, print_minimal=False, which_agent=2,
-                 use_threading=True, num_rollouts_train=25, num_rollouts_val=20, num_fc_layers=1, depth_fc_layers=500,
-                 batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9, horizon=20, num_control_samples=5000,
-                 num_episodes_for_aggregation=10, rollouts_forTraining=9, make_aggregated_dataset_noisy=True,
-                 make_training_dataset_noisy=True, noise_actions_during_MPC_rollouts=True, dt_steps=3,
-                 steps_per_episode=333, steps_per_rollout_train=333, steps_per_rollout_val=333, min_rew_for_saving=0,
-                 visualize_True=True, visualize_False=False):
+    def __init__(self, env, replay_buffer=None, BUFFER_SIZE=10000, theta=1,
+                 steps_per_waypoint=10, mean_per_stepsize=1, std_per_stepsize=1, stepsizes_in_waypoint_radii=1,
+                 seed=0, run_num=0,
+                 use_existing_training_data=False, use_existing_dynamics_model=False, num_rollouts_save_for_mf=60,
+                 print_minimal=False, which_agent=2, use_threading=True, num_rollouts_train=25, num_rollouts_val=20,
+                 num_fc_layers=1, depth_fc_layers=500, batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9,
+                 horizon=20, num_control_samples=5000, num_episodes_for_aggregation=10, rollouts_forTraining=9,
+                 make_aggregated_dataset_noisy=True, make_training_dataset_noisy=True,
+                 noise_actions_during_MPC_rollouts=True, dt_steps=3, steps_per_rollout_train=333,
+                 steps_per_rollout_val=333, visualize_False=False):
         """
         :param env: the environment the agent is going to navigate
         :param replay_buffer: the buffer that stores previous experiences (state, action, reward, terminal, next_state) tuples
         :param BUFFER_SIZE: max size of the memory buffer
         :param theta: the minimum distance for the agent to consider a waypoint "reached" - distance defined by distance function
-        :param distance_function: function that should hopefully have the metric property
-                - takes in 2 1D arrays (numpy) and returns a postiive integer, 0 if equal
         :param seed: for the random packages
         :param run_num: the number that labels the run, determines the name of the folder to save/load to/from
         :param use_existing_training_data: whether or not to load the training data
@@ -110,11 +128,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param make_training_dataset_noisy:
         :param noise_actions_during_MPC_rollouts:
         :param dt_steps:
-        :param steps_per_episode:
         :param steps_per_rollout_train:
         :param steps_per_rollout_val:
-        :param min_rew_for_saving:
-        :param visualize_True:
         :param visualize_False:
         """
 
@@ -122,19 +137,25 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.env = env
         self.N = num_control_samples
         self.horizon = horizon
-        self.distance_function = distance_function
-        self.theta = theta # minimum distance to get to desired state(s)
+        self.steps_per_waypoint = steps_per_waypoint
+        self.mean_per_stepsize = mean_per_stepsize
+        self.std_per_stepsize = std_per_stepsize
+        self.stepsizes_in_waypoint_radii = stepsizes_in_waypoint_radii
+        self.theta = theta  # minimum distance to get to desired state(s)
         self.use_existing_dynamics_model = use_existing_dynamics_model
+        self.make_aggregated_dataset_noisy = make_aggregated_dataset_noisy
         self.nEpochs = nEpoch
         self.fraction_use_new = fraction_use_new
         self.num_episodes_for_aggregation = num_episodes_for_aggregation
         self.num_episodes_finished = 0
+        self.distance_function = None
+        self.path_to_follow = None
         self.desired_states = None
         self.current_desired_state_index = None  # will start at 0 when a new episode begins otherwise error
         self.distances_left = None  # self.distances_left[x] will tell the distance from
         #                             desired_states[x] to desired_states[x+1] + [x+1] to [x+2].... until the end
 
-        self.dt_from_xml = 0 #env.env.model.opt.timestep  # TODO: dt_from_xml seems to be only for rendering
+        self.dt_from_xml = 0  # env.env.model.opt.timestep  # TODO: dt_from_xml seems to be only for rendering
 
         self.save_dir = make_save_directories(run_num)  ### make directories for saving data ###
 
@@ -151,9 +172,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
         # Initialize replay memory
         if replay_buffer == None:
-            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE) # type: ReplayBuffer
+            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)  # type: ReplayBuffer
         else:
-            self.replay_buffer = replay_buffer # type: ReplayBuffer
+            self.replay_buffer = replay_buffer  # type: ReplayBuffer
 
         ### Get Training Data  ###########################################################################
         if (use_existing_training_data):
@@ -323,16 +344,24 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             self.current_desired_state_index = min(self.current_desired_state_index + 1,
                                                    len(self.desired_states) - 1)
 
-    def start_new_episode_plan(self, starting_state, desired_states):
+    def start_new_episode_plan(self, starting_state, path_to_follow):
         """
         Called at the beginning of an episode.
         :param starting_state: the starting state of the episode
         :param desired_states: the states it wants to navigate through, agent will try to follow
             route and end up within close proximity to the last state
         """
+        # set variables for the new episode
         self.current_desired_state_index = 0
-        desired_states = np.asarray(desired_states)
+        self.path_to_follow = path_to_follow
+        desired_states = np.asarray(get_start_waypoints_final_states_steps(path_to_follow, self.steps_per_waypoint))
         self.desired_states = desired_states
+        stds, means = path_deltas_stds_and_means_per_dim(path_to_follow)
+        stepsizes = (means * self.mean_per_stepsize) + (stds * self.std_per_stepsize)
+        radii = stepsizes * self.stepsizes_in_waypoint_radii
+        self.distance_function = \
+            elliptical_euclidean_distance_function_generator(radii)
+
 
         # calculate distances for the MPC reward function
         if len(desired_states) >= 2:
@@ -343,7 +372,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             self.distances_left = [0]
         self.distances_left = np.asarray(self.distances_left)
 
-        #train
+        # train
         if self.num_episodes_finished % self.num_episodes_for_aggregation == 0:
             self.train_dynamics_model()
         self.num_episodes_finished += 1
@@ -362,6 +391,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             s2_batch = np.zeros((0, self.dataZ.shape[1]))
         else:
             s_batch, a_batch, _, _, s2_batch = self.replay_buffer.all_batch()
+        if self.make_aggregated_dataset_noisy:
+            s_batch = add_noise(s_batch)
+            s2_batch = add_noise(s2_batch)
         dataX_new_preprocessed = np.nan_to_num((s_batch - self.mean_x) / self.std_x)
         dataY_new_preprocessed = np.nan_to_num((a_batch - self.mean_y) / self.std_y)
         dataZ_new_preprocessed = np.nan_to_num((s2_batch - self.mean_z) / self.std_z)
@@ -385,9 +417,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                                                                      self.fraction_use_new)
 
         save_path = self.saver.save(self.sess, self.save_dir + '/models/model_numTrain' +
-                                    str(1 + (self.num_episodes_finished // self.num_episodes_for_aggregation)) + '.ckpt')
+                                    str(1 + (
+                                            self.num_episodes_finished // self.num_episodes_for_aggregation)) + '.ckpt')
         save_path = self.saver.save(self.sess, self.save_dir + '/models/finalModel.ckpt')
-
 
     @property
     def current_desired_state(self):
@@ -456,53 +488,67 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
         return best_action, best_sim_number, best_sequence
 
+
 if __name__ == "__main__":
     import random
     import gym
-    from smartstart.reinforcementLearningCore.rlTrain import rlTrain
-    from smartstart.utilities.plot import plot_summary, show_plot, \
-        mean_reward_episode, steps_episode
 
     # intialize variables
-    step_per_waypoint = 20
+    steps_per_waypoint = 10
     num_episodes = 2
     max_steps = 1000
     render = False
     render_episode = False
     print_steps = True
     print_results = True
-    ENV_NAME = 'MountainCarContinuous-v0' # configuring environment
+    ENV_NAME = 'MountainCarContinuous-v0'  # configuring environment
     env = gym.make(ENV_NAME)
-    RANDOM_SEED = 1234 # Reset the seed for random number generation
+    RANDOM_SEED = 1234  # Reset the seed for random number generation
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     tf.set_random_seed(RANDOM_SEED)
 
     # Initialize agent, see class for available parameters
-    agent = NND_MB_agent(env, use_existing_training_data=True, horizon=20,
+    agent = NND_MB_agent(env,
+                         theta=1,
+                         steps_per_waypoint=steps_per_waypoint,
+                         mean_per_stepsize= 1,
+                         std_per_stepsize= 1,
+                         stepsizes_in_waypoint_radii=1,
+                         use_existing_training_data=True,
+                         horizon=20,
                          num_episodes_for_aggregation=1)  # type: NND_MB_agent
 
-    #intializing the desired_states
+    # intializing the desired_states
     target_default_directory = "ddpg_summaries"
     target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
-    target_path = os.path.join(get_default_directory(target_default_directory), target_file_name)
-    target_summary = Summary.load(target_path) # type:Summary
-    desired_states = get_start_waypoints_final_states_steps(target_summary.best_path, step_per_waypoint)
-
+    target_file_pathname = os.path.join(get_default_directory(target_default_directory), target_file_name)
+    target_summary = Summary.load(target_file_pathname)  # type:Summary
+    target_path = target_summary.get_last_path(0)
+    target_reward = target_summary.get_last_reward(0)
+    desired_states = get_start_waypoints_final_states_steps(target_path, steps_per_waypoint)
 
     # summary object
     summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
 
-    np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)}) # for printing
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})  # for printing
 
     # begin training episodes(1)
     for i_episode in range(num_episodes):
-        episode = Episode()  # record the episode
+        episode = Episode()  # type: Episode # record the episode
         observation = env.reset()  # setup env
 
         # Step through the Episode
-        agent.start_new_episode_plan(observation, desired_states)  # only needed for smartStart
+        agent.start_new_episode_plan(observation, target_path)  # only needed for smartStart
+
+        plot_pauser_count = 0
+        prev_pause_count = 1
+        plot = True
+        ion_plot()
+        axis0, line_collection, line_collection2, highlight = None, None, None, None
+        plotted = False
         for step in range(max_steps):
+
             # rendering
             if render:
                 render = agent.render(env)
@@ -526,6 +572,25 @@ if __name__ == "__main__":
 
             # record results to episode object
             episode.append(observation, action, reward, new_observation, done)
+
+            if not plotted:
+                axis0, line_collection, line_collection2, \
+                highlight = plot_path(target_path,
+                                      path2=episode.get_total_path(),
+                                      title="Desired Path rw({0:.2f}) vs. Current Path rw({0:.2f})".format(
+                                          target_reward, episode.reward),
+                                      x_label="x_pos", y_label="x_velocity",
+                                      waypoint_centers=desired_states,
+                                      highlight_waypoint_index=agent.current_desired_state_index,
+                                      radii=[1, 1])
+                show_plot()
+                plotted = True
+                pause_plot(0.001)
+            else:
+                line_collection2, highlight = update_path(axis0, line_collection, line_collection2, highlight,
+                                                          episode.get_total_path(),
+                                                          agent.current_desired_state, [1, 1])
+                pause_plot(0.001)
 
             # check terminal observation
             if done:

@@ -1,9 +1,9 @@
 from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.plot import plot_path, plot_summary, \
     mean_reward_episode, steps_episode, show_plot, total_rewards_episode, \
-    plot_get_axes
+    plot_get_axes, get_start_waypoints_final_states
 from smartstart.utilities.utilities import get_default_directory
-from smartstart.utilities.numerical import path_mean_and_std_per_state
+from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim
 
 import os
 
@@ -23,6 +23,7 @@ if __name__ == "__main__":
     linewidth = 2
     num_stds = 1
     num_steps = 1
+    steps_per_waypoint = 10
 
 
 
@@ -37,48 +38,43 @@ if __name__ == "__main__":
     plot_summary(summary, total_rewards_episode, ma_window=1, axis=ax3,
                  title="MountainCarContinuous-v0 Q-Learning Total Reward per Episode")
 
-    #LAST Trajectory
+    #LAST Trajectory##   ########################################################
     # which "last" trajectory to show
     last_index = 0
-    # number of waypoints for BEST PATH
-    steps_per_waypoint = 20
-    num_waypoints = len(summary.get_last_path(last_index)) // steps_per_waypoint
-    # Get State Statistics
-    path_stds, path_means = path_mean_and_std_per_state(summary.get_last_path(last_index))
+    path, reward, title = summary.get_last_path(last_index), summary.get_last_reward(last_index), str(last_index) + " From Last Path"
+    num_waypoints = len(path) // steps_per_waypoint
+    waypoint_centers = get_start_waypoints_final_states(path, num_waypoints)
+    path_stds, path_means = path_deltas_stds_and_means_per_dim(path)  # Get State Statistics
     print("Last Traj: STD's: {}, Means: {}".format(path_stds, path_means))
-
-    # Plot Paths/Trajectories
-    radii = (path_means + (path_stds * num_stds)) * num_steps
-
-    #last trajectory
-    plot_path(summary.get_last_path(last_index),
+    radii = (path_means + (path_stds * num_stds)) * num_steps  # radii for waypoints
+    ## Plot Paths/Trajectories
+    plot_path(path,
               path2=summary.get_last_path(last_index + 1),
-              title=str(last_index) + " From Last Path",
-              reward=summary.get_last_reward(last_index),
+              title=title,
+              reward=reward,
               x_label="x_pos",
               y_label="x_velocity",
-              num_waypoints=num_waypoints,
+              waypoint_centers=waypoint_centers,
               radii=radii,
               linewidth=linewidth-1)
 
 
-    #BEST Trajectory
+    #BEST Trajectory ##########################################################
     # number of waypoints for BEST PATH
-    steps_per_waypoint = 10
-    num_waypoints = len(summary.best_path) // steps_per_waypoint
-    # Get State Statistics
-    path_stds, path_means = path_mean_and_std_per_state(summary.best_path)
+    path, reward, title = summary.best_path, summary.best_reward, "Best Path"
+    num_waypoints = len(path) // steps_per_waypoint
+    waypoint_centers = get_start_waypoints_final_states(path, num_waypoints)
+    path_stds, path_means = path_deltas_stds_and_means_per_dim(path) # Get State Statistics
     print("Best Traj: STD's: {}, Means: {}".format(path_stds, path_means))
-
-    # Plot Paths/Trajectories
-    radii = (path_means + (path_stds * num_stds)) * num_steps
-    #best trajectory
-    plot_path(summary.best_path,
-              title="Best Path",
-              reward=summary.best_reward,
+    radii = (path_means + (path_stds * num_stds)) * num_steps # radii for waypoints
+    ## Plot Paths/Trajectories
+    plot_path(path,
+              title=title,
+              reward=reward,
               x_label="x_pos",
               y_label="x_velocity",
-              num_waypoints=num_waypoints,
+              waypoint_centers=waypoint_centers,
+              highlight_waypoint_index=0,
               radii=radii,
               linewidth=linewidth)
 
