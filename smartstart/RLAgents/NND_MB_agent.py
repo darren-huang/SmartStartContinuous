@@ -490,8 +490,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         distances_to_end = np.zeros((self.N,))
 
         gamma = .7
-        # horizontal_penalty_factor = 0
-        horizontal_penalty_factor = .5
+        horizontal_penalty_factor = 0
+        # horizontal_penalty_factor = .5
 
         # accumulate reward over each timestep
         for pt_number in range(resulting_states.shape[0]):
