@@ -18,13 +18,13 @@ from policy_random import Policy_Random
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.reinforcementLearningCore.agents import NavigationRLAgent
-from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path
+from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
 from smartstart.utilities.datacontainers import Summary, Episode
 from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps
-from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim
-
+from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
 
 # from rllab.rllab.envs.normalized_env import normalize
+from utilities.numerical import elliptical_euclidean_distance_function_generator
 
 
 def make_save_directories(run_num):
@@ -39,45 +39,6 @@ def make_save_directories(run_num):
     return save_dir
 
 
-def euclidean_distance(state, other_state):
-    """
-
-    :param state: state/list of states (numpy) EITHER 1D or 2D
-    :param other_state: state/list of states (numpy) EITHER 1D or 2D
-    :return: distance/ list of distances (numpy)
-    """
-    axis = max(len(state.shape), len(other_state.shape)) - 1
-    return np.sum((state - other_state) ** 2, axis=axis) ** 0.5
-
-
-def elliptical_euclidean_distance_function_generator(radii):
-    """
-      __
-     / | \                    |
-    |  | | where the vertical | represents the y-radius
-    |  ._| and the horizontal _ represents the x-radius
-    |    | (distance function makes all points on that ellipse become distance 1 from the center
-     \__/
-    :param radii: for states of n-dimensions, radii is n - long specifying the elliptical radius along that axis
-    :return:
-    """
-    for i in radii:
-        assert i > 0
-    radii = np.asarray(radii)
-
-    def distance_func(state, other_state):
-        """
-
-        :param state: state/list of states (numpy) EITHER 1D or 2D
-        :param other_state: state/list of states (numpy) EITHER 1D or 2D
-        :return: distance/ list of distances (numpy)
-        """
-        axis = max(len(state.shape), len(other_state.shape)) - 1
-        return np.sum(((state - other_state) / radii) ** 2, axis=axis) ** 0.5
-
-    return distance_func
-
-
 class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Agent (NND_MB_agent)
     tf_datatype = tf.float64
     noiseToSignal = 0.01
@@ -86,7 +47,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
     actions_ag = 'nc'
 
     def __init__(self, env, replay_buffer=None, BUFFER_SIZE=10000, theta=1,
-                 steps_per_waypoint=10, mean_per_stepsize=1, std_per_stepsize=1, stepsizes_in_waypoint_radii=1,
+                 steps_per_waypoint=10, mean_per_stepsize=1, std_per_stepsize=1, stepsizes_in_waypoint_radii=1.,
                  seed=0, run_num=0,
                  use_existing_training_data=False, use_existing_dynamics_model=False, num_rollouts_save_for_mf=60,
                  print_minimal=False, which_agent=2, use_threading=True, num_rollouts_train=25, num_rollouts_val=20,
@@ -133,7 +94,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param visualize_False:
         """
 
-        ### Initial Variables ###################################################################
+        ### Initial Variables ###########################################################################
         self.env = env
         self.N = num_control_samples
         self.horizon = horizon
@@ -148,6 +109,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.fraction_use_new = fraction_use_new
         self.num_episodes_for_aggregation = num_episodes_for_aggregation
         self.num_episodes_finished = 0
+        self.radii = None
         self.distance_function = None
         self.path_to_follow = None
         self.desired_states = None
@@ -176,7 +138,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         else:
             self.replay_buffer = replay_buffer  # type: ReplayBuffer
 
-        ### Get Training Data  ###########################################################################
+        ### Get Training Data  ##########################################################################
         if (use_existing_training_data):
             if (not (print_minimal)):
                 print("\n#####################################")
@@ -274,7 +236,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             np.save(self.save_dir + '/training_data/forwardsim_x_true.npy', self.forwardsim_x_true)
             np.save(self.save_dir + '/training_data/forwardsim_y.npy', self.forwardsim_y)
 
-        # XYZ variable data ##############################################################################
+        # XYZ variable data #############################################################################
         # every component (i.e. x position) should become mean 0, std 1
         self.mean_x = np.mean(self.dataX, axis=0)
         self.dataX = self.dataX - self.mean_x
@@ -295,7 +257,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.inputs = np.concatenate((self.dataX, self.dataY), axis=1)
         self.outputs = np.copy(self.dataZ)
 
-        # Create Dynamics Model ###############################################
+        # Create Dynamics Model #########################################################################
         # dimensions
         assert self.inputs.shape[0] == self.outputs.shape[0]
         inputSize = self.inputs.shape[1]
@@ -313,7 +275,10 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         # TODO: ROLLOUTS FOR TRAINING DATA!!!!!
 
     def get_action(self, state):
-        best_action, best_sim_number, best_sequence = self.get_best_sim_actions(state)
+        return self.get_action_with_predicted_states(state)[0]
+
+    def get_action_with_predicted_states(self, state):
+        best_action, best_sim_number, best_sequence, best_path = self.get_best_sim_actions(state)
 
         # whether to execute noisy or clean actions
         noise_actions = True
@@ -330,7 +295,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             noise = self.noise_amount * npr.normal(size=action_to_take.shape)  #
             action_to_take = action_to_take + noise  # no clip maybe go over bounds for action space
 
-        return action_to_take
+        return action_to_take, best_path
 
     def observe(self, state, action, reward, new_state, done):
         # get distances to current and next waypoints
@@ -339,10 +304,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         distance_to_next = self.distance_function(new_state, self.next_desired_state)
 
         # TODO decide which one to use or to use both (theta, or distances to next<=current)
-        if distance_to_current <= self.theta or distance_to_next <= distance_to_current:
+        if self.move_to_next(new_state, self.current_desired_state_index, distance_to_current, distance_to_next):
             # close enough to curr_waypoint, move on to next waypoint
-            self.current_desired_state_index = min(self.current_desired_state_index + 1,
-                                                   len(self.desired_states) - 1)
+            self.current_desired_state_index += 1
 
     def start_new_episode_plan(self, starting_state, path_to_follow):
         """
@@ -356,18 +320,22 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.path_to_follow = path_to_follow
         desired_states = np.asarray(get_start_waypoints_final_states_steps(path_to_follow, self.steps_per_waypoint))
         self.desired_states = desired_states
+
+        # radii calc (based off of standard deviation and mean of step sizes)
         stds, means = path_deltas_stds_and_means_per_dim(path_to_follow)
-        stepsizes = (means * self.mean_per_stepsize) + (stds * self.std_per_stepsize)
-        radii = stepsizes * self.stepsizes_in_waypoint_radii
+        self.radii = radii_calc(means, stds, self.mean_per_stepsize, self.std_per_stepsize, self.stepsizes_in_waypoint_radii)
+
+        # set the distance function to have everything on the ellipse defined by 'radii' to be exactly a distance of 1
         self.distance_function = \
-            elliptical_euclidean_distance_function_generator(radii)
+            elliptical_euclidean_distance_function_generator(self.radii)
 
 
         # calculate distances for the MPC reward function
         if len(desired_states) >= 2:
-            self.distances_left = \
+            temporal_differences = \
                 [self.distance_function(desired_states[x - 1], desired_states[x]) for x in
                  range(1, len(desired_states))] + [0]
+            self.distances_left = [sum(temporal_differences[i:]) for i in range(len(desired_states))]
         else:
             self.distances_left = [0]
         self.distances_left = np.asarray(self.distances_left)
@@ -392,8 +360,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         else:
             s_batch, a_batch, _, _, s2_batch = self.replay_buffer.all_batch()
         if self.make_aggregated_dataset_noisy:
-            s_batch = add_noise(s_batch)
-            s2_batch = add_noise(s2_batch)
+            s_batch = add_noise(s_batch, self.noiseToSignal)
+            s2_batch = add_noise(s2_batch, self.noiseToSignal)
         dataX_new_preprocessed = np.nan_to_num((s_batch - self.mean_x) / self.std_x)
         dataY_new_preprocessed = np.nan_to_num((a_batch - self.mean_y) / self.std_y)
         dataZ_new_preprocessed = np.nan_to_num((s2_batch - self.mean_z) / self.std_z)
@@ -427,7 +395,15 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
     @property
     def next_desired_state(self):
-        return self.desired_states[min(self.current_desired_state_index, len(self.desired_states) - 1)]
+        return self.desired_states[min(self.current_desired_state_index + 1, len(self.desired_states) - 1)]
+
+    #private
+    def move_to_next(self, pt, desired_state_index, distance_to_curr, distance_to_next):
+        move_to_next = np.logical_and(
+            # distance_to_curr <= self.theta,
+            np.logical_or(distance_to_curr <= self.theta, distance_to_next <= distance_to_curr),
+            desired_state_index != len(self.desired_states) - 1)
+        return move_to_next
 
     def get_best_sim_actions(self, curr_nn_state):
         # randomly sample N candidate action sequences
@@ -439,16 +415,30 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         resulting_states = self.dyn_model.do_forward_sim([curr_nn_state, 0], np.copy(all_samples), many_in_parallel)
         resulting_states = np.array(resulting_states)  # this is [horizon+1, N, statesize]
 
+
+        # moved_to_next = np.zeros((self.N,))
+        # done_forever = np.zeros((self.N,))
+        # prev_forward = np.zeros((self.N,))
+        # prev_pt = resulting_states[0]
+
+        # scores, best_score, best_sim_number = self.generate_scores_add_total_dist(resulting_states)
+        scores, best_score, best_sim_number = self.generate_scores_add_delta(resulting_states)
+
+
+        best_sequence = all_samples[best_sim_number]
+        best_action = np.copy(best_sequence[0])
+        best_path = resulting_states[:,best_sim_number]
+
+        return best_action, best_sim_number, best_sequence, best_path
+
+    def generate_scores_add_total_dist(self, resulting_states):
         # init vars to evaluate the trajectories
         scores = np.zeros((self.N,))
 
         samples_desired_state_indices = np.tile(self.current_desired_state_index, (self.N,))
         samples_desired_state_indices = samples_desired_state_indices.astype(int)
 
-        # moved_to_next = np.zeros((self.N,))
-        # done_forever = np.zeros((self.N,))
-        # prev_forward = np.zeros((self.N,))
-        # prev_pt = resulting_states[0]
+        distances_to_end = np.zeros((self.N,))
 
         # accumulate reward over each timestep
         for pt_number in range(resulting_states.shape[0]):
@@ -463,157 +453,136 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             distances_to_next = self.distance_function(next_desired_states, pt)
 
             # boolean array, tells whether or not the sample moves to the next waypoint
-            # TODO decide which one to use or to use both( theta, or distances to next<=current)
-            move_to_next = np.logical_and(
-                np.logical_or(distances_to_current <= self.theta, distances_to_next <= distances_to_current),
-                samples_desired_state_indices != len(self.desired_states) - 1)
+            move_to_next = self.move_to_next(pt, samples_desired_state_indices, distances_to_current, distances_to_next)
 
             # update scores as the sum of distances left on path
             not_move_to_next = np.logical_not(move_to_next)
-            scores[not_move_to_next] += \
+            distances_to_end[not_move_to_next] = \
                 self.distances_left[samples_desired_state_indices[not_move_to_next]] + \
-                distances_to_current[not_move_to_next]  # TODO calculate distance maybe with reward function?
-            scores[move_to_next] += \
+                distances_to_current[not_move_to_next]
+            distances_to_end[move_to_next] = \
                 self.distances_left[samples_desired_state_indices[move_to_next] + 1] + \
-                distances_to_next[move_to_next]  # TODO calculate distance maybe with reward function?
+                distances_to_next[move_to_next]
+
+            #update scores
+            scores += distances_to_end
 
             # update next waypoint for each sample if necessary
             samples_desired_state_indices[move_to_next] += 1  # if within theta of waypoint, increment waypoint
-
         # pick best action sequence
         best_score = np.min(scores)
         best_sim_number = np.argmin(scores)
-        best_sequence = all_samples[best_sim_number]
-        best_action = np.copy(best_sequence[0])
 
-        return best_action, best_sim_number, best_sequence
+        return scores, best_score, best_sim_number
+
+    def generate_scores_add_delta(self, resulting_states):
+        # init vars to evaluate the trajectories
+        scores = np.zeros((self.N,))
+
+        samples_desired_state_indices = np.tile(self.current_desired_state_index, (self.N,))
+        samples_desired_state_indices = samples_desired_state_indices.astype(int)
+
+        pts = resulting_states[0] #starting state
+        current_desired_states = self.desired_states[samples_desired_state_indices]
+        prev_distances_to_end = self.distances_left[samples_desired_state_indices] + \
+                        self.distance_function(pts, current_desired_states)
+
+        distances_to_end = np.zeros((self.N,))
+
+        gamma = .7
+        # horizontal_penalty_factor = 0
+        horizontal_penalty_factor = .5
+
+        # accumulate reward over each timestep
+        for pt_number in range(resulting_states.shape[0]):
+            # array of "the point"... for each sim
+            pts = resulting_states[pt_number]  # N x state
+
+            # get distances to current and next waypoints
+            current_desired_states = self.desired_states[samples_desired_state_indices]
+            next_desired_states = self.desired_states[
+                np.minimum(samples_desired_state_indices + 1, len(self.desired_states) - 1)]
+            distances_to_current = self.distance_function(current_desired_states, pts)
+            distances_to_next = self.distance_function(next_desired_states, pts)
+
+            # check if each sample should move onto the next waypoint
+            move_to_next = self.move_to_next(pts, samples_desired_state_indices, distances_to_current, distances_to_next)
+            samples_desired_state_indices[move_to_next] += 1  # if within theta of waypoint, increment waypoint
+
+            # get distance to new/current waypoint (updated)
+            distances_to_current[move_to_next] = distances_to_next[move_to_next]
+
+            # calculated distance left on the path
+            distances_to_end = self.distances_left[samples_desired_state_indices] + distances_to_current
+
+            # update scores as the sum of distances left on path
+            scores += (prev_distances_to_end - distances_to_end) * (gamma ** (pt_number)) #add the delta forward
+            np.copyto(prev_distances_to_end, distances_to_end)
+
+            # penalty for horizontal distance from the line segment
+            # (line segment determined by the prev and current waypoint except for 1st waypoint)
+            valid_penalties = samples_desired_state_indices >= 1 # needs a current and previous waypoint
+            line_seg_begin_indices = np.maximum(samples_desired_state_indices - 1, 0) #ensures no -1's
+            dist = dist_line_seg_to_point(
+                self.desired_states[line_seg_begin_indices], #prev waypoint
+                self.desired_states[line_seg_begin_indices + 1], #current waypoint
+                pts,
+                self.radii)
+            scores -= dist * horizontal_penalty_factor * gamma
+
+        # pick best action sequence
+        best_score = np.max(scores)
+        best_sim_number = np.argmax(scores)
+
+        #TODO remove following for loop:
+        # best_path = resulting_states[:,best_sim_number]
+        # sample_desired_state_index = int(self.current_desired_state_index)
+        # pt = best_path[0]  # starting state
+        # current_desired_state = self.desired_states[sample_desired_state_index]
+        # prev_distance_to_end = self.distances_left[sample_desired_state_index] + \
+        #                         self.distance_function(pt, current_desired_state)
+        # distance_to_end = 0
+        # score = 0
+        # for pt_number in range(best_path.shape[0]):
+        #     # array of "the point"... for each sim
+        #     pt = best_path[pt_number]  # N x state
+        #
+        #     # get distances to current and next waypoints
+        #     current_desired_state = self.desired_states[sample_desired_state_index]
+        #     next_desired_state = self.desired_states[
+        #         np.minimum(sample_desired_state_index + 1, len(self.desired_states) - 1)]
+        #     distance_to_current = self.distance_function(current_desired_state, pt)
+        #     distance_to_next = self.distance_function(next_desired_state, pt)
+        #
+        #     # check if each sample should move onto the next waypoint
+        #     move_to_next = self.move_to_next(pt, sample_desired_state_index, distance_to_current,
+        #                                      distance_to_next)
+        #     if move_to_next:
+        #         sample_desired_state_index += 1  # if within theta of waypoint, increment waypoint
+        #         # get distance to new/current waypoint (updated)
+        #         distance_to_current = distance_to_next
+        #
+        #     # calculated distance left on the path
+        #     distance_to_end = self.distances_left[sample_desired_state_index] + distance_to_current
+        #
+        #     # update scores as the sum of distances left on path
+        #     score += (prev_distance_to_end - distance_to_end) * (gamma ** (pt_number))  # add the delta forward
+        #     prev_distance_to_end = distance_to_end
+        #
+        #     # penalty for horizontal distance from the line segment (line segment determined by the prev and current waypoint)
+        #     if sample_desired_state_index >= 1:  # needs a current and previous waypoint
+        #         dist = dist_line_seg_to_point(
+        #             self.desired_states[sample_desired_state_index - 1],  # prev waypoint
+        #             self.desired_states[sample_desired_state_index],  # current waypoint
+        #             pt,
+        #             self.radii) * horizontal_penalty_factor
+        #         # print(dist)
+        #         score -= dist
+        print("distance from point: " + str(self.distance_function(resulting_states[0][0],self.desired_states[0])))
+        print("'projection' from line segment: " +
+              str(dist_line_seg_to_point(self.desired_states[0], self.desired_states[1],
+                                         resulting_states[0][0], self.radii)))
 
 
-if __name__ == "__main__":
-    import random
-    import gym
 
-    # intialize variables
-    steps_per_waypoint = 10
-    num_episodes = 2
-    max_steps = 1000
-    render = False
-    render_episode = False
-    print_steps = True
-    print_results = True
-    ENV_NAME = 'MountainCarContinuous-v0'  # configuring environment
-    env = gym.make(ENV_NAME)
-    RANDOM_SEED = 1234  # Reset the seed for random number generation
-    random.seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
-    tf.set_random_seed(RANDOM_SEED)
-
-    # Initialize agent, see class for available parameters
-    agent = NND_MB_agent(env,
-                         theta=1,
-                         steps_per_waypoint=steps_per_waypoint,
-                         mean_per_stepsize= 1,
-                         std_per_stepsize= 1,
-                         stepsizes_in_waypoint_radii=1,
-                         use_existing_training_data=True,
-                         horizon=20,
-                         num_episodes_for_aggregation=1)  # type: NND_MB_agent
-
-    # intializing the desired_states
-    target_default_directory = "ddpg_summaries"
-    target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
-    target_file_pathname = os.path.join(get_default_directory(target_default_directory), target_file_name)
-    target_summary = Summary.load(target_file_pathname)  # type:Summary
-    target_path = target_summary.get_last_path(0)
-    target_reward = target_summary.get_last_reward(0)
-    desired_states = get_start_waypoints_final_states_steps(target_path, steps_per_waypoint)
-
-    # summary object
-    summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
-
-    np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})  # for printing
-
-    # begin training episodes(1)
-    for i_episode in range(num_episodes):
-        episode = Episode()  # type: Episode # record the episode
-        observation = env.reset()  # setup env
-
-        # Step through the Episode
-        agent.start_new_episode_plan(observation, target_path)  # only needed for smartStart
-
-        plot_pauser_count = 0
-        prev_pause_count = 1
-        plot = True
-        ion_plot()
-        axis0, line_collection, line_collection2, highlight = None, None, None, None
-        plotted = False
-        for step in range(max_steps):
-
-            # rendering
-            if render:
-                render = agent.render(env)
-
-            # agent action
-            action = agent.get_action(observation)
-
-            # environment processing
-            new_observation, reward, done, _ = env.step(action)  # also returns emtpy dict (to match openAI)
-
-            # printing the step
-            if print_steps:
-                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, observation,
-                                                                                                  action,
-                                                                                                  new_observation,
-                                                                                                  reward).replace("\n",
-                                                                                                                  ""))
-
-            # agent update model// observe new observation
-            agent.observe(observation, action, reward, new_observation, done)
-
-            # record results to episode object
-            episode.append(observation, action, reward, new_observation, done)
-
-            if not plotted:
-                axis0, line_collection, line_collection2, \
-                highlight = plot_path(target_path,
-                                      path2=episode.get_total_path(),
-                                      title="Desired Path rw({0:.2f}) vs. Current Path rw({0:.2f})".format(
-                                          target_reward, episode.reward),
-                                      x_label="x_pos", y_label="x_velocity",
-                                      waypoint_centers=desired_states,
-                                      highlight_waypoint_index=agent.current_desired_state_index,
-                                      radii=[1, 1])
-                show_plot()
-                plotted = True
-                pause_plot(0.001)
-            else:
-                line_collection2, highlight = update_path(axis0, line_collection, line_collection2, highlight,
-                                                          episode.get_total_path(),
-                                                          agent.current_desired_state, [1, 1])
-                pause_plot(0.001)
-
-            # check terminal observation
-            if done:
-                break
-            else:
-                observation = new_observation  # increment local observation
-        agent.end_episode()  # needed for continuous stuffs
-        # Episode over
-
-        # Final Render and/or print results
-        if render or render_episode:
-            message = "Episode: %d, steps: %d, reward: %.2f" % (
-                i_episode, len(episode), episode.average_reward())
-            render_episode = agent.render(env, message=message)
-        if print_results:
-            print("Episode: %d, steps: %d, reward: %.2f" % (
-                i_episode, len(episode), episode.average_reward()))
-
-        # update summary
-        summary.append(episode)
-
-    # render results
-    while render:
-        render = agent.render(env)
-
-    summary.save(get_default_directory("nnd_mb_tests"), extra_name_append="")
+        return scores, best_score, best_sim_number

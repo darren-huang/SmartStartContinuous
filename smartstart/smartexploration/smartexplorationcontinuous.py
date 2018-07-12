@@ -156,7 +156,7 @@ class SmartStartContinuous(RLAgent):
         smart_start_index = None
         max_ucb = -float('inf')
 
-        #find the smart_start state
+        #find the smart_start state TODO PARALLELEIZE WITH NUMPY
         for main_step_index in possible_start_indices:
             # state value
             main_step = self.replay_buffer.buffer[main_step_index]

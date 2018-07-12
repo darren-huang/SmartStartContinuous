@@ -58,5 +58,70 @@ def path_deltas_stds_and_means_per_dim(path):
 
     return stds, means
 
-def radiis(means, stds, num_means, num_stds, num_steps):
+def radii_calc(means, stds, num_means, num_stds, num_steps):
     return ((num_means * means) + (num_stds * stds)) * num_steps
+
+def euclidean_distance(state, other_state):
+    """
+
+    :param state: state/list of states (numpy) EITHER 1D or 2D
+    :param other_state: state/list of states (numpy) EITHER 1D or 2D
+    :return: distance/ list of distances (numpy)
+    """
+    axis = max(len(state.shape), len(other_state.shape)) - 1
+    return np.sum((state - other_state) ** 2, axis=axis) ** 0.5
+
+def dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, radii):
+    # create vectors that have the line_seg_begin as the 'origin'
+    pt_vector = pt - line_seg_begin
+    line_vector = line_seg_end - line_seg_begin
+    dist_func = elliptical_euclidean_distance_function_generator(radii)
+
+    # note the returned projection is a also a vector with the line_seg_begin as the 'origin'
+    return dist_func(projection_of_a_onto_b(pt_vector, line_vector, radii = radii),
+                     pt_vector)
+
+
+def projection_of_a_onto_b(a, b, radii=None):
+    if radii is not None:
+        # scale a and b
+        a, b = a / radii, b/ radii
+
+    a_dot_b = np.sum(a*b)
+    b_magnitude = (np.sum(b * b) ** 0.5)
+    c = a_dot_b / b_magnitude # c*b_hat = projection component where b_hat is the unit vector of b
+    b_hat = b / (np.sum(b * b) ** 0.5)
+    proj_of_a_onto_b = c * b_hat
+
+    if radii is not None:
+        # unscale projection back to normal basis
+        proj_of_a_onto_b = proj_of_a_onto_b * radii
+    return proj_of_a_onto_b
+
+
+def elliptical_euclidean_distance_function_generator(radii):
+    """
+      __
+     / | \                    |
+    |  | | where the vertical | represents the y-radius
+    |  ._| and the horizontal _ represents the x-radius
+    |    | (distance function makes all points on that ellipse become distance 1 from the center
+     \__/
+    :param radii: for states of n-dimensions, radii is n - long specifying the elliptical radius along that axis
+    :return:
+    """
+    for i in radii:
+        assert i > 0
+    radii = np.asarray(radii)
+
+    def distance_func(state, other_state):
+        """
+
+        :param state: state/list of states (numpy) EITHER 1D or 2D
+        :param other_state: state/list of states (numpy) EITHER 1D or 2D
+        :return: distance/ list of distances (numpy)
+        """
+        axis = max(len(state.shape), len(other_state.shape)) - 1
+        return np.sum(((state - other_state) / radii) ** 2, axis=axis) ** 0.5
+
+    return distance_func

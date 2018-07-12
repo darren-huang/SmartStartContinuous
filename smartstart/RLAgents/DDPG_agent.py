@@ -253,7 +253,7 @@ if __name__ == "__main__":
     agent = DDPG_agent(env)
 
     # Train the agent, summary contains training data
-    summary = rlTrain(agent, env, render=False,
+    summary = rlTrain(agent, env, render=True,
                       render_episode=False,
                       print_results=True, num_episodes=1000)  # type: Summary
 

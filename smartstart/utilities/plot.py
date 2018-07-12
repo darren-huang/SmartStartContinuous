@@ -335,7 +335,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=[],
+def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=[],
               highlight_waypoint_index = None, radii=[0, 0], linewidth=3):
     assert len(path[0]) == 2
 
@@ -355,6 +355,7 @@ def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=Non
     #draw trajectory
     line_collection = make_line_collection(x, y, color_num_scale, cmap=cmap, norm=norm, linewidth=linewidth)
     line_collection2 = None
+    line_collection3 = None
     cmap2 = None
     norm2 = None
     if path2:
@@ -381,6 +382,17 @@ def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=Non
         figure, (axis0, axis1) = plt.subplots(1, 2, gridspec_kw={
             'width_ratios': [12, 1]})  # type: (object, (matplotlib.axes.Axes, matplotlib.axes.Axes))
 
+    if path3 is not None:
+        # get x's and y's
+        x3 = [s[0] for s in path3]
+        y3 = [s[1] for s in path3]
+        # color map variables to configure a gradient along the trajectory
+        color_num_scale3 = np.linspace(0, len(path3), len(path3))
+        cmap3 = truncate_colormap(plt.get_cmap('copper_r'), minval=.05, maxval=.5)
+        norm3 = plt.Normalize(0, len(path3))
+        # draw trajectory
+        line_collection3 = make_line_collection(x3, y3, color_num_scale3, cmap=cmap3, norm=norm3, linewidth=linewidth)
+
     #maybe draw waypoints along trajectory
     if waypoint_centers:
         waypoint_cmap = plt.get_cmap('binary')
@@ -403,6 +415,8 @@ def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=Non
     axis0.set_ylabel(y_label)
     if path2:
         axis0.add_collection(line_collection2)
+    if path3 is not None:
+        axis0.add_collection(line_collection3)
     axis0.add_collection(line_collection) # add main path
     axis0.set_xlim(min(x) - radii[0], max(x) + radii[0]) #set graph view cropping thingy
     axis0.set_ylim(min(y) - radii[1], max(y) + radii[1])
@@ -412,12 +426,13 @@ def plot_path(path, path2=None, title="", reward=None, x_label=None, y_label=Non
     cb1.set_label('Step')
     plt.tight_layout()
 
-    return axis0, line_collection, line_collection2, highlight
+    return axis0, line_collection, line_collection2, line_collection3, highlight
 
-def update_path(axis, old_line_collection, old_line_collection2, old_highlihgt, new_path, new_center, radii,
-                linewidth=3):
+def update_path(axis, old_line_collection, old_line_collection2, old_line_collection3, old_highlihgt, new_path,
+                new_path3, new_center, radii, linewidth=3):
     old_line_collection.remove()
     old_line_collection2.remove()
+    old_line_collection3.remove()
     old_highlihgt.remove()
     new_highlight = Ellipse((new_center[0], new_center[1]), radii[0] * 2, radii[1] * 2, 0,
                         color="#ff8080")
@@ -435,7 +450,18 @@ def update_path(axis, old_line_collection, old_line_collection2, old_highlihgt, 
     # draw trajectory
     new_line_collection2 = make_line_collection(x2, y2, color_num_scale2, cmap=cmap2, norm=norm2, linewidth=linewidth)
     axis.add_collection(new_line_collection2)
-    return new_line_collection2, new_highlight
+
+    # get x's and y's
+    x3 = [s[0] for s in new_path3]
+    y3 = [s[1] for s in new_path3]
+    # color map variables to configure a gradient along the trajectory
+    color_num_scale3 = np.linspace(0, len(new_path3), len(new_path3))
+    cmap3 = truncate_colormap(plt.get_cmap('copper_r'), minval=.05, maxval=.5)
+    norm3 = plt.Normalize(0, len(new_path3))
+    # draw trajectory
+    line_collection3 = make_line_collection(x3, y3, color_num_scale3, cmap=cmap3, norm=norm3, linewidth=linewidth)
+    axis.add_collection(line_collection3)
+    return new_line_collection2, line_collection3, new_highlight
 
 
 def make_circle_collection(circle_centers, color_num_scale, radius=5,
@@ -482,6 +508,9 @@ def ion_plot():
     :return:
     """
     plt.ion()
+
+def ioff_plot():
+    plt.ioff()
 
 def show_plot():
     """Render the plots on screen
