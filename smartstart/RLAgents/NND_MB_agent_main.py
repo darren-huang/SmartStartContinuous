@@ -26,7 +26,10 @@ if __name__ == "__main__":
     steps_per_waypoint = 1
     num_episodes = 10
     max_steps = 1000
-    horizon = 10
+    horizon = 4
+    gamma = .75
+    horizontal_penalty_factor = .5
+    # horizontal_penalty_factor = .5
     N=5000
     render = False
     render_episode = False
@@ -41,15 +44,17 @@ if __name__ == "__main__":
 
     # Initialize agent, see class for available parameters
     agent = NND_MB_agent(env,
-                         theta=1,
+                         #theta=1,
                          steps_per_waypoint=steps_per_waypoint,
                          mean_per_stepsize= mean_per_stepsize,
                          std_per_stepsize= std_per_stepsize,
                          stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
+                         gamma=gamma,
+                         horizontal_penalty_factor=horizontal_penalty_factor,
                          use_existing_training_data=True,
                          horizon=horizon,
                          num_control_samples=N,
-                         num_episodes_for_aggregation=10)  # type: NND_MB_agent
+                         num_episodes_for_aggregation=1)  # type: NND_MB_agent
 
     # intializing the desired_states
     target_default_directory = "ddpg_summaries"

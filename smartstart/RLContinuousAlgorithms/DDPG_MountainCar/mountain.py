@@ -57,7 +57,7 @@ def trainer(epochs=1000, MINIBATCH_SIZE=40, GAMMA = 0.99, epsilon=1.0, min_epsil
         actor.update_target_network()
         critic.update_target_network()
         # Initialize replay memory
-        replay_buffer = ReplayBuffer(BUFFER_SIZE, RANDOM_SEED)
+        replay_buffer = ReplayBuffer(None, BUFFER_SIZE, RANDOM_SEED)
 
         goal = 0
         max_state = -1.
@@ -110,7 +110,7 @@ def trainer(epochs=1000, MINIBATCH_SIZE=40, GAMMA = 0.99, epsilon=1.0, min_epsil
 
                 if train_indicator:
                     # 3. Save in replay buffer:
-                    replay_buffer.add(np.reshape(state, (actor.s_dim,)), np.reshape(action, (actor.a_dim,)), reward,
+                    replay_buffer.add(None, np.reshape(state, (actor.s_dim,)), np.reshape(action, (actor.a_dim,)), reward,
                                       done, np.reshape(next_state, (actor.s_dim,)))
 
                     # Keep adding experience to the memory until
@@ -191,4 +191,4 @@ def trainer(epochs=1000, MINIBATCH_SIZE=40, GAMMA = 0.99, epsilon=1.0, min_epsil
 
 
 if __name__ == '__main__':
-    trainer(epochs=100, epsilon = 1., render = True)
+    trainer(epochs=100, epsilon = 1., render = True, MINIBATCH_SIZE=1)

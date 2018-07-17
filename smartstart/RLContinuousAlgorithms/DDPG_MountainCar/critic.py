@@ -85,6 +85,7 @@ class CriticNetwork(object):
         trainLength = tf.placeholder(dtype=tf.int32, name = 'trainlengh')
         # net
         l2Flat = tf.reshape(slim.flatten(l2),[self.batch_size,trainLength,self.h_size])
+
         state_in = cell.zero_state(self.batch_size, tf.float32)
         rnn,rnn_state = tf.nn.dynamic_rnn(cell= cell,inputs=l2Flat, dtype=tf.float32,initial_state=state_in,scope=scope)
         rnn = tf.reshape(rnn,shape=[-1,self.h_size])

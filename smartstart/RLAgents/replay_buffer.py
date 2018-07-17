@@ -96,7 +96,9 @@ class ReplayBuffer(object):
         self.buffer.clear()
         self.next_episode_number = 0
 
-    def start_new_episode(self, state):
+    def start_new_episode(self, observing_agent):
+        if observing_agent is not self.main_agent:
+            return #main agent should do the episode starts, all other agents ignored
         if len(self.episode_starting_indices) > 0 and self.episode_starting_indices[-1] == self.next_episode_number:
             print("shouldn't call start episode twice in a row")
         else:

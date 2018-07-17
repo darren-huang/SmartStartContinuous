@@ -8,11 +8,16 @@ from queue import Queue
 from typing import Deque
 
 import numpy as np
+import tensorflow as tf
 
+from smartstart.RLAgents.DDPG_agent import DDPG_agent
+from smartstart.RLAgents.NND_MB_agent import NND_MB_agent
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent
+from smartstart.utilities.utilities import get_default_directory
+
 
 
 class SmartStartContinuous(RLAgent):
@@ -94,10 +99,18 @@ class SmartStartContinuous(RLAgent):
                  exploration_param=2.,
                  eta=0.5,
                  m=1,
-                 vi_gamma=0.99,
-                 vi_min_error=1e-5,
-                 vi_max_itr=1000,
-                 buffer_size=10000,
+                 nnd_mb_run_num=None,
+                 nnd_mb_steps_per_waypoint=1,
+                 nnd_mb_mean_per_stepsize=1,
+                 nnd_mb_std_per_stepsize=1,
+                 nnd_mb_stepsizes_in_waypoint_radii=1,
+                 nnd_mb_gamma=.75,
+                 nnd_mb_horizontal_penalty_factor=.5,
+                 nnd_mb_use_existing_training_data=True,
+                 nnd_mb_horizon=20,
+                 nnd_mb_num_control_samples=5000,
+                 nnd_mb_num_episodes_for_aggregation=3,
+                 buffer_size=500000,
                  n_ss = 1000,
                  sigma = 1):
         self.__class__.__name__ = "SmartStart_" + agent.__class__.__name__
@@ -119,11 +132,24 @@ class SmartStartContinuous(RLAgent):
 
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
 
-
         # keep track of SmartStartPathing vs. NormalAgentPathing
         self.smart_start_pathing = False
         self.smart_start_path = None  # placeholder for smart_start_state to navigate to
 
+        # the agent for navigating to the smartstart
+        self.nnd_mb_agent = NND_MB_agent(env,
+                                         replay_buffer=self.replay_buffer,
+                                         run_num=nnd_mb_run_num,
+                                         steps_per_waypoint=nnd_mb_steps_per_waypoint,
+                                         mean_per_stepsize=nnd_mb_mean_per_stepsize,
+                                         std_per_stepsize=nnd_mb_std_per_stepsize,
+                                         stepsizes_in_waypoint_radii=nnd_mb_stepsizes_in_waypoint_radii,
+                                         gamma=nnd_mb_gamma,
+                                         horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
+                                         use_existing_training_data=nnd_mb_use_existing_training_data,
+                                         horizon=nnd_mb_horizon,
+                                         num_control_samples=nnd_mb_num_control_samples,
+                                         num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation)
 
     @property
     def normal_agent_pathing(self):
@@ -152,6 +178,9 @@ class SmartStartContinuous(RLAgent):
             return None
 
         possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
+
+        if not possible_start_indices: # no valid states then return None
+            return None
 
         smart_start_index = None
         max_ucb = -float('inf')
@@ -187,119 +216,82 @@ class SmartStartContinuous(RLAgent):
 
         return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_index)
 
-    def dynamic_programming(self, start_state):
-        """Fits transition model, reward function and performs dynamic
-        programming
-
-        Transition model is fitted using the following equation
-
-            T(s,a,s') = \frac{C(s,a,s'}{C(s,a)}
-
-        Where C(*) is the visitation count. The reward function is zero
-        everywhere except for the transition that results in the smart start
-
-            R(s,a,s') = 1 if s' == s_{ss}
-            R(s,a,s') = 0 otherwise
-
-        Dynamic programming is done using value iteration.
-
-        Parameters
-        ----------
-        start_state : :obj:`np.ndarray`
-            SmartStart state
-
-        """
-        # Reset policy
-        self.policy.reset()
-
-        # Fit transition model and reward function
-        for obs_c, obs_count in self.agent.count_map.items():
-            for action, action_count in obs_count.items():
-                for obs_tp1, count in action_count.items():
-                    self.policy.add_obs(obs_c)
-                    if obs_tp1 == tuple(start_state):
-                        self.policy.R[obs_c + action][obs_tp1] = 1.
-                    self.policy.T[obs_c + action][obs_tp1] = \
-                        count / sum(self.agent.count_map[obs_c][action].
-                                    values())
-
-        # Perform dynamic programming
-        self.policy.optimize()
-
     def get_action(self, state):
         if self.smart_start_pathing:
-            return self.policy.get_action(state)
+            return self.nnd_mb_agent.get_action(state)
         else:
             return self.agent.get_action(state)
 
     def observe(self, state, action, reward, new_state, done):
         # new_state added (maybe) to buffer
-        self.state_to_buffer(new_state)
+        self.replay_buffer.add(self, state, action, reward, done, new_state)
 
         # agent observation
         self.agent.observe(state, action, reward, new_state, done)
 
         # check if smart_start_state has been reached
-        if self.smart_start_pathing and np.array_equal(new_state, self.smart_start_path):
+        if self.smart_start_pathing and self.nnd_mb_agent.close_enough_to_goal(new_state):
             self.smart_start_pathing = False
+            print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
+            print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
-        # new_state added (maybe) to buffer
-        self.state_to_buffer(state)
-
+        self.replay_buffer.start_new_episode(self)
         self.agent.start_new_episode(state)
-        if np.random.rand() <= self.eta: #eta is probability of using smartStart
+        #TODO REMOVE FOLLOWING THIS IS JUST FOR TESTING
+        if True:
+        # if np.random.rand() <= self.eta: #eta is probability of using smartStart
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
 
-            #TODO: finish everything after this comment
-            if self.smart_start_path is not None and not np.array_equal(self.smart_start_path, state): #valid smart start
-                self.smart_start_pathing = True
-
-                self.dynamic_programming(self.smart_start_path) #this will update the policy
+            if self.smart_start_path: #ensure path exists
+                print("path exists")
+                # let neural network dynamics model based controller load the path
+                self.nnd_mb_agent.start_new_episode_plan(state, self.smart_start_path)
+                if not self.nnd_mb_agent.close_enough_to_goal(state): #ensure goal hasn't already been reached
+                    self.smart_start_pathing = True #this start smart start navigation
+                    print("SMART_START START!!!")
 
 
     def render(self, env, **kwargs):
-        kwargs['smart_start_state_density_map'] = self.get_smart_state_density_map()
-        return self.agent.render(env, **kwargs)
-
-    #private method, adds (maybe -rnd) state to buffer
-    def state_to_buffer(self, new_state):
-        # TODO CHANGE BUFFER
-        if len(self.replay_buffer) < self.buffer_size: # still has capacity
-            self.replay_buffer.append(new_state)
-        else: # buffer full -> random replacement
-            index = random.randint(0, self.buffer_size)
-            if index != self.buffer_size:
-                self.replay_buffer[index] = new_state
-
+        return env.render()
 
 if __name__ == "__main__":
-    from smartstart.environments.gridworld import GridWorld
-    from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
-    from smartstart.RLDiscreteAlgorithms import SARSALambda
+    import random
+    import gym
+    from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+    from smartstart.utilities.plot import plot_summary, show_plot, \
+        mean_reward_episode, steps_episode
 
-    directory = '/home/bartkeulen/repositories/smartstart/data/tmp'
+    # Reset the seed for random number generation
+    RANDOM_SEED = 1234
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    tf.set_random_seed(RANDOM_SEED)
 
-    np.random.seed()
+    # configuring environment
+    ENV_NAME = 'MountainCarContinuous-v0'
+    env = gym.make(ENV_NAME)
 
-    env = GridWorld.generate(GridWorld.EASY)
-    visualizer = GridWorldVisualizer(env)
-    visualizer.add_visualizer(GridWorldVisualizer.LIVE_AGENT,
-                              GridWorldVisualizer.CONSOLE,
-                              GridWorldVisualizer.VALUE_FUNCTION,
-                              GridWorldVisualizer.DENSITY)
-    env.visualizer = visualizer
-    # env.T_prob = 0.1
+    # Initialize agent, see class for available parameters
+    base_agent = DDPG_agent(env)
+    smart_start_agent = SmartStartContinuous(base_agent, env,
+                                             nnd_mb_run_num=0,
+                                             nnd_mb_steps_per_waypoint=1,
+                                             nnd_mb_mean_per_stepsize=1,
+                                             nnd_mb_std_per_stepsize=1,
+                                             nnd_mb_stepsizes_in_waypoint_radii=1,
+                                             nnd_mb_gamma=.75,
+                                             nnd_mb_horizontal_penalty_factor=.5,
+                                             nnd_mb_use_existing_training_data=True,
+                                             nnd_mb_horizon=4,
+                                             nnd_mb_num_control_samples=5000,
+                                             nnd_mb_num_episodes_for_aggregation=3,
+                                             n_ss=2000)
 
-    # env.wall_reset = True
+    # Train the agent, summary contains training data
+    summary = rlTrain(smart_start_agent, env, render=True,
+                      print_steps=False,
+                      render_episode=False,
+                      print_results=True, num_episodes=1000)  # type: Summary
 
-    # agent = generate_smartstart_object(SARSALambda, env, eta=0.75, alpha=0.3,
-    #                                    num_episodes=1000, max_steps=1000,
-    #                                    exploitation_param=0.)
-    agent = SmartStartDiscrete(SARSALambda(env, ta=0.75, alpha=0.3,
-                                       num_episodes=1000, max_steps=1000), env,
-                                       exploitation_param=0.)
-
-    summary = agent.train(render=False, render_episode=True)
-
-    summary.save(directory=directory)
+    summary.save(get_default_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep")

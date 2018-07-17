@@ -10,13 +10,12 @@ from smartstart.utilities.utilities import get_default_directory
 from smartstart.utilities.datacontainers import Summary
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
+from baselines.ddpg import ddpg, models
 
 import numpy as np
 
 
-
-
-class DDPG_agent(RLAgent, metaclass=ABCMeta):
+class DDPG_Baselines_agent(RLAgent, metaclass=ABCMeta):
     #TODO edit this description
     """Base class for temporal-difference methods
 
