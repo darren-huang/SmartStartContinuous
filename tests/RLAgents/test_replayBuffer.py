@@ -82,7 +82,7 @@ class TestReplayBuffer(TestCase):
         replay_buffer = ReplayBuffer(0, 2)
         replay_buffer.start_new_episode(0)
         replay_buffer.add(0, 2, 2, 2, False, 2)
-        replay_buffer.start_new_episode(1)
+        replay_buffer.start_new_episode(0)
         replay_buffer.add(0, 2, 2, 2, False, 2)
         # should have episodes [0,1] after adding another item, should reduce to [1] which reindexes to [0]
         replay_buffer.add(0, 2, 2, 2, False, 2)
@@ -93,7 +93,7 @@ class TestReplayBuffer(TestCase):
     def test_episode_number_to_buffer_index(self):
         replay_buffer = ReplayBuffer(0, 10)
         for i in range(20):
-            replay_buffer.start_new_episode(i)
+            replay_buffer.start_new_episode(0)
             replay_buffer.add(0, i, i, i, False, i)
             for j in range(len(replay_buffer.episode_starting_indices)):
                 episode_index = replay_buffer.episode_starting_indices[-(j+1)] # going backwards

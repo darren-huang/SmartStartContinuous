@@ -108,8 +108,8 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
 
         #tensorflow :D
         self.sess = tf.Session()
-        #TODO:REMOVE THIS BIT
-        self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+        # #TO/DO:REMOVE THIS BIT
+        # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
 
         # info of the environment to pass to the agent
         self.state_dim = env.observation_space.shape[0]
@@ -175,12 +175,8 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
 
     def scale(self, actions):  # assume domain [-1,1]
         actions = np.clip(actions, -1, 1)
-        scaled_actions = []
         low, high = self.env.action_space.low, self.env.action_space.high
-
-        for i in range(len(actions)):
-            a = actions[i]
-            scaled_actions += [(a + 1) * (high[i] - low[i]) / 2 + low[i]]
+        scaled_actions = (((actions + 1) / 2) * (high - low)) + low
         return scaled_actions  # edit - DH.
 
     def observe(self, state, action, reward, new_state, done):
@@ -242,21 +238,21 @@ if __name__ == "__main__":
     import random
     import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+    from smartstart.utilities.utilities import set_global_seeds
     from smartstart.utilities.plot import plot_summary, show_plot, \
         mean_reward_episode, steps_episode
 
     # Reset the seed for random number generation
     RANDOM_SEED = 1234
-    random.seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
-    tf.set_random_seed(RANDOM_SEED)
+
+    set_global_seeds(RANDOM_SEED)
 
     # configuring environment
     ENV_NAME = 'MountainCarContinuous-v0'
     env = gym.make(ENV_NAME)
 
     # Initialize agent, see class for available parameters
-    agent = DDPG_agent(env, MINIBATCH_SIZE=1)
+    agent = DDPG_agent(env, MINIBATCH_SIZE=40)
 
     # Train the agent, summary contains training data
     summary = rlTrain(agent, env, render=True,

@@ -17,7 +17,7 @@ class ReplayBuffer(object):
             to the replay buffer, only one state entry will add (this is the case with Smart Starts)
     """
 
-    def __init__(self, main_agent, max_buffer_size, random_seed=123):
+    def __init__(self, main_agent, max_buffer_size):
         """
         The right side of the deque contains the most recent experiences
         """
@@ -36,8 +36,9 @@ class ReplayBuffer(object):
         self.next_episode_number = 0
         self.episode_starting_indices = deque() # holds the COUNT of the first state of the episode
         self.buffer = deque()
-        if random_seed is not None:
-            random.seed(random_seed)
+
+    def set_main_agent(self, new_main_agent):
+        self.main_agent = new_main_agent
 
     def add(self, observing_agent, s, a, r, t, s2):
         if observing_agent is not self.main_agent:
@@ -149,17 +150,16 @@ class ReplayBuffer(object):
         :return: array of States
         """
         if len(self.episode_starting_indices) == 0:
-            return ": ("
+            raise ValueError(": (   -   no episodes have been recorded")
         episode_index = self.buffer_index_to_episode_number(buffer_index)
         episode_start_index = None
 
-        #find the
         # shouldn't be a bottle neck because should be a small number of episodes (if it is a bottleneck can use binary search)
-        for i in range(len(self.episode_starting_indices) - 2):
+        for i in range(len(self.episode_starting_indices) - 1):
             if self.episode_starting_indices[i] <= episode_index and episode_index < self.episode_starting_indices[i+1]:
                 episode_start_index = self.episode_starting_indices[i]
                 break
-        if episode_start_index is None and self.episode_starting_indices[-1] <= self.episode_starting_indices:
+        if episode_start_index is None and self.episode_starting_indices[-1] <= episode_index:
             episode_start_index = self.episode_starting_indices[-1]
 
         buffer_start_index = self.episode_number_to_buffer_index(episode_start_index)

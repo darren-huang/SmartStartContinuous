@@ -11,7 +11,7 @@ from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, r
 # my imports
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
-from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps
+from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps, set_global_seeds
 
 # from rllab.rllab.envs.normalized_env import normalize
 
@@ -37,23 +37,15 @@ if __name__ == "__main__":
     print_results = True
     ENV_NAME = 'MountainCarContinuous-v0'  # configuring environment
     env = gym.make(ENV_NAME)
+
     RANDOM_SEED = 1234  # Reset the seed for random number generation
-    random.seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
-    tf.set_random_seed(RANDOM_SEED)
+    set_global_seeds(RANDOM_SEED)
 
     # Initialize agent, see class for available parameters
-    agent = NND_MB_agent(env,
-                         #theta=1,
-                         steps_per_waypoint=steps_per_waypoint,
-                         mean_per_stepsize= mean_per_stepsize,
-                         std_per_stepsize= std_per_stepsize,
-                         stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
-                         gamma=gamma,
-                         horizontal_penalty_factor=horizontal_penalty_factor,
-                         use_existing_training_data=True,
-                         horizon=horizon,
-                         num_control_samples=N,
+    agent = NND_MB_agent(env, steps_per_waypoint=steps_per_waypoint, mean_per_stepsize=mean_per_stepsize,
+                         std_per_stepsize=std_per_stepsize, stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
+                         gamma=gamma, horizontal_penalty_factor=horizontal_penalty_factor,
+                         use_existing_training_data=True, horizon=horizon, num_control_samples=N,
                          num_episodes_for_aggregation=1)  # type: NND_MB_agent
 
     # intializing the desired_states

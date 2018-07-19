@@ -57,7 +57,7 @@ def trainer(epochs=1000, MINIBATCH_SIZE=40, GAMMA = 0.99, epsilon=1.0, min_epsil
         actor.update_target_network()
         critic.update_target_network()
         # Initialize replay memory
-        replay_buffer = ReplayBuffer(None, BUFFER_SIZE, RANDOM_SEED)
+        replay_buffer = ReplayBuffer(None, BUFFER_SIZE)
 
         goal = 0
         max_state = -1.

@@ -10,13 +10,13 @@ from typing import Deque
 import numpy as np
 import tensorflow as tf
 
-from smartstart.RLAgents.DDPG_agent import DDPG_agent
+from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.RLAgents.NND_MB_agent import NND_MB_agent
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
-from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent
-from smartstart.utilities.utilities import get_default_directory
+from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
+from smartstart.utilities.utilities import get_default_directory, set_global_seeds
 
 
 
@@ -47,7 +47,7 @@ class SmartStartContinuous(RLAgent):
 
     Parameters
     ----------
-    agent : :obj:'~smartstart.reinforcementLearningCore.agents.ValueFuncAndCountMapRLAgent'
+    agent : :obj:'~smartstart.reinforcementLearningCore.agents.ValueFuncRLAgent'
         agent that runs once smartstart pathing is over (must also be a Counter, and have a .get_state_value func)
     env : :obj:`~smartstart.environments.environment.Environment`
         environment
@@ -95,6 +95,7 @@ class SmartStartContinuous(RLAgent):
     def __init__(self,
                  agent,
                  env,
+                 sess, #tf session
                  exploitation_param=1.,
                  exploration_param=2.,
                  eta=0.5,
@@ -127,8 +128,13 @@ class SmartStartContinuous(RLAgent):
         # SmartStart Trajectory Optimization
 
         # keeps track of some distribution of all states visited
-        #TODO CHANGE BUFFER
-        self.replay_buffer = ReplayBuffer(self, buffer_size) # FIFO replacement strategy
+        #TODO Document the necessity of having the base_agent inherit from ReplayBufferRLAgent
+        if isinstance(agent, ReplayBufferRLAgent):
+            self.replay_buffer = agent.replay_buffer
+            agent.set_replay_buffer_main_agent(self)
+        else:
+            self.replay_buffer = ReplayBuffer(self, buffer_size)  # FIFO replacement strategy
+
 
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
 
@@ -137,18 +143,15 @@ class SmartStartContinuous(RLAgent):
         self.smart_start_path = None  # placeholder for smart_start_state to navigate to
 
         # the agent for navigating to the smartstart
-        self.nnd_mb_agent = NND_MB_agent(env,
-                                         replay_buffer=self.replay_buffer,
-                                         run_num=nnd_mb_run_num,
+        self.nnd_mb_agent = NND_MB_agent(env, sess, replay_buffer=self.replay_buffer,
                                          steps_per_waypoint=nnd_mb_steps_per_waypoint,
                                          mean_per_stepsize=nnd_mb_mean_per_stepsize,
                                          std_per_stepsize=nnd_mb_std_per_stepsize,
                                          stepsizes_in_waypoint_radii=nnd_mb_stepsizes_in_waypoint_radii,
-                                         gamma=nnd_mb_gamma,
-                                         horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
+                                         gamma=nnd_mb_gamma, horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
+                                         run_num=nnd_mb_run_num,
                                          use_existing_training_data=nnd_mb_use_existing_training_data,
-                                         horizon=nnd_mb_horizon,
-                                         num_control_samples=nnd_mb_num_control_samples,
+                                         horizon=nnd_mb_horizon, num_control_samples=nnd_mb_num_control_samples,
                                          num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation)
 
     @property
@@ -174,7 +177,7 @@ class SmartStartContinuous(RLAgent):
         :obj:`np.ndarray`
             smart start
         """
-        if not self.replay_buffer: # if buffer is emtpy, nothing to evaluate
+        if len(self.replay_buffer) == 0: # if buffer is emtpy, nothing to evaluate
             return None
 
         possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
@@ -230,17 +233,17 @@ class SmartStartContinuous(RLAgent):
         self.agent.observe(state, action, reward, new_state, done)
 
         # check if smart_start_state has been reached
-        if self.smart_start_pathing and self.nnd_mb_agent.close_enough_to_goal(new_state):
-            self.smart_start_pathing = False
-            print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
-            print("END OF SMART START STUFFS")
+        if self.smart_start_pathing:
+            self.nnd_mb_agent.observe(state, action, reward, new_state, done)
+            if self.nnd_mb_agent.close_enough_to_goal(new_state):
+                self.smart_start_pathing = False
+                print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
+                print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
-        self.replay_buffer.start_new_episode(self)
-        self.agent.start_new_episode(state)
-        #TODO REMOVE FOLLOWING THIS IS JUST FOR TESTING
-        if True:
-        # if np.random.rand() <= self.eta: #eta is probability of using smartStart
+        #TO/DO REMOVE FOLLOWING THIS IS JUST FOR TESTING
+        # if True:
+        if np.random.rand() <= self.eta: #eta is probability of using smartStart
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
 
             if self.smart_start_path: #ensure path exists
@@ -250,6 +253,9 @@ class SmartStartContinuous(RLAgent):
                 if not self.nnd_mb_agent.close_enough_to_goal(state): #ensure goal hasn't already been reached
                     self.smart_start_pathing = True #this start smart start navigation
                     print("SMART_START START!!!")
+
+        self.agent.start_new_episode(state)
+        self.replay_buffer.start_new_episode(self)
 
 
     def render(self, env, **kwargs):
@@ -262,36 +268,38 @@ if __name__ == "__main__":
     from smartstart.utilities.plot import plot_summary, show_plot, \
         mean_reward_episode, steps_episode
 
-    # Reset the seed for random number generation
-    RANDOM_SEED = 1234
-    random.seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
-    tf.set_random_seed(RANDOM_SEED)
-
     # configuring environment
     ENV_NAME = 'MountainCarContinuous-v0'
     env = gym.make(ENV_NAME)
 
-    # Initialize agent, see class for available parameters
-    base_agent = DDPG_agent(env)
-    smart_start_agent = SmartStartContinuous(base_agent, env,
-                                             nnd_mb_run_num=0,
-                                             nnd_mb_steps_per_waypoint=1,
-                                             nnd_mb_mean_per_stepsize=1,
-                                             nnd_mb_std_per_stepsize=1,
-                                             nnd_mb_stepsizes_in_waypoint_radii=1,
-                                             nnd_mb_gamma=.75,
-                                             nnd_mb_horizontal_penalty_factor=.5,
-                                             nnd_mb_use_existing_training_data=True,
-                                             nnd_mb_horizon=4,
-                                             nnd_mb_num_control_samples=5000,
-                                             nnd_mb_num_episodes_for_aggregation=3,
-                                             n_ss=2000)
+    # Reset the seed for random number generation
+    RANDOM_SEED = 1234
+    set_global_seeds(RANDOM_SEED)
+    env.seed(RANDOM_SEED)
+    with tf.Session() as sess:
+        # Initialize agent, see class for available parameters
+        base_agent = DDPG_Baselines_agent(env, sess, num_steps_before_train=1, num_train_iterations=1,
+                                     actor_lr=0.01,
+                                     critic_lr=0.005)
 
-    # Train the agent, summary contains training data
-    summary = rlTrain(smart_start_agent, env, render=True,
-                      print_steps=False,
-                      render_episode=False,
-                      print_results=True, num_episodes=1000)  # type: Summary
+        smart_start_agent = SmartStartContinuous(base_agent, env, sess,
+                                                 nnd_mb_run_num=0,
+                                                 nnd_mb_steps_per_waypoint=1,
+                                                 nnd_mb_mean_per_stepsize=1,
+                                                 nnd_mb_std_per_stepsize=1,
+                                                 nnd_mb_stepsizes_in_waypoint_radii=1,
+                                                 nnd_mb_gamma=.75,
+                                                 nnd_mb_horizontal_penalty_factor=.5,
+                                                 nnd_mb_use_existing_training_data=True,
+                                                 nnd_mb_horizon=4,
+                                                 nnd_mb_num_control_samples=5000,
+                                                 nnd_mb_num_episodes_for_aggregation=3,
+                                                 n_ss=2000)
+        sess.graph.finalize()
+
+        # Train the agent, summary contains training data
+        summary = rlTrain(smart_start_agent, env, render=True,
+                          render_episode=False,
+                          print_results=True, num_episodes=1000)  # type: Summary
 
     summary.save(get_default_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep")

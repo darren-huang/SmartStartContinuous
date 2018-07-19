@@ -8,9 +8,10 @@ from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, r
 import os
 
 
-target_default_directory = "ddpg_summaries"
+target_default_directory = "ddpg_baselines_summaries"
 # target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
-target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
+# target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
+target_file_name = "DDPG_Baselines_agent_MountainCarContinuous-v0-1000ep.json"
 
 if __name__ == "__main__":
     target_path = os.path.join(get_default_directory(target_default_directory), target_file_name)

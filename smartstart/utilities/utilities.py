@@ -2,6 +2,7 @@
 
 """
 import os
+import random
 import numpy as np
 
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
@@ -52,3 +53,13 @@ def get_start_waypoints_final_states_steps(path, steps_per_waypoint):
     waypoint_centers = path[:-1:steps_per_waypoint]
     waypoint_centers.append(path[-1])
     return waypoint_centers
+
+def set_global_seeds(i):
+    try:
+        import tensorflow as tf
+    except ImportError:
+        pass
+    else:
+        tf.set_random_seed(i)
+    np.random.seed(i)
+    random.seed(i)

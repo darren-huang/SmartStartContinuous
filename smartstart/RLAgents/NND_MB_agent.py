@@ -47,17 +47,15 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
     # n is noisy, c is clean... 1st letter is what action's executed and 2nd letter is what action's aggregated
     actions_ag = 'nc'
 
-    def __init__(self, env, final_steps=10, replay_buffer=None, BUFFER_SIZE=10000, #theta=1,
-                 steps_per_waypoint=10, mean_per_stepsize=1, std_per_stepsize=1, stepsizes_in_waypoint_radii=1.,
-                 gamma=.75, horizontal_penalty_factor=1,
-                 seed=0, run_num=0,
-                 use_existing_training_data=False, use_existing_dynamics_model=False, num_rollouts_save_for_mf=60,
-                 print_minimal=False, which_agent=2, use_threading=True, num_rollouts_train=25, num_rollouts_val=20,
-                 num_fc_layers=1, depth_fc_layers=500, batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9,
-                 horizon=20, num_control_samples=5000, num_episodes_for_aggregation=10, rollouts_forTraining=9,
-                 make_aggregated_dataset_noisy=True, make_training_dataset_noisy=True,
-                 noise_actions_during_MPC_rollouts=True, dt_steps=3, steps_per_rollout_train=333,
-                 steps_per_rollout_val=333, visualize_False=False):
+    def __init__(self, env, sess, final_steps=10, replay_buffer=None, BUFFER_SIZE=10000, steps_per_waypoint=10,
+                 mean_per_stepsize=1, std_per_stepsize=1, stepsizes_in_waypoint_radii=1., gamma=.75,
+                 horizontal_penalty_factor=1, run_num=0, use_existing_training_data=False,
+                 use_existing_dynamics_model=False, num_rollouts_save_for_mf=60, print_minimal=False, which_agent=2,
+                 use_threading=True, num_rollouts_train=25, num_rollouts_val=20, num_fc_layers=1, depth_fc_layers=500,
+                 batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9, horizon=20, num_control_samples=5000,
+                 num_episodes_for_aggregation=10, rollouts_forTraining=9, make_aggregated_dataset_noisy=True,
+                 make_training_dataset_noisy=True, noise_actions_during_MPC_rollouts=True, dt_steps=3,
+                 steps_per_rollout_train=333, steps_per_rollout_val=333, visualize_False=False):
         """
         :param env: the environment the agent is going to navigate
         :param replay_buffer: the buffer that stores previous experiences (state, action, reward, terminal, next_state) tuples
@@ -68,7 +66,6 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param std_per_stepsize: same as mean per stepsize, but with standard deviation of the step
         :param stepsizes_in_waypoint_radii: the number of "stepsizes" we want the size of our waypoint to be
 
-        :param seed: for the random packages
         :param run_num: the number that labels the run, determines the name of the folder to save/load to/from
         :param use_existing_training_data: whether or not to load the training data
         :param use_existing_dynamics_model: whether or not to load the dynamics model
@@ -141,11 +138,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         else:
             self.noise_amount = 0
 
-        if seed is not None:  # set seeds
-            npr.seed(seed)
-            tf.set_random_seed(seed)
-
-        self.sess = tf.Session()  # TODO: decide if i need GPU options
+        self.sess = sess  # TODO: decide if i need GPU options
 
         # Initialize replay memory
         if replay_buffer == None:
@@ -532,10 +525,10 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             distances_to_current = self.distance_function(current_desired_states, pts)
             distances_to_next = self.distance_function(next_desired_states, pts)
 
-            #TODO remove:
-            if pt_number == 0:
-                print("curr: " + str(distances_to_current[0]))
-                print("next: " + str(distances_to_next[0]))
+            #TO/DO remove:
+            # if pt_number == 0:
+            #     print("curr: " + str(distances_to_current[0]))
+            #     print("next: " + str(distances_to_next[0]))
 
             # check if each sample should move onto the next waypoint
             move_to_next = self.move_to_next(pts, samples_desired_state_indices, distances_to_current, distances_to_next)

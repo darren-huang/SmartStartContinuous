@@ -1,5 +1,6 @@
 import abc
 from smartstart.reinforcementLearningCore.counter import Counter
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
 
 class RLAgent(metaclass=abc.ABCMeta):
 
@@ -70,6 +71,16 @@ class ValueFuncRLAgent(RLAgent):
         :param state: observes state inside agent's environment
         :return: value of that state (usually a float)
         """
+
+class ReplayBufferRLAgent(RLAgent):
+    """
+        RLAgent who uses a replay buffer
+    """
+    def __init__(self):
+        self.replay_buffer = None
+
+    def set_replay_buffer_main_agent(self, new_main_agent):
+        self.replay_buffer.set_main_agent(new_main_agent)
 
 class ValueFuncAndCountRLAgent(ValueFuncRLAgent, Counter):
     """
