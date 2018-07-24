@@ -154,7 +154,5 @@ fabric.properties
 # custom rules
 .idea
 *.bin
-*.json
-**/*/data/
 logs/
 scripts/
