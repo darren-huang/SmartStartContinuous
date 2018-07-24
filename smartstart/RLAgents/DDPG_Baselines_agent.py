@@ -16,13 +16,14 @@ class ReplayBufferWrapper: #wraps a ReplayBuffer but has the same interface as b
     """
     specifically for the DDPG_Baseline to use
     """
-    def __init__(self, replay_buffer):
+    def __init__(self, replay_buffer, main_agent):
         """
         :param replay_buffer: replay buffer to be wrapped, if replay buffer is None, a new one is created
         :param buffer_size: the size of the buffer (only set IF replayBuffer=None)
         :param random_seed: the random seed of the buffer (only set IF replayBuffer=None)
         """
-        self.replay_buffer = replay_buffer
+        self.replay_buffer = replay_buffer #type: ReplayBuffer
+        self.main_agent = main_agent
 
     def sample(self, batch_size):
         # Draw such that we always have a proceeding element.
@@ -41,7 +42,7 @@ class ReplayBufferWrapper: #wraps a ReplayBuffer but has the same interface as b
         if not training:
             return
 
-        self.replay_buffer.add(self, obs0, action, reward, terminal1, obs1)
+        self.replay_buffer.add(self.main_agent, obs0, action, reward, terminal1, obs1)
 
     @property
     def nb_entries(self):
@@ -54,10 +55,10 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
     Continuous RLAgent using the DDPG from the baselines library using OrnsteinUhlenbeckActionNoise
     """
 
-    def __init__(self, env, sess, replay_buffer=None, layer_norm=True, mu=0.4, sigma=0.2, BUFFER_SIZE=10000,
-                 random_seed=123, gamma=0.99, tau=0.001, normalize_returns=False, normalize_observations=True,
-                 batch_size=64, actor_lr=1e-4, critic_lr=1e-3, critic_l2_reg=0, enable_popart=False, clip_norm=None,
-                 reward_scale=1., num_steps_before_train=40, num_train_iterations=50):
+    def __init__(self, env, sess, replay_buffer=None, layer_norm=True, mu=0.4, sigma=0.2, BUFFER_SIZE=10000, gamma=0.99,
+                 tau=0.001, normalize_returns=False, normalize_observations=True, batch_size=64, actor_lr=1e-4,
+                 critic_lr=1e-3, critic_l2_reg=0, enable_popart=False, clip_norm=None, reward_scale=1.,
+                 num_steps_before_train=40, num_train_iterations=50):
 
         super().__init__()
         self.env = env
@@ -71,40 +72,41 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
         # #TO/DO:REMOVE THIS BIT
         # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess) # debug tensorflow
 
-        with self.sess.as_default() as sess:
-            # info of the environment to pass to the agent
-            self.state_dim = env.observation_space.shape[0]
-            self.action_dim = env.action_space.shape[0]
 
-            # action_noise = None
-            param_noise = None
-            nb_actions = env.action_space.shape[-1]
+        # info of the environment to pass to the agent
+        self.state_dim = env.observation_space.shape[0]
+        self.action_dim = env.action_space.shape[0]
 
-            #TODO: set an option to choose which noise
-            # param_noise = AdaptiveParamNoiseSpec(initial_stddev=float(stddev), desired_action_stddev=float(stddev)) #diff types of noise
-            # action_noise = NormalActionNoise(mu=np.zeros(nb_actions), sigma=float(stddev) * np.ones(nb_actions)) # diff types of noise
-            action_noise = OrnsteinUhlenbeckActionNoise(mu=np.ones(nb_actions) * float(mu),
-                                                                sigma=float(sigma) * np.ones(nb_actions))
+        # action_noise = None
+        param_noise = None
+        nb_actions = env.action_space.shape[-1]
 
-            if replay_buffer:
-                self.replay_buffer = replay_buffer  # type: ReplayBuffer
-            else:
-                self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)
-            self.memory = ReplayBufferWrapper(self.replay_buffer)
+        #TODO: set an option to choose which noise
+        # param_noise = AdaptiveParamNoiseSpec(initial_stddev=float(stddev), desired_action_stddev=float(stddev)) #diff types of noise
+        # action_noise = NormalActionNoise(mu=np.zeros(nb_actions), sigma=float(stddev) * np.ones(nb_actions)) # diff types of noise
+        action_noise = OrnsteinUhlenbeckActionNoise(mu=np.ones(nb_actions) * float(mu),
+                                                            sigma=float(sigma) * np.ones(nb_actions))
 
-            critic = Critic(layer_norm=layer_norm)
-            actor = Actor(nb_actions, layer_norm=layer_norm)
+        if replay_buffer:
+            self.replay_buffer = replay_buffer  # type: ReplayBuffer
+        else:
+            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)
+        self.memory = ReplayBufferWrapper(self.replay_buffer, self)
 
-            self.inner_ddpg_agent = DDPG(actor, critic, self.memory, env.observation_space.shape, env.action_space.shape,
-                                         gamma=gamma, tau=tau, normalize_returns=normalize_returns,
-                                         normalize_observations=normalize_observations,
-                                         batch_size=batch_size, action_noise=action_noise, param_noise=param_noise,
-                                         critic_l2_reg=critic_l2_reg,
-                                         actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart, clip_norm=clip_norm,
-                                         reward_scale=reward_scale)
+        critic = Critic(layer_norm=layer_norm)
+        actor = Actor(nb_actions, layer_norm=layer_norm)
 
-            self.inner_ddpg_agent.initialize(self.sess)
-            self.inner_ddpg_agent.reset()
+        self.inner_ddpg_agent = DDPG(actor, critic, self.memory, env.observation_space.shape, env.action_space.shape,
+                                     gamma=gamma, tau=tau, normalize_returns=normalize_returns,
+                                     normalize_observations=normalize_observations,
+                                     batch_size=batch_size, action_noise=action_noise, param_noise=param_noise,
+                                     critic_l2_reg=critic_l2_reg,
+                                     actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart, clip_norm=clip_norm,
+                                     reward_scale=reward_scale)
+
+        self.inner_ddpg_agent.initialize(self.sess)
+        self.sess.graph.finalize()
+        self.inner_ddpg_agent.reset()
 
 
 
@@ -180,7 +182,8 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
                 #     distance = agent.adapt_param_noise()
                 cl, al = self.inner_ddpg_agent.train()
                 self.inner_ddpg_agent.update_target_net()
-            print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al))
+            #TODO: have an option for printing this out
+            print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al), end='')
 
 
 if __name__ == "__main__":
@@ -200,9 +203,8 @@ if __name__ == "__main__":
     env.seed(RANDOM_SEED)
     with tf.Session() as sess:
         # Initialize agent, see class for available parameters
-        agent = DDPG_Baselines_agent(env, sess, num_steps_before_train=1, num_train_iterations=1,
-                                     actor_lr=0.01,
-                                     critic_lr=0.005)
+        agent = DDPG_Baselines_agent(env, sess, BUFFER_SIZE=10000, actor_lr=0.01, critic_lr=0.005,
+                                     num_steps_before_train=1, num_train_iterations=1)
 
         # Train the agent, summary contains training data
         summary = rlTrain(agent, env, render=True,

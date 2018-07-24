@@ -9,6 +9,8 @@ from typing import Deque
 
 import numpy as np
 import tensorflow as tf
+import time
+import matplotlib.pyplot as plt
 
 from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.RLAgents.NND_MB_agent import NND_MB_agent
@@ -154,6 +156,8 @@ class SmartStartContinuous(RLAgent):
                                          horizon=nnd_mb_horizon, num_control_samples=nnd_mb_num_control_samples,
                                          num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation)
 
+        self.times_for_smart_start = []
+
     @property
     def normal_agent_pathing(self):
         return not self.smart_start_pathing
@@ -196,18 +200,18 @@ class SmartStartContinuous(RLAgent):
             state_value = self.agent.get_state_value(state)
 
             #C_hat calculation###############
-            C_hat = 0
-
             #bandwith
             h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma #silverman's rule of thumb
 
-            #iterate over all states in replay buffer, calculated the kernel density estimation
-            other_state = self.replay_buffer.step_to_s(self.replay_buffer.buffer[0])
-            C_hat += self.K((np.linalg.norm(state - other_state)) / h)
-            for other_step in self.replay_buffer.buffer:
-                other_state = self.replay_buffer.step_to_s2(other_step)
-                C_hat += self.K((np.linalg.norm(state - other_state)) / h)
-            C_hat = C_hat / h
+            # #iterate over all states in replay buffer, calculated the kernel density estimation
+            # other_state = self.replay_buffer.step_to_s(self.replay_buffer.buffer[0])
+            # C_hat += self.K((np.linalg.norm(state - other_state)) / h)
+            # for other_step in self.replay_buffer.buffer:
+            #     other_state = self.replay_buffer.step_to_s2(other_step)
+            #     C_hat += self.K((np.linalg.norm(state - other_state)) / h)
+            all_states = self.replay_buffer.get_all_states()
+            C_hat_temp_arr = self.K((np.linalg.norm(state - all_states, axis=1)) / h)
+            C_hat = np.sum(C_hat_temp_arr) / h
 
             #ucb calculation
             ucb = self.exploitation_param * state_value + \
@@ -244,15 +248,30 @@ class SmartStartContinuous(RLAgent):
         #TO/DO REMOVE FOLLOWING THIS IS JUST FOR TESTING
         # if True:
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
+
+            #TODO remove the random plotting
+            start_time = time.time()
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
 
             if self.smart_start_path: #ensure path exists
-                print("path exists")
+                #TODO: remove the floowing plotting
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                # self.times_for_smart_start.append(elapsed_time)
+                # if len(self.times_for_smart_start) % 10 == 0:
+                #     plt.title("Times for Calculating Smart Start Path")
+                #     plt.plot(self.times_for_smart_start)
+                #     plt.show()
+                print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
+
+
+                print("\npath exists")
                 # let neural network dynamics model based controller load the path
                 self.nnd_mb_agent.start_new_episode_plan(state, self.smart_start_path)
                 if not self.nnd_mb_agent.close_enough_to_goal(state): #ensure goal hasn't already been reached
                     self.smart_start_pathing = True #this start smart start navigation
                     print("SMART_START START!!!")
+                    return "smart_start"
 
         self.agent.start_new_episode(state)
         self.replay_buffer.start_new_episode(self)
@@ -278,11 +297,11 @@ if __name__ == "__main__":
     env.seed(RANDOM_SEED)
     with tf.Session() as sess:
         # Initialize agent, see class for available parameters
-        base_agent = DDPG_Baselines_agent(env, sess, num_steps_before_train=1, num_train_iterations=1,
-                                     actor_lr=0.01,
-                                     critic_lr=0.005)
+        base_agent = DDPG_Baselines_agent(env, sess, BUFFER_SIZE=10000, actor_lr=0.01, critic_lr=0.005,
+                                          num_steps_before_train=1, num_train_iterations=1)
 
         smart_start_agent = SmartStartContinuous(base_agent, env, sess,
+                                                 buffer_size=10000,
                                                  nnd_mb_run_num=0,
                                                  nnd_mb_steps_per_waypoint=1,
                                                  nnd_mb_mean_per_stepsize=1,
@@ -293,13 +312,13 @@ if __name__ == "__main__":
                                                  nnd_mb_use_existing_training_data=True,
                                                  nnd_mb_horizon=4,
                                                  nnd_mb_num_control_samples=5000,
-                                                 nnd_mb_num_episodes_for_aggregation=3,
+                                                 nnd_mb_num_episodes_for_aggregation=5,
                                                  n_ss=2000)
         sess.graph.finalize()
 
         # Train the agent, summary contains training data
-        summary = rlTrain(smart_start_agent, env, render=True,
+        summary = rlTrain(smart_start_agent, env, render=False,
                           render_episode=False,
                           print_results=True, num_episodes=1000)  # type: Summary
 
-    summary.save(get_default_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep")
+    summary.save(get_default_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep-2000n_ss")

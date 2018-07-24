@@ -158,6 +158,8 @@ class Summary(object):
         self.last_paths = [[None]] * last_x #goes, 5th from last, 4th from last.... Last
         self.last_rewards = [None] * last_x
 
+        self.smart_start_episodes = [] # Only for smartStarts - > holds the indices of smart_Start episodes
+
     def append(self, episode : Episode):
         """Adds the length and total reward of episode to summary
 
@@ -238,6 +240,9 @@ class Summary(object):
 
     def get_last_reward(self, x):# x goes from 0 to last_x - 1
         return self.last_rewards[-(x + 1)]
+
+    def start_smart_start_episode(self):
+        self.smart_start_episodes.append(len(self.episodes))
 
     def to_json(self):
         """Convert summary data to JSON string

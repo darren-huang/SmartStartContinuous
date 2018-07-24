@@ -42,7 +42,10 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
         observation = env.reset() #setup env
 
         # Step through the Episode
-        agent.start_new_episode(observation) # only needed for smartStart
+        ret = agent.start_new_episode(observation) # only needed for smartStart
+        if ret == 'smart_start':
+            summary.start_smart_start_episode()
+
         for step in range(max_steps):
             #rendering
             if render:
@@ -56,7 +59,7 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
 
             #printing the step
             if print_steps:
-                print("        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}".format(step, observation, action, new_observation, reward).replace("\n", ""))
+                print("\n" + "        Step: {}, State: {}, Action: {}, New_State: {}, Reward: {}  ||  ".format(step, observation, action, new_observation, reward).replace("\n", ""), end='')
 
             #agent update model// observe new observation
             agent.observe(observation, action, reward, new_observation, done)
@@ -78,8 +81,8 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
                 i_episode, len(episode), episode.average_reward())
             render_episode = agent.render(env, message=message)
         if print_results:
-            print("Episode: %d, steps: %d, reward: %.2f" % (
-                i_episode, len(episode), episode.average_reward()))
+            print("\n\nEpisode: %d, steps: %d, reward: %.2f || " % (
+                i_episode, len(episode), episode.average_reward()) , end='')
 
         #update summary
         summary.append(episode)

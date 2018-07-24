@@ -9,7 +9,7 @@ saved as JSON strings.
 """
 import glob
 import os
-
+import matplotlib.patches as mpatches
 import matplotlib.colorbar
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.axes
@@ -93,7 +93,7 @@ def reverse_colourmap(cmap, name = 'my_cmap_r'):
     return my_cmap_r
 
 
-def mean_reward_std_episode(summaries, ma_window=1, color=None, linestyle=None):
+def mean_reward_std_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False):
     """Plot mean reward with standard deviation per episode
 
     Parameters
@@ -119,8 +119,12 @@ def mean_reward_std_episode(summaries, ma_window=1, color=None, linestyle=None):
     plt.fill_between(range(len(upper)), lower, upper, alpha=0.3, color=color)
     plt.plot(range(len(ma_mean)), ma_mean, color=color, linestyle=linestyle, linewidth=1.)
 
+    if dots:
+        print('dots for mean reward std not implemented')
 
-def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None):
+
+
+def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False):
     """Plot mean reward per episode
 
     Parameters
@@ -142,8 +146,17 @@ def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None):
 
     plt.plot(range(len(ma_mean)), ma_mean, color=color, linestyle=linestyle, linewidth=1.)
 
+    if dots:
+        smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
+        not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
+        mean_array = np.array(mean)
+        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
+        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        patches = [mpatches.Patch(color='red', label='Smart Start'), mpatches.Patch(color='blue', label='Regular')]
+        plt.legend(patches, ['Smart Start', 'Regular'])
 
-def steps_episode(summaries, ma_window=1, color=None, linestyle=None):
+
+def steps_episode(summaries, ma_window=1, color=None, linestyle=None, dots = False):
     """Plot number of steps per episode
 
 
@@ -166,7 +179,16 @@ def steps_episode(summaries, ma_window=1, color=None, linestyle=None):
 
     plt.plot(range(len(ma_mean)), ma_mean, color=color, linestyle=linestyle, linewidth=1.)
 
-def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None):
+    if dots:
+        smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
+        not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
+        mean_array = np.array(mean)
+        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
+        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        patches = [mpatches.Patch(color='red', label='Smart Start'), mpatches.Patch(color='blue', label='Regular')]
+        plt.legend(patches, ['Smart Start', 'Regular'])
+
+def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None, dots = False):
     """Plot total_rewards
 
     """
@@ -177,6 +199,14 @@ def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None):
 
     plt.plot(range(len(ma_mean)), ma_mean, color=color, linestyle=linestyle, linewidth=1.)
 
+    if dots:
+        smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
+        not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
+        mean_array = np.array(mean)
+        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
+        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        patches = [mpatches.Patch(color='red', label='Smart Start'), mpatches.Patch(color='blue', label='Regular')]
+        plt.legend(patches, ['Smart Start', 'Regular'])
 
 labels = {
     mean_reward_std_episode: ["Episode", "Average Reward"],
@@ -185,7 +215,7 @@ labels = {
     total_rewards_episode: ["Episode", "Total Reward"]
 }
 
-def plot_get_axes(ncols, nrows, fig_size_x=14, fig_size_y=10):
+def plot_get_axes(ncols, nrows, fig_size_x=13, fig_size_y=10):
     """
     :param ncols:
     :param nrows:
@@ -198,7 +228,8 @@ def plot_get_axes(ncols, nrows, fig_size_x=14, fig_size_y=10):
 
 def plot_summary(files, plot_type, ma_window=1, title=None, legend=None,
                  output_dir=None, colors=None, linestyles=None,
-                 format="eps", baseline=None, axis=None):
+                 format="eps", baseline=None, axis=None, first_num_episodes = None,
+                 dots = True):
     """Main plot function to be used
 
     The files parameter can be a list of files or a list of
@@ -258,7 +289,7 @@ def plot_summary(files, plot_type, ma_window=1, title=None, legend=None,
         files = [files]
 
     if axis:
-        plt.axes(axis)
+        plt.sca(axis)
     else:
         plt.figure()
 
@@ -278,7 +309,7 @@ def plot_summary(files, plot_type, ma_window=1, title=None, legend=None,
         if linestyles is not None:
             linestyle = linestyles.pop()
 
-        plot_type(summaries, ma_window, color, linestyle)
+        plot_type(summaries, ma_window, color, linestyle, dots = dots)
 
     if baseline is not None:
         plt.hlines(y=baseline, xmin=0, xmax=xmax, color="black", linestyle="dotted")

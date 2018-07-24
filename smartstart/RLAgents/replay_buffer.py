@@ -93,6 +93,9 @@ class ReplayBuffer(object):
 
         return s_batch, a_batch, r_batch, t_batch, s2_batch
 
+    def get_all_states(self):
+        return np.array([_[0] for _ in self.buffer] + [self.buffer[-1][4]])
+
     def clear(self):
         self.buffer.clear()
         self.next_episode_number = 0

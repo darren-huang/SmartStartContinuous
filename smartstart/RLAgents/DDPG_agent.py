@@ -259,4 +259,4 @@ if __name__ == "__main__":
                       render_episode=False,
                       print_results=True, num_episodes=1000)  # type: Summary
 
-    summary.save(get_default_directory("ddpg_summaries"), extra_name_append="-1000ep")
+    summary.save(get_default_directory("0_ddpg_summaries_DEPRACATED"), extra_name_append="-1000ep")

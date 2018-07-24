@@ -49,7 +49,7 @@ if __name__ == "__main__":
                          num_episodes_for_aggregation=1)  # type: NND_MB_agent
 
     # intializing the desired_states
-    target_default_directory = "ddpg_summaries"
+    target_default_directory = "0_ddpg_summaries_DEPRACATED"
     target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
     # target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
     target_file_pathname = os.path.join(get_default_directory(target_default_directory), target_file_name)
