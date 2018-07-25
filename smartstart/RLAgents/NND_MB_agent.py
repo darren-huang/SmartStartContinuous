@@ -17,7 +17,7 @@ from helper_funcs import perform_rollouts
 from policy_random import Policy_Random
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
-from smartstart.reinforcementLearningCore.agents import NavigationRLAgent
+from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
 from smartstart.utilities.datacontainers import Summary, Episode
 from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps

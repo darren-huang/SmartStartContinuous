@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
 from smartstart.utilities.plot import plot_path
-from smartstart.reinforcementLearningCore.agents import RLAgent
+from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork

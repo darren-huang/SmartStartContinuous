@@ -12,7 +12,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from smartstart.utilities.scheduler import Scheduler
 
-from smartstart.reinforcementLearningCore.agents import ValueFuncAndCountRLAgent
+from smartstart.reinforcementLearningCore.agents_abstract_classes import ValueFuncAndCountRLAgent
 
 
 class TDLearning(ValueFuncAndCountRLAgent, metaclass=ABCMeta):

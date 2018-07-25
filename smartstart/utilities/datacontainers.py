@@ -10,6 +10,7 @@ import numpy as np
 from google.cloud import storage
 
 from smartstart.utilities.utilities import DIR
+from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
 from collections import deque
 
 
@@ -160,6 +161,13 @@ class Summary(object):
 
         self.smart_start_episodes = [] # Only for smartStarts - > holds the indices of smart_Start episodes
 
+        self.name_of_agent = ""
+        self.param_dict = None
+
+    def set_agent(self, agent : RLAgent):
+        self.name_of_agent = str(agent.__class__.__name__)
+        self.param_dict = agent.get_param_dict()
+
     def append(self, episode : Episode):
         """Adds the length and total reward of episode to summary
 
@@ -253,6 +261,7 @@ class Summary(object):
             JSON string of summary data
         """
         return json.dumps(self.__dict__)
+
 
     @classmethod
     def from_json(cls, data):

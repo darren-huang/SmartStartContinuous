@@ -85,12 +85,24 @@ def plot_file(target_default_directory, target_file_name, first_num_episodes=Non
 if __name__ == "__main__":
     first_num_episodes = None
 
-    target_default_directory = "ddpg_baselines_summaries"
-    target_file_name = "DDPG_Baselines_agent_MountainCarContinuous-v0-1000ep_2.json"
-    plot_file(target_default_directory, target_file_name, paths=False, first_num_episodes= first_num_episodes)
 
-    target_default_directory = "ddpg_baselines_summaries"
-    target_file_name = "DDPG_Baselines_agent_MountainCarContinuous-v0-1000ep_1.json"
-    plot_file(target_default_directory, target_file_name, paths=False, first_num_episodes= first_num_episodes)
+    files = """DDPG_Baselines_agent_MountainCarContinuous-v0-10ep-NoGPU.json
+            DDPG_Baselines_agent_MountainCarContinuous-v0-10ep-NoGPU_1.json
+            DDPG_Baselines_agent_MountainCarContinuous-v0-10ep-NoGPU_2.json
+            DDPG_Baselines_agent_MountainCarContinuous-v0-10ep-NoGPU_3.json
+            DDPG_Baselines_agent_MountainCarContinuous-v0-10ep-NoGPU_4.json""".split()
+
+    summaries = []
+    for file in files:
+        target_default_directory = "ddpg_baselines_summaries"
+        target_file_name = file
+        # plot_file(target_default_directory, target_file_name, paths=False, first_num_episodes=first_num_episodes)
+        target_path = os.path.join(get_default_directory(target_default_directory), target_file_name)
+        summaries.append(Summary.load(target_path))
+
+    for i in range(10):
+        print("Episode " + str(i) + ": " + str([summary.episodes[i] for summary in summaries]))
+
+
 
     show_plot()

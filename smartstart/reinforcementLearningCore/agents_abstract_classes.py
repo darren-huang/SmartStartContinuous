@@ -45,6 +45,12 @@ class RLAgent(metaclass=abc.ABCMeta):
         """
         pass
 
+    def get_param_dict(self):
+        """
+        :return: a dictionary of the name of parameters to the actual values
+        """
+        return None
+
 class NavigationRLAgent(RLAgent):
     """
     RL agent that at the beginning of an episode decides to plan it's trajectory based on given

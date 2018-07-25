@@ -31,7 +31,9 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
 
     """
     #summary object
+    #TODO fix how the names are gotten (hasattr func)
     summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
+    summary.set_agent(agent)
 
     # for printing
     np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})

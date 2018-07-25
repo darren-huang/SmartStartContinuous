@@ -17,7 +17,7 @@ from smartstart.RLAgents.NND_MB_agent import NND_MB_agent
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
-from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
+from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
 from smartstart.utilities.utilities import get_default_directory, set_global_seeds
 
 
@@ -116,6 +116,7 @@ class SmartStartContinuous(RLAgent):
                  buffer_size=500000,
                  n_ss = 1000,
                  sigma = 1):
+        #TODO fix naming for smartStart - this affects class not object
         self.__class__.__name__ = "SmartStart_" + agent.__class__.__name__
         self.exploitation_param = exploitation_param
         self.exploration_param = exploration_param

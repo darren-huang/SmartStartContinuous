@@ -7,7 +7,7 @@ import numpy as np
 
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
-from smartstart.reinforcementLearningCore.agents import RLAgent, ValueFuncAndCountRLAgent
+from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncAndCountRLAgent
 
 
 class SmartStartDiscrete(RLAgent):

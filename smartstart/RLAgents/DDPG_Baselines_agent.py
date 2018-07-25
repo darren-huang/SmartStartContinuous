@@ -1,16 +1,16 @@
-from abc import ABCMeta
-
-from smartstart.reinforcementLearningCore.agents import ValueFuncRLAgent, ReplayBufferRLAgent
-from smartstart.RLAgents.replay_buffer import ReplayBuffer
-from smartstart.utilities.utilities import get_default_directory, set_global_seeds
-from smartstart.utilities.datacontainers import Summary
-import tensorflow as tf
-
-from baselines.ddpg.ddpg import DDPG
-from baselines.ddpg.models import Actor, Critic
-from baselines.ddpg.noise import *
-
 import numpy as np
+import argparse
+import tensorflow as tf
+from baselines.ddpg.ddpg import DDPG
+# from baselines.ddpg.models import Actor, Critic
+from baselines.ddpg.noise import *
+from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models import Actor_Editted, Critic_Editted
+
+from smartstart.RLAgents.replay_buffer import ReplayBuffer
+from smartstart.reinforcementLearningCore.agents_abstract_classes import ValueFuncRLAgent, ReplayBufferRLAgent
+from smartstart.utilities.datacontainers import Summary
+from smartstart.utilities.utilities import get_default_directory, set_global_seeds
+
 
 class ReplayBufferWrapper: #wraps a ReplayBuffer but has the same interface as baselines' ddpg memeory
     """
@@ -55,12 +55,37 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
     Continuous RLAgent using the DDPG from the baselines library using OrnsteinUhlenbeckActionNoise
     """
 
-    def __init__(self, env, sess, replay_buffer=None, layer_norm=True, mu=0.4, sigma=0.2, BUFFER_SIZE=10000, gamma=0.99,
-                 tau=0.001, normalize_returns=False, normalize_observations=True, batch_size=64, actor_lr=1e-4,
-                 critic_lr=1e-3, critic_l2_reg=0, enable_popart=False, clip_norm=None, reward_scale=1.,
-                 num_steps_before_train=40, num_train_iterations=50):
+    def __init__(self,
+                 env,
+                 sess,
+                 replay_buffer=None,
+                 layer_norm=True,
+                 mu=0.4,  #OrnsteinUhlenbeckActionNoise
+                 sigma=0.2,  #OrnsteinUhlenbeckActionNoise
+                 BUFFER_SIZE=10000,
+                 gamma=0.99,
+                 tau=0.001, # soft target updates
+                 normalize_returns=False,
+                 normalize_observations=True,
+                 batch_size=64,
+                 actor_lr=1e-4, # Base learning rate for the Actor Network
+                 critic_lr=1e-3, # Base learning rate for the Critic Network
+                 critic_l2_reg=0, # Base learning rate for the Critic Regularization Network
+                 actor_h1=64, # size of hidden layer 1 for actor
+                 actor_h2=64, # size of hidden layer 2 for actor
+                 critic_h1=64, # size of hidden layer 1 for critic
+                 critic_h2=64, # size of hidden layer 2 for critic
+                 enable_popart=False,
+                 clip_norm=None,
+                 reward_scale=1.,
+                 num_steps_before_train = 40,
+                 num_train_iterations = 50):
 
         super().__init__()
+        self.param_dict = locals().copy()
+        for var_str in ['__class__', 'self', 'sess', 'env']:
+            self.param_dict[var_str] = "Not serializable"
+
         self.env = env
         self.num_steps_before_train = num_steps_before_train
         self.remaining_steps_before_train = num_steps_before_train
@@ -72,43 +97,42 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
         # #TO/DO:REMOVE THIS BIT
         # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess) # debug tensorflow
 
+        with self.sess.as_default():
+            # info of the environment to pass to the agent
+            self.state_dim = env.observation_space.shape[0]
+            self.action_dim = env.action_space.shape[0]
 
-        # info of the environment to pass to the agent
-        self.state_dim = env.observation_space.shape[0]
-        self.action_dim = env.action_space.shape[0]
+            # action_noise = None
+            param_noise = None
+            nb_actions = env.action_space.shape[-1]
 
-        # action_noise = None
-        param_noise = None
-        nb_actions = env.action_space.shape[-1]
+            #TODO: set an option to choose which noise
+            # param_noise = AdaptiveParamNoiseSpec(initial_stddev=float(stddev), desired_action_stddev=float(stddev)) #diff types of noise
+            # action_noise = NormalActionNoise(mu=np.zeros(nb_actions), sigma=float(stddev) * np.ones(nb_actions)) # diff types of noise
+            action_noise = OrnsteinUhlenbeckActionNoise(mu=np.ones(nb_actions) * float(mu),
+                                                                sigma=float(sigma) * np.ones(nb_actions))
 
-        #TODO: set an option to choose which noise
-        # param_noise = AdaptiveParamNoiseSpec(initial_stddev=float(stddev), desired_action_stddev=float(stddev)) #diff types of noise
-        # action_noise = NormalActionNoise(mu=np.zeros(nb_actions), sigma=float(stddev) * np.ones(nb_actions)) # diff types of noise
-        action_noise = OrnsteinUhlenbeckActionNoise(mu=np.ones(nb_actions) * float(mu),
-                                                            sigma=float(sigma) * np.ones(nb_actions))
+            if replay_buffer:
+                self.replay_buffer = replay_buffer  # type: ReplayBuffer
+            else:
+                self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)
+            self.memory = ReplayBufferWrapper(self.replay_buffer, self)
 
-        if replay_buffer:
-            self.replay_buffer = replay_buffer  # type: ReplayBuffer
-        else:
-            self.replay_buffer = ReplayBuffer(self, BUFFER_SIZE)
-        self.memory = ReplayBufferWrapper(self.replay_buffer, self)
+            critic = Critic_Editted(layer_norm=layer_norm, h1=critic_h1, h2=critic_h2)
+            actor = Actor_Editted(nb_actions, layer_norm=layer_norm, h1=actor_h1, h2=actor_h2)
 
-        critic = Critic(layer_norm=layer_norm)
-        actor = Actor(nb_actions, layer_norm=layer_norm)
+            self.inner_ddpg_agent = DDPG(actor, critic, self.memory, env.observation_space.shape, env.action_space.shape,
+                                         gamma=gamma, tau=tau, normalize_returns=normalize_returns,
+                                         normalize_observations=normalize_observations,
+                                         batch_size=batch_size, action_noise=action_noise, param_noise=param_noise,
+                                         critic_l2_reg=critic_l2_reg,
+                                         actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart, clip_norm=clip_norm,
+                                         reward_scale=reward_scale)
 
-        self.inner_ddpg_agent = DDPG(actor, critic, self.memory, env.observation_space.shape, env.action_space.shape,
-                                     gamma=gamma, tau=tau, normalize_returns=normalize_returns,
-                                     normalize_observations=normalize_observations,
-                                     batch_size=batch_size, action_noise=action_noise, param_noise=param_noise,
-                                     critic_l2_reg=critic_l2_reg,
-                                     actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart, clip_norm=clip_norm,
-                                     reward_scale=reward_scale)
-
-        self.inner_ddpg_agent.initialize(self.sess)
-        self.sess.graph.finalize()
-        self.inner_ddpg_agent.reset()
-
-
+            self.inner_ddpg_agent.initialize(self.sess)
+            #TODO comment/uncomment
+            self.sess.graph.finalize()
+            self.inner_ddpg_agent.reset()
 
     def get_state_value(self, state):
         raw_action, q = self.inner_ddpg_agent.pi(state, apply_noise=True,
@@ -171,6 +195,9 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
         self.inner_ddpg_agent.reset()
         self.train()
 
+    def get_param_dict(self):
+        return self.param_dict
+
     #private method
     def train(self):
         if len(self.memory.replay_buffer) >= self.batch_size:
@@ -186,29 +213,53 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
             print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al), end='')
 
 
+parser = argparse.ArgumentParser(description='Set some flages')
+parser.add_argument('--noGpu', action='store_true', help='If included, stops the gpu from being used')
+args = parser.parse_args()
+noGpu = args.noGpu
+
 if __name__ == "__main__":
-    import random
     import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
-    from smartstart.utilities.plot import plot_summary, show_plot, \
-        mean_reward_episode, steps_episode
 
     # configuring environment
     ENV_NAME = 'MountainCarContinuous-v0'
     env = gym.make(ENV_NAME)
 
-    # Reset the seed for random number generation
-    RANDOM_SEED = 1234
-    set_global_seeds(RANDOM_SEED)
-    env.seed(RANDOM_SEED)
-    with tf.Session() as sess:
+    if noGpu:
+        tfConfig = tf.ConfigProto(device_count={'GPU': 0})
+    else:
+        tfConfig = None
+
+    with tf.Session(config=tfConfig) as sess:
+    # with tf.Session() as sess:
+        # Reset the seed for random number generation
+        RANDOM_SEED = 1234
+        set_global_seeds(RANDOM_SEED)
+        env.seed(RANDOM_SEED)
+
+        a = tf.random_uniform([1])
+        print(sess.run(a))  # generates 'A1'
+        print(sess.run(a))  # generates 'A2'
+        print(sess.run(a))  # generates 'B1'
+        print(sess.run(a))  # generates 'B2'
+
+
+        #run parameters
+        episodes = 1
+
         # Initialize agent, see class for available parameters
-        agent = DDPG_Baselines_agent(env, sess, BUFFER_SIZE=10000, actor_lr=0.01, critic_lr=0.005,
-                                     num_steps_before_train=1, num_train_iterations=1)
+        agent = DDPG_Baselines_agent(env, sess,
+                                     BUFFER_SIZE=10000,
+                                     actor_lr=0.01,
+                                     critic_lr=0.005,
+                                     num_steps_before_train=1,
+                                     num_train_iterations=1)
 
         # Train the agent, summary contains training data
-        summary = rlTrain(agent, env, render=True,
+        summary = rlTrain(agent, env, render=False,
                           render_episode=False,
-                          print_results=True, num_episodes=1000)  # type: Summary
+                          print_results=True, num_episodes=episodes)  # type: Summary
 
-    summary.save(get_default_directory("ddpg_baselines_summaries"), extra_name_append="-1000ep")
+    summary.save(get_default_directory("ddpg_baselines_summaries"),
+                 extra_name_append="-" + str(episodes) + "ep" + "-NoGPU" + "-test")
