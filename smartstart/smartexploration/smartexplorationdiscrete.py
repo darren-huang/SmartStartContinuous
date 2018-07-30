@@ -110,6 +110,9 @@ class SmartStartDiscrete(RLAgent):
         self.smart_start_pathing = False
         self.smart_start_state = None # placeholder for smart_start_state to navigate to
 
+    def get_param_dict(self):
+        return None
+
     @property
     def normal_agent_pathing(self):
         return not self.smart_start_pathing

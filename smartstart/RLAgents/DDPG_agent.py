@@ -6,7 +6,7 @@ from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise
-from smartstart.utilities.utilities import get_default_directory
+from smartstart.utilities.utilities import get_default_data_directory
 from smartstart.utilities.datacontainers import Summary
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
@@ -135,6 +135,9 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
         else:
             self.replay_buffer = replay_buffer
 
+    def get_param_dict(self):
+        return None
+
     def get_state_value(self, state):
         # q_values, _ = self.get_q_values(state)
         # q_value = max(q_values)
@@ -259,4 +262,4 @@ if __name__ == "__main__":
                       render_episode=False,
                       print_results=True, num_episodes=1000)  # type: Summary
 
-    summary.save(get_default_directory("0_ddpg_summaries_DEPRACATED"), extra_name_append="-1000ep")
+    summary.save(get_default_data_directory("0_ddpg_summaries_DEPRACATED"), extra_name_append="-1000ep")

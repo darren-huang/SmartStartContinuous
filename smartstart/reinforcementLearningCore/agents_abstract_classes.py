@@ -47,9 +47,9 @@ class RLAgent(metaclass=abc.ABCMeta):
 
     def get_param_dict(self):
         """
-        :return: a dictionary of the name of parameters to the actual values
+        :return: a dictionary that contains the hyper-parameters given to the agent upon its initialization
         """
-        return None
+        raise NotImplementedError("Agent hasn't overridden get_param_dict, if you don't wish to implement it just return None")
 
 class NavigationRLAgent(RLAgent):
     """

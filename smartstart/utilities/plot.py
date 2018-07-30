@@ -215,7 +215,7 @@ labels = {
     total_rewards_episode: ["Episode", "Total Reward"]
 }
 
-def plot_get_axes(ncols, nrows, fig_size_x=13, fig_size_y=10):
+def plot_get_axes(ncols, nrows, fig_size_x=14, fig_size_y=10):
     """
     :param ncols:
     :param nrows:

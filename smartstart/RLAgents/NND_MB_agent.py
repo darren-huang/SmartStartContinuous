@@ -20,7 +20,7 @@ from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
 from smartstart.utilities.datacontainers import Summary, Episode
-from smartstart.utilities.utilities import get_default_directory, get_start_waypoints_final_states_steps
+from smartstart.utilities.utilities import get_default_data_directory, get_start_waypoints_final_states_steps
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
 
 # from rllab.rllab.envs.normalized_env import normalize

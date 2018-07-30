@@ -31,7 +31,7 @@ def get_data_directory(file):
         os.makedirs(fp)
     return fp
 
-def get_default_directory(foldername):
+def get_default_data_directory(foldername):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
                  'data/')
     path = os.path.join(path, foldername)

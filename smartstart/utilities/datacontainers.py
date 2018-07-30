@@ -146,7 +146,6 @@ class Summary(object):
         name of the summary, used for saving the data (Default = None)
     episodes : :obj:`list` of :obj:`tuple` with episode data
     """
-
     def __init__(self, name=None, last_x=5):
         super().__init__()
         self.name = name
@@ -162,11 +161,15 @@ class Summary(object):
         self.smart_start_episodes = [] # Only for smartStarts - > holds the indices of smart_Start episodes
 
         self.name_of_agent = ""
-        self.param_dict = None
+        self.param_dict = {}
 
     def set_agent(self, agent : RLAgent):
         self.name_of_agent = str(agent.__class__.__name__)
-        self.param_dict = agent.get_param_dict()
+        if agent.get_param_dict() is not None:
+            self.param_dict = {**agent.get_param_dict(), **self.param_dict}
+
+    def add_params_to_param_dict(self, **kwargs):
+        self.param_dict = {**kwargs, **self.param_dict}
 
     def append(self, episode : Episode):
         """Adds the length and total reward of episode to summary

@@ -36,8 +36,8 @@ summary = rlTrain(smartStartAgent, grid_world,
                   render=True,
                   render_episode=True,
                   print_results=True,
-                  # num_episodes=500,
-                  num_episodes=50,
+                  num_episodes=500,
+                  # num_episodes=50,
                   max_steps=1000)
 
 # Plot results

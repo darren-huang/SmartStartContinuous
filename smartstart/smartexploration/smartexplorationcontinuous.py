@@ -18,7 +18,7 @@ from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLDiscreteAlgorithms import ValueIteration
 from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
-from smartstart.utilities.utilities import get_default_directory, set_global_seeds
+from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds
 
 
 
@@ -298,8 +298,8 @@ if __name__ == "__main__":
     env.seed(RANDOM_SEED)
     with tf.Session() as sess:
         # Initialize agent, see class for available parameters
-        base_agent = DDPG_Baselines_agent(env, sess, BUFFER_SIZE=10000, actor_lr=0.01, critic_lr=0.005,
-                                          num_steps_before_train=1, num_train_iterations=1)
+        base_agent = DDPG_Baselines_agent(env, sess, buffer_size=10000, num_train_iterations=1,
+                                          num_steps_before_train=1, actor_lr=0.01, critic_lr=0.005)
 
         smart_start_agent = SmartStartContinuous(base_agent, env, sess,
                                                  buffer_size=10000,
@@ -322,4 +322,4 @@ if __name__ == "__main__":
                           render_episode=False,
                           print_results=True, num_episodes=1000)  # type: Summary
 
-    summary.save(get_default_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep-2000n_ss")
+    summary.save(get_default_data_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep-2000n_ss")

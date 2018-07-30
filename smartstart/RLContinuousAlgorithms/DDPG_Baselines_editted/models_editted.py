@@ -20,7 +20,7 @@ class Model(object):
 
 
 class Actor_Editted(Model):
-    def __init__(self, nb_actions, name='actor', layer_norm=True, h1=64, h2=64):
+    def __init__(self, nb_actions, name='actor', layer_norm=True, h1=64, h2=64, lastLayerTanh=False):
         """
         :param nb_actions: number of actions (size of vector)
         :param name: name of the model
@@ -33,6 +33,7 @@ class Actor_Editted(Model):
         self.layer_norm = layer_norm
         self.h1 = h1
         self.h2 = h2
+        self.lastLayerTanh = lastLayerTanh
 
     def __call__(self, obs, reuse=False):
         with tf.variable_scope(self.name) as scope:
@@ -48,7 +49,11 @@ class Actor_Editted(Model):
             x = tf.layers.dense(x, self.h2)
             if self.layer_norm:
                 x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
+
+            if self.lastLayerTanh:
+                x = tf.nn.tanh(x)
+            else:
+                x = tf.nn.relu(x)
 
             x = tf.layers.dense(x, self.nb_actions,
                                 kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
@@ -57,7 +62,7 @@ class Actor_Editted(Model):
 
 
 class Critic_Editted(Model):
-    def __init__(self, name='critic', layer_norm=True, h1=64, h2=64):
+    def __init__(self, name='critic', layer_norm=True, h1=64, h2=64, lastLayerTanh=False):
         """
         :param name: name of the model
         :param layer_norm: whether or not to normalize the layers (see tensorflow.contrib.layers.layer_norm)
@@ -68,6 +73,7 @@ class Critic_Editted(Model):
         self.layer_norm = layer_norm
         self.h1 = h1
         self.h2 = h2
+        self.lastLayerTanh = lastLayerTanh
 
     def __call__(self, obs, action, reuse=False):
         with tf.variable_scope(self.name) as scope:
@@ -84,7 +90,11 @@ class Critic_Editted(Model):
             x = tf.layers.dense(x, self.h2)
             if self.layer_norm:
                 x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
+
+            if self.lastLayerTanh:
+                x = tf.nn.tanh(x)
+            else:
+                x = tf.nn.relu(x)
 
             x = tf.layers.dense(x, 1, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
         return x

@@ -52,6 +52,9 @@ class QLearning(TDLearning):
 
         return next_q_value, action_tp1
 
+    def get_param_dict(self):
+        return None
+
 
 class QLearningLambda(TDLearningLambda):
     """

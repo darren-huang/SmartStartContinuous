@@ -26,14 +26,12 @@ visualizer.add_visualizer(GridWorldVisualizer.LIVE_AGENT,
 agent = QLearning(grid_world,
                   alpha=0.1,
                   epsilon=0.05,
-                  num_episodes=500,
-                  max_steps=1000,
                   exploration=QLearning.E_GREEDY)
 
 # Train the agent, summary contains training data
 summary = rlTrain(agent, grid_world, render=True,
                   render_episode=False,
-                  print_results=True)
+                  print_results=True, num_episodes=500, max_steps=1000)
 
 # Plot results
 plot_summary(summary, mean_reward_episode, ma_window=5,
