@@ -215,14 +215,14 @@ labels = {
     total_rewards_episode: ["Episode", "Total Reward"]
 }
 
-def plot_get_axes(ncols, nrows, fig_size_x=14, fig_size_y=10):
+def plot_get_axes_and_fig(ncols, nrows, fig_size_x=18, fig_size_y=10):
     """
     :param ncols:
     :param nrows:
     :return: ((ax1, ax2), (ax3, ax4)) if nrows=2,ncols=2
     """
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(fig_size_x, fig_size_y))
-    return axes
+    return axes, fig
 
 
 
@@ -326,7 +326,8 @@ def plot_summary(files, plot_type, ma_window=1, title=None, legend=None,
     if output_dir:
         save_plot(output_dir, title, format)
 
-    plt.tight_layout()
+    # plt.tight_layout()
+
 
 
 

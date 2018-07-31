@@ -74,7 +74,7 @@ def run_experiment(param_grid, n_processes=-1):
         if type(params['task']) is not list:
             params['task'] = [params['task']]
 
-    # Convert parameter grid to iterable list
+
     params = list(ParameterGrid(param_grid))
     for i in range(len(params)):
         params[i]['id'] = i

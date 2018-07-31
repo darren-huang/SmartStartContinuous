@@ -250,7 +250,7 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
                 cl, al = self.inner_ddpg_agent.train()
                 self.inner_ddpg_agent.update_target_net()
             # TODO: have an option for printing this out
-            print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al), end='')
+            # print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al), end='')
 
 
 import time
@@ -282,12 +282,6 @@ if __name__ == "__main__":
         # Reset the seed for random number generation
         set_global_seeds(RANDOM_SEED)
         env.seed(RANDOM_SEED)
-
-        a = tf.random_uniform([1])
-        print(sess.run(a))  # generates 'A1'
-        print(sess.run(a))  # generates 'A2'
-        print(sess.run(a))  # generates 'B1'
-        print(sess.run(a))  # generates 'B2'
 
         # run parameters
         episodes = 1000
@@ -331,9 +325,10 @@ if __name__ == "__main__":
 
         noGpu_str = "-NoGPU" if noGpu else ""
         llTanh_str = "-LLTanh" if lastLayerTanh else ""
-        fp = summary.save(get_default_data_directory("ddpg_baselines_summaries_1"),
-                          extra_name_append="-" + str(episodes) + "ep" + noGpu_str +"-noNorm" + llTanh_str + "-decayingNoise")
         summary.add_params_to_param_dict(zz_RANDOM_SEED=RANDOM_SEED, zz_episodes=episodes, noGpu=noGpu)
+        fp = summary.save(get_default_data_directory("ddpg_baselines_summaries/1"),
+                          extra_name_append="-" + str(episodes) + "ep" + noGpu_str +"-noNorm" + llTanh_str + "-decayingNoise")
+
 
         train_writer = tf.summary.FileWriter(fp[:-5])
         train_writer.add_graph(sess.graph)

@@ -1,3 +1,0 @@
-Logging to C:\Users\Darren Huang\PythonProjects\smartstart\smartstart\utilities\../../data/dppg_baselines_main_editted
-rank 0: seed=0, logdir=C:\Users\Darren Huang\PythonProjects\smartstart\smartstart\utilities\../../data/dppg_baselines_main_editted
-scaling actions by [1.] before executing in env
