@@ -1,5 +1,5 @@
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.core.serializable import Serializable
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.spaces.base import Space
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.core.serializable import Serializable
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.spaces.base import Space
 
 
 class EnvSpec(Serializable):

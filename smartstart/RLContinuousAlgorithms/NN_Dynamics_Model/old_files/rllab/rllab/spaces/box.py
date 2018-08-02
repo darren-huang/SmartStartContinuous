@@ -1,7 +1,7 @@
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.core.serializable import Serializable
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.core.serializable import Serializable
 from .base import Space
 import numpy as np
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.misc import ext
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import ext
 import theano
 
 

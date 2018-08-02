@@ -1,7 +1,7 @@
 from .base import Space
 import numpy as np
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.misc import special
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.misc import ext
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import special
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import ext
 
 
 class Discrete(Space):

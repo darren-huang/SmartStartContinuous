@@ -5,7 +5,7 @@ import tensorflow as tf
 import time
 import math
 
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.feedforward_network import feedforward_network
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.feedforward_network import feedforward_network
 
 
 class Dyn_Model:

@@ -2,7 +2,7 @@ import os.path
 import sys
 import pickle as pickle
 import random
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.misc.console import colorize, Message
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc.console import colorize, Message
 from collections import OrderedDict
 import numpy as np
 import operator

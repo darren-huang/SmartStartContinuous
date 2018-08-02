@@ -1,6 +1,6 @@
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.spaces.base import Space
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.spaces.base import Space
 import numpy as np
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.rllab.rllab.misc import ext
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import ext
 
 
 class Product(Space):
