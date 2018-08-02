@@ -9,11 +9,11 @@ import tensorflow as tf
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.data_manipulation import \
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.data_manipulation import \
     from_observation_to_usablestate, generate_training_data_inputs, generate_training_data_outputs
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.dynamics_model import Dyn_Model
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add_noise, perform_rollouts
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.dynamics_model import Dyn_Model
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.helper_funcs import add_noise, perform_rollouts
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.policy_random import Policy_Random
 
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
@@ -160,9 +160,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
             # data collection, either with or without multi-threading
             if (use_threading):
-                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.collect_samples_threaded import CollectSamples
+                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.collect_samples_threaded import CollectSamples
             else:
-                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.collect_samples import CollectSamples
+                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model_2.collect_samples import CollectSamples
 
             if (not (print_minimal)):
                 print("\n#####################################")
