@@ -5,7 +5,10 @@ import numpy as np
 
 def rlTrain(agent, env, render=False, render_episode=False, print_results=True, print_steps=True,
             num_episodes=500,
-            max_steps=1000):
+            max_steps=1000,
+            progress_bar=False,
+            id=None,
+            num_ticks=100):
     """Runs a training experiment
 
     Training experiment runs for agent.num_episodes and each episode takes
@@ -30,6 +33,11 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
         Summary Object containing the training data
 
     """
+    if progress_bar:
+        progress_tick = num_episodes // num_ticks
+        print("process id: " + str(id) + "|" + ("-" * num_ticks) + "|    " +
+              str(0) + "/" + str(num_episodes) + " episodes")
+
     #summary object
     #TODO fix how the names are gotten (hasattr func)
     summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
@@ -88,6 +96,13 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
 
         #update summary
         summary.append(episode)
+
+        if progress_bar and (i_episode + 1) % progress_tick == 0:
+            i_progress = (i_episode + 1) // progress_tick
+            i_rest = num_ticks - i_progress
+            print("process id: " + str(id) + "|" +  ("*"*i_progress) + ("-"*i_rest) + "|    " +
+                  str(i_episode + 1) + "/" + str(num_episodes) + " episodes")
+
 
     #render results
     while render:

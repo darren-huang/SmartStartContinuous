@@ -1,29 +1,24 @@
 # imports
 import os
 import time
-import re
 
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
 
-from data_manipulation import from_observation_to_usablestate
-from data_manipulation import generate_training_data_inputs
-from data_manipulation import generate_training_data_outputs
-from dynamics_model import Dyn_Model
-from helper_funcs import add_noise
-from helper_funcs import perform_rollouts
-# my imports
-from policy_random import Policy_Random
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
-from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
-from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
-from smartstart.utilities.datacontainers import Summary, Episode
-from smartstart.utilities.utilities import get_default_data_directory, get_start_waypoints_final_states_steps
-from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
 
-# from rllab.rllab.envs.normalized_env import normalize
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.data_manipulation import \
+    from_observation_to_usablestate, generate_training_data_inputs, generate_training_data_outputs
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.dynamics_model import Dyn_Model
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add_noise, perform_rollouts
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
+
+from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
+from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
+from smartstart.utilities.utilities import get_start_waypoints_final_states_steps
+
 from utilities.numerical import elliptical_euclidean_distance_function_generator
 
 
@@ -165,9 +160,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
             # data collection, either with or without multi-threading
             if (use_threading):
-                from collect_samples_threaded import CollectSamples
+                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.collect_samples_threaded import CollectSamples
             else:
-                from collect_samples import CollectSamples
+                from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.collect_samples import CollectSamples
 
             if (not (print_minimal)):
                 print("\n#####################################")

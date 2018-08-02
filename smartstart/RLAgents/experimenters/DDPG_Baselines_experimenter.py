@@ -9,6 +9,8 @@ from smartstart.utilities.utilities import set_global_seeds, get_default_data_di
 def task_run_ddpg_baselines_mc(params):
     import tensorflow as tf
 
+    print("\n\nprocess " + str(params['id']) + " has started" + "-"*200 + "\n")
+
     noGpu = True
     render = False
     replay_buffer = None
@@ -58,60 +60,66 @@ def task_run_ddpg_baselines_mc(params):
         tfConfig = None
 
     file_location = None
-    with tf.Session(config=tfConfig) as sess:
-        # with tf.Session() as sess:
-        # Reset the seed for random number generation
-        set_global_seeds(RANDOM_SEED)
-        env.seed(RANDOM_SEED)
 
-        # Initialize agent, see class for available parameters
-        agent = DDPG_Baselines_agent(env, sess,
-                                     replay_buffer=replay_buffer,
-                                     buffer_size=buffer_size,
-                                     batch_size=batch_size,
-                                     num_train_iterations=num_train_iterations,
-                                     num_steps_before_train=num_steps_before_train,
-                                     ou_epsilon=ou_epsilon,
-                                     ou_min_epsilon=ou_min_epsilon,
-                                     ou_epsilon_decay_factor=ou_epsilon_decay_factor,
-                                     ou_mu=ou_mu,
-                                     ou_sigma=ou_sigma,
-                                     ou_theta=ou_theta,
-                                     actor_lr=actor_lr,
-                                     actor_h1=actor_h1,
-                                     actor_h2=actor_h2,
-                                     critic_lr=critic_lr,
-                                     critic_h1=critic_h1,
-                                     critic_h2=critic_h2,
-                                     gamma=gamma,
-                                     tau=tau,
-                                     layer_norm=layer_norm,
-                                     normalize_observations=normalize_observations,
-                                     normalize_returns=normalize_returns,
-                                     critic_l2_reg=critic_l2_reg,
-                                     enable_popart=enable_popart,
-                                     clip_norm=clip_norm,
-                                     reward_scale=reward_scale,
-                                     lastLayerTanh=lastLayerTanh
-                                     )
+    with tf.Graph().as_default() as graph:
+        with tf.Session(config=tfConfig, graph=graph) as sess:
+            # with tf.Session() as sess:
+            # Reset the seed for random number generation
+            set_global_seeds(RANDOM_SEED)
+            env.seed(RANDOM_SEED)
 
-        # Train the agent, summary contains training data
-        summary = rlTrain(agent, env, render=render,
-                          render_episode=False,
-                          print_steps=False,
-                          print_results=True, num_episodes=episodes)  # type: Summary
+            # Initialize agent, see class for available parameters
+            agent = DDPG_Baselines_agent(env, sess,
+                                         replay_buffer=replay_buffer,
+                                         buffer_size=buffer_size,
+                                         batch_size=batch_size,
+                                         num_train_iterations=num_train_iterations,
+                                         num_steps_before_train=num_steps_before_train,
+                                         ou_epsilon=ou_epsilon,
+                                         ou_min_epsilon=ou_min_epsilon,
+                                         ou_epsilon_decay_factor=ou_epsilon_decay_factor,
+                                         ou_mu=ou_mu,
+                                         ou_sigma=ou_sigma,
+                                         ou_theta=ou_theta,
+                                         actor_lr=actor_lr,
+                                         actor_h1=actor_h1,
+                                         actor_h2=actor_h2,
+                                         critic_lr=critic_lr,
+                                         critic_h1=critic_h1,
+                                         critic_h2=critic_h2,
+                                         gamma=gamma,
+                                         tau=tau,
+                                         layer_norm=layer_norm,
+                                         normalize_observations=normalize_observations,
+                                         normalize_returns=normalize_returns,
+                                         critic_l2_reg=critic_l2_reg,
+                                         enable_popart=enable_popart,
+                                         clip_norm=clip_norm,
+                                         reward_scale=reward_scale,
+                                         lastLayerTanh=lastLayerTanh
+                                         )
 
-        noGpu_str = "_NoGPU" if noGpu else ""
-        llTanh_str = "_LLTanh" if lastLayerTanh else ""
-        decayingNoise_str = "-decayingNoise" if decayingNoise else ""
-        summary.add_params_to_param_dict(zz_RANDOM_SEED=RANDOM_SEED, zz_episodes=episodes, noGpu=noGpu)
-        fp = summary.save(get_default_data_directory("ddpg_baselines_summaries/" + sub_dir_name), last_name_section=True,
-                          extra_name_append= get_extra_name(params) +
-                          "_" + str(episodes) + "ep" + noGpu_str + "_noNorm" + llTanh_str + decayingNoise_str)
+            # Train the agent, summary contains training data
+            summary = rlTrain(agent, env, render=render,
+                              render_episode=False,
+                              print_steps=False,
+                              print_results=False, num_episodes=episodes,
+                              progress_bar=True,
+                              id=params['id'],
+                              num_ticks=params['num_ticks'])  # type: Summary
 
+            noGpu_str = "_NoGPU" if noGpu else ""
+            llTanh_str = "_LLTanh" if lastLayerTanh else ""
+            decayingNoise_str = "-decayingNoise" if decayingNoise else ""
+            summary.add_params_to_param_dict(zz_RANDOM_SEED=RANDOM_SEED, zz_episodes=episodes, noGpu=noGpu)
+            fp = summary.save(get_default_data_directory("ddpg_baselines_summaries/" + sub_dir_name), last_name_section=True,
+                              extra_name_append= get_extra_name(params) +
+                              "_" + str(episodes) + "ep" + noGpu_str + "_noNorm" + llTanh_str + decayingNoise_str)
 
-        # train_writer = tf.summary.FileWriter(fp[:-35])
-        # train_writer.add_graph(sess.graph)
+            print("\n\nprocess " + str(params['id']) + " has finished" + "!" * 200 + "\n")
+
+            # train_writer = tf.summary.FileWriter(fp[:-35])
+            # train_writer.add_graph(sess.graph)
 
 # Define the task function for the experiment
 def task_print(params):
@@ -126,8 +134,9 @@ def get_extra_name(params):
 if __name__ == "__main__":
     experiment_task = task_run_ddpg_baselines_mc
     # experiment_task = task_print
-    num_exp_per_param = 5
+    num_exp_per_param = 1
     episodes = 1000
+    num_ticks = 200
     decaying_noise = True #must be the case that these match the parameters
     sub_dir_name = 'hidden_layer_size_experiment'
 
@@ -135,7 +144,8 @@ if __name__ == "__main__":
         'task' : experiment_task,
         'num_exp' : num_exp_per_param,
 
-        'RANDOM_SEED' : [1234],
+        'num_ticks' : [num_ticks],
+        'RANDOM_SEED' : [1, 12, 123, 1234, 12345], #new seed so each experiment is different but reproducible
         'episodes' : [episodes],
         'decayingNoise' : [decaying_noise],
         'sub_dir_name' : [sub_dir_name],

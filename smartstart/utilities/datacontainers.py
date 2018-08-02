@@ -286,7 +286,7 @@ class Summary(object):
         summary.__dict__.update(data_dict)
         return summary
 
-    def save(self, directory=DIR, post_fix=None, extra_name_append = "", last_name_section=False):
+    def save(self, directory=DIR, post_fix=0, extra_name_append = "", last_name_section=False):
         """Save summary as json file
 
         The summary name is used as filename, an optional postfix can be
@@ -305,17 +305,16 @@ class Summary(object):
         :obj:`str`
             full filepath to the saved json summary
         """
-
-        name = self.name
-        if last_name_section:
-            name = name.split("_")[-1]
-        name = name + extra_name_append
-        if post_fix is not None:
+        def make_name(self, last_name_section, extra_name_append, post_fix, directory):
+            name = self.name
+            if last_name_section:
+                name = name.split("_")[-1]
+            name = name + extra_name_append
             name += "_" + str(post_fix)
-        else:
-            post_fix = 0
-        name += ".json"
-        fp = os.path.join(directory, name)
+            name += ".json"
+            fp = os.path.join(directory, name)
+
+        name = make_name(self, last_name_section, extra_name_append, post_fix, directory)
 
         # ensure file doesn't exist yet, if it does, create a new name
         while (os.path.exists(fp)):
