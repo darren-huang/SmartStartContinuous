@@ -1,11 +1,11 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-from numpy import genfromtxt
-import joblib
-import pandas
 import argparse
 
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas
+import seaborn as sns
+from numpy import genfromtxt
 
 ######################
 ## ARGUMENTS TO SPECIFY

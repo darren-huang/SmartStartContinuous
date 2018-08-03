@@ -1,8 +1,10 @@
-from rllab.rllab.algos.batch_polopt import BatchSampler
-from math import exp, log
-from numpy import var
-import random
 import copy
+import random
+from math import exp, log
+
+from numpy import var
+from rllab.rllab.algos.batch_polopt import BatchSampler
+
 
 class ISSampler(BatchSampler):
     """

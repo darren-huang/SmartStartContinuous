@@ -1,13 +1,13 @@
 
 
-from rllab.rllab.envs.base import Env, Step
-from rllab.rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from rllab.rllab.baselines.zero_baseline import ZeroBaseline
-from rllab.rllab.algos.trpo import TRPO
-from rllab.rllab.spaces.box import Box
 import lasagne.nonlinearities
 import numpy as np
 import theano.tensor as TT
+from rllab.rllab.algos.trpo import TRPO
+from rllab.rllab.baselines.zero_baseline import ZeroBaseline
+from rllab.rllab.envs.base import Env, Step
+from rllab.rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.rllab.spaces.box import Box
 
 
 class DummyEnv(Env):

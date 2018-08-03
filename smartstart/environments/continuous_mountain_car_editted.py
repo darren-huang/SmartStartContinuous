@@ -15,10 +15,12 @@ permalink: https://perma.cc/6Z2N-PFWC
 """
 
 import math
+
 import gym
+import numpy as np
 from gym import spaces
 from gym.utils import seeding
-import numpy as np
+
 
 class Continuous_MountainCarEnv(gym.Env):
     metadata = {

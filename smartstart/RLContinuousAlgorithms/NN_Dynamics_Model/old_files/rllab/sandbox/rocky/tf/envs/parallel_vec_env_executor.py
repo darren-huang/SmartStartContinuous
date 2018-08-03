@@ -1,12 +1,12 @@
 
 
-import numpy as np
 import pickle as pickle
-from sandbox.rocky.tf.misc import tensor_utils
-from rllab.rllab.misc import logger
-
-from rllab.rllab.sampler.stateful_pool import singleton_pool
 import uuid
+
+import numpy as np
+from rllab.rllab.misc import logger
+from rllab.rllab.sampler.stateful_pool import singleton_pool
+from sandbox.rocky.tf.misc import tensor_utils
 
 
 def worker_init_envs(G, alloc, scope, env):

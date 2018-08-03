@@ -1,13 +1,14 @@
 import ctypes
-from ctypes import pointer, byref
 import logging
-from threading import Lock
 import os
+from ctypes import pointer, byref
+from threading import Lock
+
+import OpenGL.GL as gl
+import numpy as np
 
 from . import mjcore, mjconstants, glfw
 from .mjlib import mjlib
-import numpy as np
-import OpenGL.GL as gl
 
 logger = logging.getLogger(__name__)
 

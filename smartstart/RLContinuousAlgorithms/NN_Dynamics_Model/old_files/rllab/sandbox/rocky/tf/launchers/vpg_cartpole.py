@@ -1,13 +1,13 @@
 
 
 
-from sandbox.rocky.tf.algos.vpg import VPG
 from rllab.rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.rllab.envs.normalized_env import normalize
-from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from sandbox.rocky.tf.envs.base import TfEnv
 from rllab.rllab.misc.instrument import stub, run_experiment_lite
+from sandbox.rocky.tf.algos.vpg import VPG
+from sandbox.rocky.tf.envs.base import TfEnv
+from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 stub(globals())
 

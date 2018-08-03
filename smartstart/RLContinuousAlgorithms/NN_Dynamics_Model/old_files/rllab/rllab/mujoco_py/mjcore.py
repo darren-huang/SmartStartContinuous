@@ -1,9 +1,10 @@
-from ctypes import create_string_buffer
 import ctypes
-from . import mjconstants as C
+from ctypes import create_string_buffer
 
-from .mjtypes import *  # import all for backwards compatibility
+from . import mjconstants as C
 from .mjlib import mjlib
+from .mjtypes import *  # import all for backwards compatibility
+
 
 class MjError(Exception):
     pass

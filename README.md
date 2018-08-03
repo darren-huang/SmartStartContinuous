@@ -11,31 +11,25 @@ Full documentation can be found on the github pages for this project, click
 
 ## Windows Setup
 Before using pipenv to install the pipfile.lock requirements, we will need
-1. (ALSO NEED CMAKE AND ZLIB?)`make` command for windows (sepcifically needed for `baselines`, open-ai's python reinforcement learning algorithms package) I got the command through [MSYS2](https://github.com/msys2/msys2/wiki/MSYS2-installation)
-
-    1. Install MSYS2 (easiest way is through [Chocolatey](https://chocolatey.org/packages/msys2), once Chocolatey is installed
-    you can use `choco install msys2`)
     
-    2. Add MSYS2 to Path environment variable (for me I added specifically the path `C:\tools\msys64\usr\bin` to the end of my path variable)
-        1. Go to `Control Panel > System and Security > System > Advanced system settings > Environment Variables`
-        2. Under System Variables, select the variable `path`, click edit
-        3. In the window, click `New` and then `Browse...`, select the `C:\tools\msys64\usr\bin` and click `ok`
+1. Place the correct pip-files into the project directory
+    1. Determine which `Pipfile`/`Pipfile.lock` to use, 3 different options:
+    
+        1. `TensorflowCpu-NoAvx`: Tensorflow WITHOUT GPU support (CPU only) with a CPU that doesn't support AVX instructions (specifically has Tensorflow-CPU 1.5)
+    
+            * To check for AVX support, run [Coreinfo.exe](https://docs.microsoft.com/en-us/sysinternals/downloads/coreinfo) in terminal and `AVX -` indicates no support, `AVX             *` means it is supported
+            
+        2. `TensorflowCpu`: Tensorflow WITHOUT GPU support (CPU only) with a CPU that supports AVX instructions (specifically has Tensorflow-CPU latest version)
         
-    3. Now in a terminal session, run the command `pacman -Syuu` to update the package databases
-    
-    4. Now run `pacman -Sy make` to install the make command
-    
-2. Determine which `Pipfile`/`Pipfile.lock` to use, 3 different options:
-    
-    1. `TensorflowCpu-NoAvx`: Tensorflow WITHOUT GPU support (CPU only) with a CPU that doesn't support AVX instructions (specifically has Tensorflow-CPU 1.5)
-
-        1. To check for AVX support, run [Coreinfo.exe](https://docs.microsoft.com/en-us/sysinternals/downloads/coreinfo) in terminal and `AVX -` indicates no support, `AVX             *` means it is supported
+        3. `TensorflowGpu`: Tensorflow WITH GPU support, also needs a CPU with AVX instructions (specifically has Tensorflow-GPU latest version)
         
-    2. `TensorflowCpu`: Tensorflow WITHOUT GPU support (CPU only) with a CPU that supports AVX instructions (specifically has Tensorflow-CPU latest version)
+            * To install the prerequisites for GPU support see [TensorFlow with GPU support](https://www.tensorflow.org/install/install_windows)
+            
+    2. Copy `Pipfile`/`Pipfile.lock` from `/projectDirectory/alternativePipfiles/tensorflowSelection/` to the `/projectDirectory/` replacing the current files
+        
+2. Install MPI for Windows, currently I am able to get it to work with [Microsoft MPI v9.0.1](https://www.microsoft.com/en-us/download/details.aspx?id=56727)
     
-    3. `TensorflowGpu`: Tensorflow WITH GPU support, also needs a CPU with AVX instructions (specifically has Tensorflow-GPU latest version)
-    
-        1. To install the prerequisites for GPU support see [TensorFlow with GPU support](https://www.tensorflow.org/install/install_windows)
+    1. NOTE: for whatever reason I had int install both the `msmpisetup.exe` and the `msmpisetup.msi`
 
     
 

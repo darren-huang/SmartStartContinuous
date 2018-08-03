@@ -1,9 +1,8 @@
 import numpy as np
-
+from rllab.rllab.baselines.base import Baseline
+from rllab.rllab.core.parameterized import Parameterized
 from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc.overrides import overrides
-from rllab.rllab.core.parameterized import Parameterized
-from rllab.rllab.baselines.base import Baseline
 from rllab.rllab.regressors.gaussian_conv_regressor import GaussianConvRegressor
 
 

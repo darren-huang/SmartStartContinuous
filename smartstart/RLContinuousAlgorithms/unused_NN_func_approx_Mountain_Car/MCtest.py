@@ -1,8 +1,9 @@
 import json
+
 import numpy as np
 from keras.models import model_from_json
-from smartstart.RLContinuousAlgorithms.unused_NN_func_approx_Mountain_Car.MountainCar import MountainCar
 
+from smartstart.RLContinuousAlgorithms.unused_NN_func_approx_Mountain_Car.MountainCar import MountainCar
 
 if __name__ == "__main__":
     # Initialize parameters
@@ -28,13 +29,10 @@ if __name__ == "__main__":
         game_over = False
         # get initial input
         input_t = env.observe()
-
         c += 1
         while not game_over:
-            input_tm1 = input_t
-
             # get next action
-            q = model.predict(input_tm1)
+            q = model.predict(input_t)
             action = np.argmax(q[0])
 
             # apply action, get rewards and new state

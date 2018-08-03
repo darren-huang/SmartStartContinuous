@@ -1,6 +1,6 @@
 from rllab.rllab.algos.vpg import VPG
-from rllab.rllab.optimizers.lbfgs_optimizer import LbfgsOptimizer
 from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.optimizers.lbfgs_optimizer import LbfgsOptimizer
 
 
 class ERWR(VPG, Serializable):

@@ -1,8 +1,8 @@
 from rllab.rllab.algos.ddpg import DDPG
 from rllab.rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.rllab.envs.normalized_env import normalize
-from rllab.rllab.misc.instrument import stub, run_experiment_lite
 from rllab.rllab.exploration_strategies.ou_strategy import OUStrategy
+from rllab.rllab.misc.instrument import stub, run_experiment_lite
 from rllab.rllab.policies.deterministic_mlp_policy import DeterministicMLPPolicy
 from rllab.rllab.q_functions.continuous_mlp_q_function import ContinuousMLPQFunction
 

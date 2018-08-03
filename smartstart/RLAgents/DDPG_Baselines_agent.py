@@ -1,12 +1,12 @@
-import numpy as np
 import argparse
+
 import tensorflow as tf
 from baselines.ddpg.ddpg import DDPG
 # from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.noise import *
-from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models_editted import Actor_Editted, Critic_Editted
 
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
+from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models_editted import Actor_Editted, Critic_Editted
 from smartstart.reinforcementLearningCore.agents_abstract_classes import ValueFuncRLAgent, ReplayBufferRLAgent
 from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds

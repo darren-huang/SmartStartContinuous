@@ -2,10 +2,12 @@
 Data structure for implementing experience replay
 Author: Patrick Emami
 """
-from collections import deque
-import random
-import numpy as np
 import pickle
+import random
+from collections import deque
+
+import numpy as np
+
 
 class ReplayBuffer(object):
     """

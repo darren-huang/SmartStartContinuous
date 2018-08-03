@@ -1,9 +1,9 @@
 
 
 
-from rllab.rllab.spaces.base import Space
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from rllab.rllab.spaces.base import Space
 
 
 class Product(Space):

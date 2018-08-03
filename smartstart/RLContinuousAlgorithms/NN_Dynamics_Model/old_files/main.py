@@ -1,34 +1,35 @@
 
 #imports
+import argparse
+import copy
+import json
+import os
+import pickle
+import sys
+import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
-import time
-import matplotlib.pyplot as plt
-import pickle
-import copy
-import os
-import sys
-from six.moves import cPickle
 # from rllab.rllab.envs.normalized_env import normalize
 import yaml
-import argparse
-import json
-
-#my imports
-from policy_random import Policy_Random
-from trajectories import make_trajectory
-from trajectories import get_trajfollow_params
+from data_manipulation import from_observation_to_usablestate
 from data_manipulation import generate_training_data_inputs
 from data_manipulation import generate_training_data_outputs
-from data_manipulation import from_observation_to_usablestate
 from data_manipulation import get_indices
-from helper_funcs import perform_rollouts
-from helper_funcs import create_env
-from helper_funcs import visualize_rendering
-from helper_funcs import add_noise
 from dynamics_model import Dyn_Model
+from helper_funcs import add_noise
+from helper_funcs import create_env
+from helper_funcs import perform_rollouts
+from helper_funcs import visualize_rendering
 from mpc_controller import MPCController
+# my imports
+from policy_random import Policy_Random
+from six.moves import cPickle
+from trajectories import get_trajfollow_params
+from trajectories import make_trajectory
+
 
 def main():
 

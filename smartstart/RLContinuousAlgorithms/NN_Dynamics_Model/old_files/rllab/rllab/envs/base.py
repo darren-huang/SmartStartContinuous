@@ -1,5 +1,6 @@
-from .env_spec import EnvSpec
 import collections
+
+from .env_spec import EnvSpec
 
 
 class Env(object):

@@ -1,8 +1,8 @@
-from smartstart.utilities.experimenter import run_experiment
-
 import gym
+
 from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+from smartstart.utilities.experimenter import run_experiment
 from smartstart.utilities.utilities import set_global_seeds, get_default_data_directory
 
 

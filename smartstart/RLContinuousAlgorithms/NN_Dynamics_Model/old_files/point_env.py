@@ -1,7 +1,8 @@
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.envs.base import Env
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.spaces import Box
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.envs.base import Step
 import numpy as np
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.envs.base import Env
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.envs.base import Step
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.spaces import Box
+
 
 class PointEnv(Env):
     @property

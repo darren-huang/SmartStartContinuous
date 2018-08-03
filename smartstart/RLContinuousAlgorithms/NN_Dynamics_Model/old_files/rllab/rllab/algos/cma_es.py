@@ -1,15 +1,14 @@
-from rllab.rllab.algos.base import RLAlgorithm
-
-import theano.tensor as TT
 import numpy as np
-
+import rllab.rllab.misc.logger as logger
+import rllab.rllab.plotter as plotter
+import theano.tensor as TT
+from rllab.rllab.algos.base import RLAlgorithm
+from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc import ext
 from rllab.rllab.misc.special import discount_cumsum
 from rllab.rllab.sampler import parallel_sampler, stateful_pool
 from rllab.rllab.sampler.utils import rollout
-from rllab.rllab.core.serializable import Serializable
-import rllab.rllab.misc.logger as logger
-import rllab.rllab.plotter as plotter
+
 from . import cma_es_lib
 
 

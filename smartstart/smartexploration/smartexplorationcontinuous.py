@@ -3,23 +3,18 @@
 Defines method for generating a SmartStart object from an algorithm object. The
 SmartStart object will be a subclass of the original algorithm object.
 """
-import random
-from queue import Queue
-from typing import Deque
+
+import time
 
 import numpy as np
 import tensorflow as tf
-import time
-import matplotlib.pyplot as plt
 
 from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.RLAgents.NND_MB_agent import NND_MB_agent
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
-from smartstart.RLDiscreteAlgorithms import ValueIteration
-from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
+from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds
-
 
 
 class SmartStartContinuous(RLAgent):
@@ -285,8 +280,6 @@ if __name__ == "__main__":
     import random
     import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
-    from smartstart.utilities.plot import plot_summary, show_plot, \
-        mean_reward_episode, steps_episode
 
     # configuring environment
     ENV_NAME = 'MountainCarContinuous-v0'

@@ -12,10 +12,10 @@ __license__ = 'MIT'
 __version__ = '1.0.1'
 
 import ctypes
-import os
 import glob
-import sys
+import os
 import subprocess
+import sys
 import textwrap
 
 # Python 3 compatibility:

@@ -1,9 +1,8 @@
+import lasagne.init
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-import lasagne.init
 import numpy as np
 import theano.tensor as TT
-
 from rllab.rllab.core.lasagne_layers import ParamLayer
 from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.network import GRUNetwork

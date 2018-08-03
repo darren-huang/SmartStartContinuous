@@ -2,13 +2,15 @@
 # University of Montreal, 2012-2013
 
 
-import numpy, sys
+import collections
+import os
+import pickle
+
+import numpy
+import sys
 import theano
 import theano.tensor as T
-import pickle
-import os
 from rllab.rllab.misc.ext import compile_function
-import collections
 
 
 def gauss_newton_product(cost, p, v, s):  # this computes the product Gv = J'HJv (G is the Gauss-Newton matrix)

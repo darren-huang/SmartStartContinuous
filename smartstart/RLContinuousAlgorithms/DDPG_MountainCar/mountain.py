@@ -4,15 +4,14 @@ Date : 18 may 2017
 rev1
 
 '''
-import tensorflow as tf
-import numpy as np
 import gym
+import numpy as np
+import tensorflow as tf
+
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise
-
-
 
 # Base learning rate for the Actor network
 ACTOR_LEARNING_RATE = 0.0001

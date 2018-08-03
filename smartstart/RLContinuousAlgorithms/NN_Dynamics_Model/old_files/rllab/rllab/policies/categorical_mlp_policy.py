@@ -1,6 +1,6 @@
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-
+import numpy as np
 from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.network import MLP
 from rllab.rllab.core.serializable import Serializable
@@ -10,7 +10,6 @@ from rllab.rllab.misc.overrides import overrides
 from rllab.rllab.policies.base import StochasticPolicy
 from rllab.rllab.spaces import Discrete
 
-import numpy as np
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):
     def __init__(

@@ -1,8 +1,8 @@
 
 
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from sandbox.rocky.tf.distributions.base import Distribution
 
 

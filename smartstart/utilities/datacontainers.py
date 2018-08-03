@@ -9,9 +9,8 @@ import sys
 import numpy as np
 from google.cloud import storage
 
-from smartstart.utilities.utilities import DIR
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
-from collections import deque
+from smartstart.utilities.utilities import DIR
 
 
 class Episode(object):

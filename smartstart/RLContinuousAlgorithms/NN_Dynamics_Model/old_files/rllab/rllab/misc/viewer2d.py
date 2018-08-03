@@ -1,6 +1,7 @@
+import numpy as np
 import pygame
 import pygame.gfxdraw
-import numpy as np
+
 
 class Colors(object):
     black = (0, 0, 0)

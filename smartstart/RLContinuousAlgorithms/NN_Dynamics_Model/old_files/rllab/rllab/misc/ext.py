@@ -1,12 +1,13 @@
+import operator
 import os.path
-import sys
 import pickle as pickle
 import random
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc.console import colorize, Message
+import sys
 from collections import OrderedDict
-import numpy as np
-import operator
 from functools import reduce
+
+import numpy as np
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc.console import colorize, Message
 
 sys.setrecursionlimit(50000)
 

@@ -11,12 +11,12 @@ from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, r
 # my imports
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.utilities.plot import plot_path, show_plot, ion_plot, pause_plot, update_path, ioff_plot
-from smartstart.utilities.utilities import get_default_data_directory, get_start_waypoints_final_states_steps, set_global_seeds
+from smartstart.utilities.utilities import get_default_data_directory, get_start_waypoints_final_states_steps, \
+    set_global_seeds
 
 # from rllab.rllab.envs.normalized_env import normalize
 
 if __name__ == "__main__":
-    import random
     import gym
 
     # intialize variables

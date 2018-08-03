@@ -1,7 +1,8 @@
 
 
-import numpy as np
 import pickle as pickle
+
+import numpy as np
 from sandbox.rocky.tf.misc import tensor_utils
 
 

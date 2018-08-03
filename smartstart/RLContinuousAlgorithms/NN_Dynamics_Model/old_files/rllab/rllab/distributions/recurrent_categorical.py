@@ -1,8 +1,8 @@
-import theano.tensor as TT
 import numpy as np
 import theano
-from rllab.rllab.distributions.categorical import Categorical
+import theano.tensor as TT
 from rllab.rllab.distributions.base import Distribution
+from rllab.rllab.distributions.categorical import Categorical
 
 TINY = 1e-8
 

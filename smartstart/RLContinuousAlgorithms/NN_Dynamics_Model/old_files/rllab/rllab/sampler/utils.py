@@ -1,6 +1,7 @@
+import time
+
 import numpy as np
 from rllab.rllab.misc import tensor_utils
-import time
 
 
 def rollout(env, agent, max_path_length=np.inf, animated=False, speedup=1):

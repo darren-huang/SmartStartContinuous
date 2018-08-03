@@ -5,10 +5,9 @@
 
 
 
+import re
 from collections import namedtuple
 from platform import python_version_tuple
-import re
-
 
 if python_version_tuple()[0] < "3":
     from itertools import izip_longest

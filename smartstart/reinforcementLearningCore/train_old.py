@@ -1,5 +1,7 @@
-from utilities.datacontainers import Summary, Episode
 import numpy as np
+
+from utilities.datacontainers import Summary, Episode
+
 
 def train(agent, env, render=False, render_episode=False, print_results=True):
     """Runs a training experiment

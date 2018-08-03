@@ -1,15 +1,14 @@
 import numpy as np
-
 import sandbox.rocky.tf.core.layers as L
+import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.misc import logger
 from sandbox.rocky.tf.core.layers_powered import LayersPowered
 from sandbox.rocky.tf.core.network import MLP
+from sandbox.rocky.tf.distributions.diagonal_gaussian import DiagonalGaussian
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
 from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
-from sandbox.rocky.tf.distributions.diagonal_gaussian import DiagonalGaussian
-from rllab.rllab.core.serializable import Serializable
-from rllab.rllab.misc import logger
-import tensorflow as tf
 
 
 class GaussianMLPRegressor(LayersPowered, Serializable):

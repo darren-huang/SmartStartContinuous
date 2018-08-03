@@ -1,10 +1,10 @@
-from rllab.rllab.misc.ext import compile_function, lazydict, flatten_tensor_variables
-from rllab.rllab.misc import logger
-from rllab.rllab.core.serializable import Serializable
-import theano.tensor as TT
-import theano
 import numpy as np
 import scipy.optimize
+import theano
+import theano.tensor as TT
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.misc import logger
+from rllab.rllab.misc.ext import compile_function, lazydict, flatten_tensor_variables
 
 
 class PenaltyLbfgsOptimizer(Serializable):

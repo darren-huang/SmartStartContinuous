@@ -1,11 +1,12 @@
+import sys
+
 from rllab.rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
+from rllab.rllab.envs.gym_env import GymEnv
 from rllab.rllab.envs.normalized_env import normalize
+from rllab.rllab.misc.instrument import stub, run_experiment_lite
+from sandbox.rocky.tf.algos.trpo import TRPO
 from sandbox.rocky.tf.envs.base import TfEnv
 from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from sandbox.rocky.tf.algos.trpo import TRPO
-from rllab.rllab.misc.instrument import stub, run_experiment_lite
-from rllab.rllab.envs.gym_env import GymEnv
-import sys
 
 stub(globals())
 

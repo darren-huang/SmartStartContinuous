@@ -1,9 +1,9 @@
-import numpy as np
-import time
-import copy
-import matplotlib.pyplot as plt
 import copy
 import multiprocessing
+import time
+
+import numpy as np
+
 
 class CollectSamples(object):
 

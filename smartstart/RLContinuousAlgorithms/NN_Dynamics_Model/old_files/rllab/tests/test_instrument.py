@@ -1,8 +1,8 @@
 
 
 
-from rllab.rllab.misc import instrument
 from nose2.tools import such
+from rllab.rllab.misc import instrument
 
 
 class TestClass(object):

@@ -1,8 +1,9 @@
 
 
-from .base import Distribution
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
+from .base import Distribution
 
 TINY = 1e-8
 

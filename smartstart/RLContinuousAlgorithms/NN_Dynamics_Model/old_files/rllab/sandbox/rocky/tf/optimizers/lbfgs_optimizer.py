@@ -1,11 +1,12 @@
 
 
+import time
+
+import scipy.optimize
+import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
-from rllab.rllab.core.serializable import Serializable
-import tensorflow as tf
-import scipy.optimize
-import time
 
 
 class LbfgsOptimizer(Serializable):

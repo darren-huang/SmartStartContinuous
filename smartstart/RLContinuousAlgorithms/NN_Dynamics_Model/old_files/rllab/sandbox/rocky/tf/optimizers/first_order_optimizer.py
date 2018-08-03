@@ -1,17 +1,18 @@
 
 
 
+import time
+from collections import OrderedDict
+from functools import partial
+
+import pyprind
+import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc import ext
 from rllab.rllab.misc import logger
-from rllab.rllab.core.serializable import Serializable
-from sandbox.rocky.tf.misc import tensor_utils
 # from rllab.rllab.algo.first_order_method import parse_update_method
 from rllab.rllab.optimizers.minibatch_dataset import BatchDataset
-from collections import OrderedDict
-import tensorflow as tf
-import time
-from functools import partial
-import pyprind
+from sandbox.rocky.tf.misc import tensor_utils
 
 
 class FirstOrderOptimizer(Serializable):

@@ -1,10 +1,11 @@
-from rllab.rllab.algos.base import RLAlgorithm
-from rllab.rllab.sampler import parallel_sampler
-from rllab.rllab.sampler.base import BaseSampler
+import IPython
 import rllab.rllab.misc.logger as logger
 import rllab.rllab.plotter as plotter
+from rllab.rllab.algos.base import RLAlgorithm
 from rllab.rllab.policies.base import Policy
-import IPython
+from rllab.rllab.sampler import parallel_sampler
+from rllab.rllab.sampler.base import BaseSampler
+
 
 class BatchSampler(BaseSampler):
     def __init__(self, algo):

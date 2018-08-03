@@ -1,14 +1,14 @@
+import itertools
 import pickle
 
+import numpy as np
+import rllab.rllab.misc.logger as logger
 import tensorflow as tf
+from rllab.rllab.misc import tensor_utils
 from rllab.rllab.sampler.base import BaseSampler
+from rllab.rllab.sampler.stateful_pool import ProgBarCounter
 from sandbox.rocky.tf.envs.parallel_vec_env_executor import ParallelVecEnvExecutor
 from sandbox.rocky.tf.envs.vec_env_executor import VecEnvExecutor
-from rllab.rllab.misc import tensor_utils
-import numpy as np
-from rllab.rllab.sampler.stateful_pool import ProgBarCounter
-import rllab.rllab.misc.logger as logger
-import itertools
 
 
 class VectorizedSampler(BaseSampler):
