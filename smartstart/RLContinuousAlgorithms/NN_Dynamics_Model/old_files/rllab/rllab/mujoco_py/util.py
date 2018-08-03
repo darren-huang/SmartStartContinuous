@@ -1,5 +1,8 @@
-import ctypes, os, sys
+import ctypes
+import os
+import sys
 from ctypes import *
+
 import six
 
 # MAXINT on Python 2, undefined on Python 3

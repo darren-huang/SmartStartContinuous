@@ -1,8 +1,9 @@
 
 
-from .base import Distribution
-import theano.tensor as TT
 import numpy as np
+import theano.tensor as TT
+
+from .base import Distribution
 
 TINY = 1e-8
 

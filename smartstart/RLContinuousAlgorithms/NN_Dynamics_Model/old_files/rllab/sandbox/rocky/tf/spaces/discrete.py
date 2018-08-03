@@ -1,8 +1,8 @@
-from rllab.rllab.spaces.base import Space
 import numpy as np
-from rllab.rllab.misc import special
-from rllab.rllab.misc import ext
 import tensorflow as tf
+from rllab.rllab.misc import ext
+from rllab.rllab.misc import special
+from rllab.rllab.spaces.base import Space
 
 
 class Discrete(Space):

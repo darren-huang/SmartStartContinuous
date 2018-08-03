@@ -1,6 +1,6 @@
+import lasagne.layers as L
 from rllab.rllab.core.parameterized import Parameterized
 from rllab.rllab.misc.overrides import overrides
-import lasagne.layers as L
 
 
 class LasagnePowered(Parameterized):

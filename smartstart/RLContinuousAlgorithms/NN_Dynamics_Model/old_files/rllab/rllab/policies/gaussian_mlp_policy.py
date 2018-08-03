@@ -2,19 +2,17 @@ import lasagne
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import numpy as np
-
+import theano.tensor as TT
 from rllab.rllab.core.lasagne_layers import ParamLayer
 from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.network import MLP
-from rllab.rllab.spaces import Box
-
 from rllab.rllab.core.serializable import Serializable
-from rllab.rllab.policies.base import StochasticPolicy
-from rllab.rllab.misc.overrides import overrides
-from rllab.rllab.misc import logger
-from rllab.rllab.misc import ext
 from rllab.rllab.distributions.diagonal_gaussian import DiagonalGaussian
-import theano.tensor as TT
+from rllab.rllab.misc import ext
+from rllab.rllab.misc import logger
+from rllab.rllab.misc.overrides import overrides
+from rllab.rllab.policies.base import StochasticPolicy
+from rllab.rllab.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):

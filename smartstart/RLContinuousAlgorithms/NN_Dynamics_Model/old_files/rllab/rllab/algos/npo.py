@@ -1,9 +1,9 @@
-from rllab.rllab.misc import ext
-from rllab.rllab.misc.overrides import overrides
-from rllab.rllab.algos.batch_polopt import BatchPolopt
 import rllab.rllab.misc.logger as logger
 import theano
 import theano.tensor as TT
+from rllab.rllab.algos.batch_polopt import BatchPolopt
+from rllab.rllab.misc import ext
+from rllab.rllab.misc.overrides import overrides
 from rllab.rllab.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
 
 

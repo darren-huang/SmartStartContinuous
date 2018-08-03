@@ -10,9 +10,11 @@
 #reward normalization?
 #confirm saver working and implement parameterised automatic saving
 
-import tensorflow as tf
-import numpy as np
 import random
+
+import numpy as np
+import tensorflow as tf
+
 
 class Memory:
   def __init__(self, capacity, batch_size, v):

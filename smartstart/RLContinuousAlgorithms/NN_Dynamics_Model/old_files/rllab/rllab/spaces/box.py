@@ -1,8 +1,9 @@
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.core.serializable import Serializable
-from .base import Space
 import numpy as np
-from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import ext
 import theano
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.core.serializable import Serializable
+from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.rllab.rllab.misc import ext
+
+from .base import Space
 
 
 class Box(Space):

@@ -1,9 +1,8 @@
 from contextlib import contextmanager
 
+import tensorflow as tf
 from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc.tensor_utils import flatten_tensors, unflatten_tensors
-import tensorflow as tf
-
 
 load_params = True
 

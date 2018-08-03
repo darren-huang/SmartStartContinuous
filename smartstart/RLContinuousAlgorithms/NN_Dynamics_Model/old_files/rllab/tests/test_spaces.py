@@ -1,6 +1,6 @@
 
-from rllab.rllab.spaces import Product, Discrete, Box
 import numpy as np
+from rllab.rllab.spaces import Product, Discrete, Box
 
 
 def test_product_space():

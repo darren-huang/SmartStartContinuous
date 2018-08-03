@@ -1,19 +1,15 @@
 from abc import ABCMeta
 
-from smartstart.utilities.plot import plot_path
-from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
+import numpy as np
+import tensorflow as tf
+
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.actor import ActorNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.critic import CriticNetwork
 from smartstart.RLContinuousAlgorithms.DDPG_MountainCar.ou_noise import OUNoise
-from smartstart.utilities.utilities import get_default_data_directory
+from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
 from smartstart.utilities.datacontainers import Summary
-import tensorflow as tf
-from tensorflow.python import debug as tf_debug
-
-import numpy as np
-
-
+from smartstart.utilities.utilities import get_default_data_directory
 
 
 class DDPG_agent(RLAgent, metaclass=ABCMeta):
@@ -238,12 +234,9 @@ class DDPG_agent(RLAgent, metaclass=ABCMeta):
         self.ruido.reset()
 
 if __name__ == "__main__":
-    import random
     import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
     from smartstart.utilities.utilities import set_global_seeds
-    from smartstart.utilities.plot import plot_summary, show_plot, \
-        mean_reward_episode, steps_episode
 
     # Reset the seed for random number generation
     RANDOM_SEED = 1234

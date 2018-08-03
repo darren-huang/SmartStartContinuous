@@ -9,21 +9,22 @@ saved as JSON strings.
 """
 import glob
 import os
-import matplotlib.patches as mpatches
-import matplotlib.colorbar
-from matplotlib.colors import LinearSegmentedColormap
+
 import matplotlib.axes
+import matplotlib.colorbar
 import matplotlib.figure
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, Wedge, Polygon, Ellipse
-from matplotlib.collections import PatchCollection
-from matplotlib.collections import LineCollection
 import numpy as np
 import seaborn as sns
+from matplotlib.collections import LineCollection
+from matplotlib.collections import PatchCollection
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import Circle, Ellipse
 
-from smartstart.utilities.numerical import moving_average
 from smartstart.utilities.datacontainers import Summary
-from smartstart.utilities.utilities import get_start_waypoints_final_states
+from smartstart.utilities.numerical import moving_average
+
 
 def cmap_map(function, cmap):
     """ Applies function (which should operate on vectors of shape 3: [r, g, b]), on colormap cmap.
@@ -367,8 +368,8 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=[],
-              highlight_waypoint_index = None, radii=[0, 0], linewidth=3):
+def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=(),
+              highlight_waypoint_index = None, radii=(0, 0), linewidth=3):
     assert len(path[0]) == 2
 
     if reward is not None:

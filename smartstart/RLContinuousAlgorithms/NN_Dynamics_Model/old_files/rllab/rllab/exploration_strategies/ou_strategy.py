@@ -1,10 +1,10 @@
-from rllab.rllab.misc.overrides import overrides
-from rllab.rllab.misc.ext import AttrDict
-from rllab.rllab.core.serializable import Serializable
-from rllab.rllab.spaces.box import Box
-from rllab.rllab.exploration_strategies.base import ExplorationStrategy
 import numpy as np
 import numpy.random as nr
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.exploration_strategies.base import ExplorationStrategy
+from rllab.rllab.misc.ext import AttrDict
+from rllab.rllab.misc.overrides import overrides
+from rllab.rllab.spaces.box import Box
 
 
 class OUStrategy(ExplorationStrategy, Serializable):

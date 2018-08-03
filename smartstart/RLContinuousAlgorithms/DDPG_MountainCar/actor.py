@@ -1,7 +1,10 @@
 
-import tensorflow as tf
-import numpy as np
 import os
+
+import numpy as np
+import tensorflow as tf
+
+
 # ===========================
 #   Actor and Critic DNNs
 # ===========================

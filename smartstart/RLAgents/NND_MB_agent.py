@@ -8,17 +8,14 @@ import tensorflow as tf
 
 # noinspection PyPackageRequirements,PyPackageRequirements
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
-
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.data_manipulation import \
     from_observation_to_usablestate, generate_training_data_inputs, generate_training_data_outputs
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.dynamics_model import Dyn_Model
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add_noise, perform_rollouts
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
-
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
 from smartstart.utilities.utilities import get_start_waypoints_final_states_steps
-
 from utilities.numerical import elliptical_euclidean_distance_function_generator
 
 

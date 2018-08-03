@@ -1,14 +1,16 @@
+import copy
+import math
+import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
-import time
-import math
-import matplotlib.pyplot as plt
-import copy
-from six.moves import cPickle
-from rllab.rllab.misc import tensor_utils
 from data_manipulation import from_observation_to_usablestate
 from reward_functions import RewardFunctions
+from rllab.rllab.misc import tensor_utils
+from six.moves import cPickle
+
 
 class MPCController:
 

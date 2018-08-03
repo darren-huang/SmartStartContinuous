@@ -1,20 +1,22 @@
+import copy
+import math
+import os
+import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
-import time
-import math
-import matplotlib.pyplot as plt
-import copy
-from six.moves import cPickle
-from rllab.rllab.misc import tensor_utils
-from rllab.rllab.envs.normalized_env import normalize
-from feedforward_network import feedforward_network
-import os
 from data_manipulation import from_observation_to_usablestate
-from dynamics_model import Dyn_Model
 from data_manipulation import get_indices
+from dynamics_model import Dyn_Model
+from feedforward_network import feedforward_network
 from mpc_controller import MPCController
+from rllab.rllab.envs.normalized_env import normalize
+from rllab.rllab.misc import tensor_utils
+from six.moves import cPickle
 from trajectories import make_trajectory
+
 
 class GetTrueAction:
 

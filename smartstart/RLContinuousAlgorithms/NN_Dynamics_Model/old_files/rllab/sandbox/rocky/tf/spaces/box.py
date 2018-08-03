@@ -1,8 +1,8 @@
 
 
 
-from rllab.rllab.spaces.box import Box as TheanoBox
 import tensorflow as tf
+from rllab.rllab.spaces.box import Box as TheanoBox
 
 
 class Box(TheanoBox):

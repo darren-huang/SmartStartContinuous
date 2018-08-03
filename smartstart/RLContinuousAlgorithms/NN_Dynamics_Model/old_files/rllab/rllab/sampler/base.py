@@ -1,10 +1,10 @@
 
 
 import numpy as np
+import rllab.rllab.misc.logger as logger
+from rllab.rllab.algos import util
 from rllab.rllab.misc import special
 from rllab.rllab.misc import tensor_utils
-from rllab.rllab.algos import util
-import rllab.rllab.misc.logger as logger
 
 
 class Sampler(object):

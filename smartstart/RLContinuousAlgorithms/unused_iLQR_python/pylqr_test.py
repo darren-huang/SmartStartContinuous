@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 import smartstart.RLContinuousAlgorithms.unused_iLQR_python.pylqr as pylqr
 
+
 class InversePendulumProblem():
     def __init__(self):
         #parameters

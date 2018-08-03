@@ -1,6 +1,7 @@
 import abc
+
 from smartstart.reinforcementLearningCore.counter import Counter
-from smartstart.RLAgents.replay_buffer import ReplayBuffer
+
 
 class RLAgent(metaclass=abc.ABCMeta):
 

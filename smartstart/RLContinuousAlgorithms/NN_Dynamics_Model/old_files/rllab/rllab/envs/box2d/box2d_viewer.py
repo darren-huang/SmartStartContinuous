@@ -1,5 +1,5 @@
-from Box2D import b2ContactListener, b2Vec2, b2DrawExtended
 import pygame
+from Box2D import b2ContactListener, b2Vec2, b2DrawExtended
 from pygame import (QUIT, KEYDOWN, KEYUP, MOUSEBUTTONDOWN, MOUSEMOTION)
 
 

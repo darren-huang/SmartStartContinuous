@@ -1,9 +1,9 @@
 import lasagne
+import lasagne.init as LI
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-import lasagne.init as LI
-from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.lasagne_layers import batch_norm
+from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc import ext
 from rllab.rllab.policies.base import Policy

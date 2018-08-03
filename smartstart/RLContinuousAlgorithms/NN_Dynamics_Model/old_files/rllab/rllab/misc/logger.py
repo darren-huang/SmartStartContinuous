@@ -1,20 +1,20 @@
-from enum import Enum
-
-from rllab.rllab.misc.tabulate import tabulate
-from rllab.rllab.misc.console import mkdir_p, colorize
-from rllab.rllab.misc.autoargs import get_all_parameters
-from contextlib import contextmanager
-import numpy as np
+import base64
+import csv
+import datetime
+import json
 import os
 import os.path as osp
-import sys
-import datetime
-import dateutil.tz
-import csv
-import joblib
-import json
 import pickle
-import base64
+import sys
+from contextlib import contextmanager
+from enum import Enum
+
+import dateutil.tz
+import joblib
+import numpy as np
+from rllab.rllab.misc.autoargs import get_all_parameters
+from rllab.rllab.misc.console import mkdir_p, colorize
+from rllab.rllab.misc.tabulate import tabulate
 
 _prefixes = []
 _prefix_str = ''

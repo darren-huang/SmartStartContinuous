@@ -1,12 +1,13 @@
 
 
-from joblib.pool import MemmapingPool
 import multiprocessing as mp
-from rllab.rllab.misc import logger
-import pyprind
+import sys
 import time
 import traceback
-import sys
+
+import pyprind
+from joblib.pool import MemmapingPool
+from rllab.rllab.misc import logger
 
 
 class ProgBarCounter(object):

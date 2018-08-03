@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-import lasagne.layers as L
 import lasagne
+import lasagne.layers as L
 import theano
 import theano.tensor as TT
 

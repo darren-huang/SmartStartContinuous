@@ -1,16 +1,15 @@
 
 
+import lasagne.init as LI
 import lasagne.layers as L
 import lasagne.nonlinearities as LN
-import lasagne.init as LI
-import theano.tensor as TT
+import numpy as np
 import theano
-from rllab.rllab.misc import ext
+import theano.tensor as TT
 from rllab.rllab.core.lasagne_layers import OpLayer
 from rllab.rllab.core.lasagne_powered import LasagnePowered
 from rllab.rllab.core.serializable import Serializable
-
-import numpy as np
+from rllab.rllab.misc import ext
 
 
 def wrapped_conv(*args, **kwargs):

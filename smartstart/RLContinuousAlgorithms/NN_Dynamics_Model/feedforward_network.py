@@ -1,5 +1,3 @@
-
-import numpy as np
 import tensorflow as tf
 
 def feedforward_network(inputState, inputSize, outputSize, num_fc_layers, depth_fc_layers, tf_datatype):

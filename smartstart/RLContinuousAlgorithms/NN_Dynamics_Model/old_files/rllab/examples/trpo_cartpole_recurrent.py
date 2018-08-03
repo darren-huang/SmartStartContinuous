@@ -5,9 +5,9 @@ from rllab.rllab.algos.trpo import TRPO
 from rllab.rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.rllab.envs.normalized_env import normalize
-from rllab.rllab.policies.gaussian_gru_policy import GaussianGRUPolicy
-from rllab.rllab.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
 from rllab.rllab.misc.instrument import stub, run_experiment_lite
+from rllab.rllab.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
+from rllab.rllab.policies.gaussian_gru_policy import GaussianGRUPolicy
 
 stub(globals())
 

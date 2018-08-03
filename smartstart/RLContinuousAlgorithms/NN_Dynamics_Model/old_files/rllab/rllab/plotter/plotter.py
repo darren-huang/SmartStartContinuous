@@ -1,8 +1,9 @@
 import atexit
-from queue import Empty
 from multiprocessing import Process, Queue
-from rllab.rllab.sampler.utils import rollout
+from queue import Empty
+
 import numpy as np
+from rllab.rllab.sampler.utils import rollout
 
 __all__ = [
     'init_worker',

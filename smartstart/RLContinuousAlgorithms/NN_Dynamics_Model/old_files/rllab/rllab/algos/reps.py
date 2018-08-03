@@ -1,13 +1,13 @@
-import theano.tensor as TT
-import theano
+import numpy as np
 import scipy.optimize
-from rllab.rllab.misc import logger
-from rllab.rllab.misc.overrides import overrides
-from rllab.rllab.misc import ext
+import theano
+import theano.tensor as TT
 from rllab.rllab.algos.batch_polopt import BatchPolopt
 from rllab.rllab.core.serializable import Serializable
-import numpy as np
+from rllab.rllab.misc import ext
+from rllab.rllab.misc import logger
 from rllab.rllab.misc import tensor_utils
+from rllab.rllab.misc.overrides import overrides
 
 
 class REPS(BatchPolopt, Serializable):

@@ -5,12 +5,11 @@ import math
 from collections import defaultdict
 
 import numpy as np
+from gym.envs.registration import EnvSpec
 
 from smartstart.environments.environment import Environment
 from smartstart.environments.generate_gridworld import generate_gridworld
 from smartstart.environments.presets import *
-
-from gym.envs.registration import EnvSpec
 
 
 class GridWorld(Environment):

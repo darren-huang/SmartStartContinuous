@@ -1,7 +1,9 @@
 
 # AUTO GENERATED. DO NOT CHANGE!
 from ctypes import *
+
 import numpy as np
+
 
 class MJCONTACT(Structure):
     

@@ -1,8 +1,8 @@
-import numpy as np
-import rllab.rllab
-import time
-import matplotlib.pyplot as plt
 import copy
+import time
+
+import numpy as np
+
 
 class CollectSamples(object):
 

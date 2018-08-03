@@ -2,10 +2,10 @@
 
 
 from nose2.tools import such
-from rllab.rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.rllab.algos.trpo import TRPO
 from rllab.rllab.baselines.zero_baseline import ZeroBaseline
+from rllab.rllab.envs.box2d.cartpole_env import CartpoleEnv
+from rllab.rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 with such.A("Issue #3") as it:
     @it.should("be fixed")

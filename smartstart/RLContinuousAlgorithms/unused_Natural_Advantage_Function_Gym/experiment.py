@@ -1,11 +1,12 @@
-import tensorflow as tf
+import argparse
+import os
+
+import gym
 import matplotlib.pyplot as plt
 import numpy as np
-import gym
-import os
-import argparse
+import tensorflow as tf
 
-import naf
+import smartstart.RLContinuousAlgorithms.unused_Natural_Advantage_Function_Gym.naf as naf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  #silence TF compilation warnings
 

@@ -15,7 +15,7 @@ sklearn = "*"
 keras = "*"
 seaborn = "*"
 wheel = "*"
-tensorflow = "==1.5"
+tensorflow = "*"
 tqdm = "*"
 atari-py = {git = "https://github.com/Kojoley/atari-py.git"}
 baselines = "*"

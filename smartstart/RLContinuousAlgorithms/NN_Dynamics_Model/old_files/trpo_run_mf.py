@@ -1,6 +1,8 @@
-import numpy as np 
-import matplotlib.pyplot as plt
 import math
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 npr = np.random
 from rllab.rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 import tensorflow as tf 

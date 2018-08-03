@@ -1,9 +1,8 @@
 import numpy as np
 import pygame
+from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.rllab.envs.box2d.parser import find_body
-
-from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.envs.box2d.parser.xml_box2d import _get_name
 from rllab.rllab.misc import autoargs
 from rllab.rllab.misc.overrides import overrides

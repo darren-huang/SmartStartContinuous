@@ -1,13 +1,13 @@
 
 
 
+import rllab.rllab.misc.logger as logger
+import tensorflow as tf
 from rllab.rllab.misc import ext
 from rllab.rllab.misc.overrides import overrides
-import rllab.rllab.misc.logger as logger
-from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
 from sandbox.rocky.tf.algos.batch_polopt import BatchPolopt
 from sandbox.rocky.tf.misc import tensor_utils
-import tensorflow as tf
+from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
 
 
 class NPO(BatchPolopt):

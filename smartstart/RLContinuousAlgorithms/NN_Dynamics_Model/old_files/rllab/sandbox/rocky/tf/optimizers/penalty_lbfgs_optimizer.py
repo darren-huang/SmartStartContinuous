@@ -1,10 +1,10 @@
-from sandbox.rocky.tf.misc import tensor_utils
-from rllab.rllab.misc import logger
-from rllab.rllab.misc import ext
-from rllab.rllab.core.serializable import Serializable
-import tensorflow as tf
 import numpy as np
 import scipy.optimize
+import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.misc import ext
+from rllab.rllab.misc import logger
+from sandbox.rocky.tf.misc import tensor_utils
 
 
 class PenaltyLbfgsOptimizer(Serializable):

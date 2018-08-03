@@ -1,7 +1,7 @@
-from rllab.rllab.sampler.base import BaseSampler
-from rllab.rllab.sampler import parallel_sampler
-from rllab.rllab.sampler.stateful_pool import singleton_pool
 import tensorflow as tf
+from rllab.rllab.sampler import parallel_sampler
+from rllab.rllab.sampler.base import BaseSampler
+from rllab.rllab.sampler.stateful_pool import singleton_pool
 
 
 def worker_init_tf(G):

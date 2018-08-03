@@ -3,11 +3,9 @@ import os.path as osp
 import mako.lookup
 import mako.template
 import numpy as np
-
 from rllab.rllab import spaces
 from rllab.rllab.envs.base import Env, Step
 from rllab.rllab.envs.box2d.box2d_viewer import Box2DViewer
-
 from rllab.rllab.envs.box2d.parser.xml_box2d import world_from_xml, find_body, \
     find_joint
 from rllab.rllab.misc import autoargs

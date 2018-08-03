@@ -1,14 +1,14 @@
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
 import sandbox.rocky.tf.core.layers as L
-from sandbox.rocky.tf.core.network import MLP
-from rllab.rllab.core.serializable import Serializable
-from sandbox.rocky.tf.distributions.categorical import Categorical
-from sandbox.rocky.tf.policies.base import StochasticPolicy
-from rllab.rllab.misc import ext
-from sandbox.rocky.tf.misc import tensor_utils
-from rllab.rllab.misc.overrides import overrides
-from sandbox.rocky.tf.spaces.discrete import Discrete
 import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.misc import ext
+from rllab.rllab.misc.overrides import overrides
+from sandbox.rocky.tf.core.layers_powered import LayersPowered
+from sandbox.rocky.tf.core.network import MLP
+from sandbox.rocky.tf.distributions.categorical import Categorical
+from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.policies.base import StochasticPolicy
+from sandbox.rocky.tf.spaces.discrete import Discrete
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):

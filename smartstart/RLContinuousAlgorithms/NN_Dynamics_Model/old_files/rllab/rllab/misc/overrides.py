@@ -14,8 +14,9 @@
 #  limitations under the License.
 #
 
-import sys
 import dis
+import sys
+
 __VERSION__ = '0.5'
 
 

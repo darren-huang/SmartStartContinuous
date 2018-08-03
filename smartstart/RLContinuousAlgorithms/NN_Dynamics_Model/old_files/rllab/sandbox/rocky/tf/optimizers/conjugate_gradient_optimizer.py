@@ -1,13 +1,14 @@
+# from rllab.rllab.misc.ext import flatten_tensor_variables
+import itertools
+
+import numpy as np
+import tensorflow as tf
+from rllab.rllab.core.serializable import Serializable
 from rllab.rllab.misc import ext
 from rllab.rllab.misc import krylov
 from rllab.rllab.misc import logger
-from rllab.rllab.core.serializable import Serializable
-# from rllab.rllab.misc.ext import flatten_tensor_variables
-import itertools
-import numpy as np
-import tensorflow as tf
-from sandbox.rocky.tf.misc import tensor_utils
 from rllab.rllab.misc.ext import sliced_fun
+from sandbox.rocky.tf.misc import tensor_utils
 
 
 class PerlmutterHvp(object):

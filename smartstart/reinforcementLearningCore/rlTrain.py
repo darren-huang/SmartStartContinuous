@@ -1,6 +1,6 @@
-from smartstart.utilities.datacontainers import Summary, Episode
 import numpy as np
 
+from smartstart.utilities.datacontainers import Summary, Episode
 
 
 def rlTrain(agent, env, render=False, render_episode=False, print_results=True, print_steps=True,

@@ -6,7 +6,6 @@ SmartStart object will be a subclass of the original algorithm object.
 import numpy as np
 
 from smartstart.RLDiscreteAlgorithms import ValueIteration
-from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncAndCountRLAgent
 
 

@@ -1,9 +1,10 @@
 
+import math
+import time
+
 import numpy as np
 import numpy.random as npr
 import tensorflow as tf
-import time
-import math
 
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.feedforward_network import feedforward_network
 

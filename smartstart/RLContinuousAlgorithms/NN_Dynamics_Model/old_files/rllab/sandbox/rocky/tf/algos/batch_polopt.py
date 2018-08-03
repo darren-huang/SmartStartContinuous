@@ -1,9 +1,10 @@
 import time
-from rllab.rllab.algos.base import RLAlgorithm
+
 import rllab.rllab.misc.logger as logger
 import rllab.rllab.plotter as plotter
-from sandbox.rocky.tf.policies.base import Policy
 import tensorflow as tf
+from rllab.rllab.algos.base import RLAlgorithm
+from sandbox.rocky.tf.policies.base import Policy
 from sandbox.rocky.tf.samplers.batch_sampler import BatchSampler
 from sandbox.rocky.tf.samplers.vectorized_sampler import VectorizedSampler
 

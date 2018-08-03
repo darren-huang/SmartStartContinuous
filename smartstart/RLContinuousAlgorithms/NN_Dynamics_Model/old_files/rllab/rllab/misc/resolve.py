@@ -1,5 +1,6 @@
-from pydoc import locate
 import types
+from pydoc import locate
+
 from rllab.rllab.misc.ext import iscanr
 
 

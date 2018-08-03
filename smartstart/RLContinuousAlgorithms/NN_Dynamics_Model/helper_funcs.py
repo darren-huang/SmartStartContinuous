@@ -6,6 +6,7 @@ import gym
 import numpy as np
 import tensorflow as tf
 
+
 def add_noise(data_inp, noiseToSignal):
     data= copy.deepcopy(data_inp)
     mean_data = np.mean(data, axis = 0)

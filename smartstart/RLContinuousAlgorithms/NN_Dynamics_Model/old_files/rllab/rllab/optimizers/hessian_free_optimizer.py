@@ -1,7 +1,8 @@
-from rllab.rllab.misc.ext import compile_function, lazydict
-from rllab.rllab.core.serializable import Serializable
-from rllab.rllab.optimizers.hf import hf_optimizer
 import time
+
+from rllab.rllab.core.serializable import Serializable
+from rllab.rllab.misc.ext import compile_function, lazydict
+from rllab.rllab.optimizers.hf import hf_optimizer
 from rllab.rllab.optimizers.minibatch_dataset import BatchDataset
 
 

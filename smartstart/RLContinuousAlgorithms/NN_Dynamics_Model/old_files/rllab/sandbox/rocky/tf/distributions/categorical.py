@@ -2,9 +2,10 @@
 
 
 import numpy as np
-from .base import Distribution
 import tensorflow as tf
 from sandbox.rocky.tf.misc import tensor_utils
+
+from .base import Distribution
 
 TINY = 1e-8
 
