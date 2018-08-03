@@ -3,7 +3,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.optimizers import sgd
-from MountainCar import MountainCar
+from smartstart.RLContinuousAlgorithms.unused_NN_func_approx_Mountain_Car.MountainCar import MountainCar
 
 class ExperienceReplay(object):
     def __init__(self, max_memory=100, discount=.9):

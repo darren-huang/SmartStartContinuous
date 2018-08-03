@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from keras.models import model_from_json
-from MountainCar import MountainCar
+from smartstart.RLContinuousAlgorithms.unused_NN_func_approx_Mountain_Car.MountainCar import MountainCar
 
 
 if __name__ == "__main__":

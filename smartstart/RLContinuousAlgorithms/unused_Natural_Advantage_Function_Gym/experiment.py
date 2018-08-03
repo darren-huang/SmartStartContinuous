@@ -5,7 +5,7 @@ import gym
 import os
 import argparse
 
-import naf
+import smartstart.RLContinuousAlgorithms.unused_Natural_Advantage_Function_Gym.naf as naf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  #silence TF compilation warnings
 

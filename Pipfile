@@ -9,8 +9,16 @@ pynput = "*"
 gym = "*"
 pygame = "*"
 matplotlib = "*"
-tensorflow = "*"
-google = "*"
+protobuf = "*"
+google-cloud-storage = "*"
+sklearn = "*"
+keras = "*"
+seaborn = "*"
+wheel = "*"
+tensorflow = "==1.5"
+tqdm = "*"
+atari-py = {git = "https://github.com/Kojoley/atari-py.git"}
+baselines = "*"
 
 [dev-packages]
 
