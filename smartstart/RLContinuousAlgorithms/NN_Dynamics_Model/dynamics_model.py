@@ -12,7 +12,7 @@ from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.feedforward_network imp
 class Dyn_Model:
 
     def __init__(self, inputSize, outputSize, sess, learning_rate, batchsize, num_fc_layers, depth_fc_layers, mean_x,
-                 mean_y, mean_z, std_x, std_y, std_z, tf_datatype, print_minimal):
+                 mean_y, mean_z, std_x, std_y, std_z, tf_datatype, verbose):
 
         #init vars
         self.sess = sess
@@ -28,7 +28,7 @@ class Dyn_Model:
         self.std_x = std_x
         self.std_y = std_y
         self.std_z = std_z
-        self.print_minimal = print_minimal
+        self.verbose = verbose
 
         #placeholders
         self.x_ = tf.placeholder(tf_datatype, shape=[None, self.inputSize], name='x') #inputs
@@ -129,12 +129,12 @@ class Dyn_Model:
 
             #save losses after an epoch
             np.save(save_dir + '/training_losses.npy', training_loss_list)
-            if(not(self.print_minimal)):
+            if(self.verbose):
                 if((i%10)==0):
                     print("\n=== Epoch {} ===".format(i))
                     print ("loss: ", avg_loss/num_batches)
         
-        if(not(self.print_minimal)):
+        if(self.verbose):
             print ("Training set size: ", (nData_old + dataX_new.shape[0]))
             print("Training duration: {:0.2f} s".format(time.time()-start))
 

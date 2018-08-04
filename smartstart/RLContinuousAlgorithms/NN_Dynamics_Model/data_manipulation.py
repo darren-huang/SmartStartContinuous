@@ -77,7 +77,7 @@ def generate_training_data_inputs(states0, controls0):
     dataY= np.concatenate(new_controls, axis=0)
     return dataX, dataY
 
-def generate_training_data_outputs(states, which_agent):
+def generate_training_data_outputs(states):
     #for each rollout, the output corresponding to each (s_i) is (s_i+1 - s_i)
     differences=[]
     for states_in_single_rollout in states:
