@@ -312,16 +312,13 @@ class Summary(object):
             name += "_" + str(post_fix)
             name += ".json"
             fp = os.path.join(directory, name)
-
-        name = make_name(self, last_name_section, extra_name_append, post_fix, directory)
+            return fp
 
         # ensure file doesn't exist yet, if it does, create a new name
+        fp = make_name(self, last_name_section, extra_name_append, post_fix, directory)
         while (os.path.exists(fp)):
             post_fix += 1
-            name = self.name + extra_name_append
-            name += "_" + str(post_fix)
-            name += ".json"
-            fp = os.path.join(directory, name)
+            fp = make_name(self, last_name_section, extra_name_append, post_fix, directory)
 
         with open(fp, 'x') as f:
             f.write(self.to_json())

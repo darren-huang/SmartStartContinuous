@@ -133,10 +133,13 @@ def get_extra_name(params):
 
 if __name__ == "__main__":
     experiment_task = task_run_ddpg_baselines_mc
-    # experiment_task = task_print
-    num_exp_per_param = 1
+    num_exp_per_param = 1 # if you want multiple (actually, increase number of seeds)
+
+    #changeable parameter
     episodes = 1000
-    num_ticks = 200
+
+    #naming / display
+    num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
     sub_dir_name = 'hidden_layer_size_experiment'
 
