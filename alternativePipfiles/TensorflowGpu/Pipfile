@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+pynput = "*"
+gym = "*"
+pygame = "*"
+matplotlib = "*"
+protobuf = "*"
+google-cloud-storage = "*"
+sklearn = "*"
+keras = "*"
+seaborn = "*"
+wheel = "*"
+tqdm = "*"
+atari-py = {git = "https://github.com/Kojoley/atari-py.git"}
+baselines = "*"
+tensorflow-gpu = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
