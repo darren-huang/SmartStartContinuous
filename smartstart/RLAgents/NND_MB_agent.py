@@ -16,12 +16,24 @@ from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Po
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
 from smartstart.utilities.utilities import get_start_waypoints_final_states_steps
-from utilities.numerical import elliptical_euclidean_distance_function_generator
+from smartstart.utilities.numerical import elliptical_euclidean_distance_function_generator
 
 
 def make_save_directories(run_num):
     save_dir = 'run_' + str(run_num)
     save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), save_dir)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        os.makedirs(save_dir + '/losses')
+        os.makedirs(save_dir + '/models')
+        # os.makedirs(save_dir + '/saved_forwardsim')
+        os.makedirs(save_dir + '/saved_trajfollow')
+        os.makedirs(save_dir + '/training_data')
+    return save_dir
+
+def make_directories(dir_name):
+    save_dir = dir_name
+    save_dir = os.path.join(, save_dir)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
         os.makedirs(save_dir + '/losses')
@@ -49,6 +61,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                  gamma=.75, horizontal_penalty_factor=1, horizon=20, num_control_samples=5000,
 
                  save_dir_name="save_untitled", load_dir_name="untitled_load",
+                 save_resulting_dynamics_model=False,
                  use_existing_training_data=False, use_existing_dynamics_model=False,
                  data_directory_name="nnd_mb_models",
 
@@ -90,8 +103,10 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         ##################################    SAVING/LOADING STUFFS       #########################################################
         :param save_dir_name: the name of the directory the model will be saved
         :param load_dir_name: the name of the directory the model will be loaded
+        :param save_resulting_dynamics_model: whether or not to save the dynamics model
         :param use_existing_training_data: whether or not to load the training data
         :param use_existing_dynamics_model: whether or not to load the dynamics model
+        :param data_directory_name: The name of the directory under the default data folder where the models are stored
 
         ##################################    NEURAL NETWORK DYNAMICS MODEL STUFFS    ############################################
         :param num_fc_layers: Number of fully connected layers in Neural Network Dynamics Model
