@@ -147,7 +147,7 @@ class SmartStartContinuous(RLAgent):
                                          std_per_stepsize=nnd_mb_std_per_stepsize,
                                          stepsizes_in_waypoint_radii=nnd_mb_stepsizes_in_waypoint_radii,
                                          gamma=nnd_mb_gamma, horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
-                                         run_num=nnd_mb_run_num,
+                                         save_dir_name=nnd_mb_run_num,
                                          use_existing_training_data=nnd_mb_use_existing_training_data,
                                          horizon=nnd_mb_horizon, num_control_samples=nnd_mb_num_control_samples,
                                          num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation)
