@@ -1,0 +1,61 @@
+directory:
+ddpg_baselines_summaries/hidden_layer_size_experiment
+
+files with wildcard grouping:
+MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+MountainCarContinuous-v0_a-128-64.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d005_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+MountainCarContinuous-v0_a-200-100.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d001_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d001_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-200-100.0-0d005_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+top performers:
+MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+MountainCarContinuous-v0_a-128-64.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+
+For both Actor and Critic, it is best to have a lower learning rate of 0.001
+similar sized actor and critic networks seemed to learn better (though some exceptions)
+
+FINAL CHOICE
+a-64-32.0-0d001_c-64-32.0-0d001
+Actor_h1 = 64, Actor_h2 = 32, Actor_lr = 0.001
+Critic_h1 = 64, Critic_h2 = 32, Critic_lr = 0.001

@@ -40,7 +40,10 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
 
     #summary object
     #TODO fix how the names are gotten (hasattr func)
-    summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
+    if hasattr(agent, 'get_summary_name'):
+        summary = Summary(agent.get_summary_name() + "_" + env.spec.id)
+    else:
+        summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
     summary.set_agent(agent)
 
     # for printing

@@ -15,25 +15,24 @@ from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
-from smartstart.utilities.utilities import get_start_waypoints_final_states_steps
+from smartstart.utilities.utilities import get_start_waypoints_final_states_steps, get_default_model_directory
 from smartstart.utilities.numerical import elliptical_euclidean_distance_function_generator
 
 
-def make_save_directories(run_num):
-    save_dir = 'run_' + str(run_num)
-    save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), save_dir)
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-        os.makedirs(save_dir + '/losses')
-        os.makedirs(save_dir + '/models')
-        # os.makedirs(save_dir + '/saved_forwardsim')
-        os.makedirs(save_dir + '/saved_trajfollow')
-        os.makedirs(save_dir + '/training_data')
-    return save_dir
+# def make_save_directories(run_num):
+#     save_dir = 'run_' + str(run_num)
+#     save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), save_dir)
+#     if not os.path.exists(save_dir):
+#         os.makedirs(save_dir)
+#         os.makedirs(save_dir + '/losses')
+#         os.makedirs(save_dir + '/models')
+#         # os.makedirs(save_dir + '/saved_forwardsim')
+#         os.makedirs(save_dir + '/saved_trajfollow')
+#         os.makedirs(save_dir + '/training_data')
+#     return save_dir
 
 def make_directories(dir_name):
-    save_dir = dir_name
-    save_dir = os.path.join(, save_dir)
+    save_dir = get_default_model_directory(dir_name, create=False)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
         os.makedirs(save_dir + '/losses')
@@ -45,6 +44,7 @@ def make_directories(dir_name):
 
 
 class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Agent (NND_MB_agent)
+    model_subdirectory_name = "NND_MB_agent"
     tf_datatype = tf.float64
     noiseToSignal = 0.01
 
@@ -55,18 +55,17 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
                  replay_buffer=None, BUFFER_SIZE=10000,
 
-                 final_steps=10, steps_per_waypoint=10, mean_per_stepsize=1, std_per_stepsize=1,
-                 stepsizes_in_waypoint_radii=1.,
+                 final_steps=10, steps_per_waypoint=1, mean_per_stepsize=1, std_per_stepsize=1,
+                 stepsizes_in_waypoint_radii=1,
 
-                 gamma=.75, horizontal_penalty_factor=1, horizon=20, num_control_samples=5000,
+                 gamma=.75, horizontal_penalty_factor=.5, horizon=20, num_control_samples=5000,
 
                  save_dir_name="save_untitled", load_dir_name="untitled_load",
-                 save_resulting_dynamics_model=False,
-                 use_existing_training_data=False, use_existing_dynamics_model=False,
-                 data_directory_name="nnd_mb_models",
+                 save_training_data=False, save_resulting_dynamics_model=False,
+                 load_existing_training_data=False, load_existing_dynamics_model=False,
 
                  num_fc_layers=1, depth_fc_layers=500, batchsize=512, lr=0.001, nEpoch=30, fraction_use_new=0.9,
-                 num_episodes_for_aggregation=10, make_aggregated_dataset_noisy=True,
+                 num_episodes_for_aggregation=3, make_aggregated_dataset_noisy=True,
                  make_training_dataset_noisy=True, noise_actions_during_MPC_rollouts=True,
 
                  verbose=True,
@@ -103,10 +102,10 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         ##################################    SAVING/LOADING STUFFS       #########################################################
         :param save_dir_name: the name of the directory the model will be saved
         :param load_dir_name: the name of the directory the model will be loaded
+        :param save_training_data: whehter or not to save the training data
         :param save_resulting_dynamics_model: whether or not to save the dynamics model
-        :param use_existing_training_data: whether or not to load the training data
-        :param use_existing_dynamics_model: whether or not to load the dynamics model
-        :param data_directory_name: The name of the directory under the default data folder where the models are stored
+        :param load_existing_training_data: whether or not to load the training data
+        :param load_existing_dynamics_model: whether or not to load the dynamics model
 
         ##################################    NEURAL NETWORK DYNAMICS MODEL STUFFS    ############################################
         :param num_fc_layers: Number of fully connected layers in Neural Network Dynamics Model
@@ -152,7 +151,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.std_per_stepsize = std_per_stepsize
         self.stepsizes_in_waypoint_radii = stepsizes_in_waypoint_radii
         self.theta = theta  # minimum distance to get to desired state(s)
-        self.use_existing_dynamics_model = use_existing_dynamics_model
+        self.use_existing_dynamics_model = load_existing_dynamics_model
         self.make_aggregated_dataset_noisy = make_aggregated_dataset_noisy
         self.nEpochs = nEpoch
         self.fraction_use_new = fraction_use_new
@@ -166,11 +165,17 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.current_desired_state_index = None  # will start at 0 when a new episode begins otherwise error
         self.distances_left = None  # self.distances_left[x] will tell the distance from
         #                             desired_states[x] to desired_states[x+1] + [x+1] to [x+2].... until the end
+        self.save_resulting_dynamics_model = save_resulting_dynamics_model
 
         self.dt_from_xml = 0  # env.env.model.opt.timestep  # TODO: dt_from_xml seems to be only for rendering
 
-        self.load_dir = make_save_directories()
-        self.save_dir = make_save_directories(save_dir_name)  ### make directories for saving data ###
+        # BY DEFAULT, directories are under .../models/NND_MB_agent
+        self.load_dir = make_directories(os.path.join(self.model_subdirectory_name, load_dir_name))  ### make directories for loading data ###
+
+        if save_resulting_dynamics_model or save_training_data:
+            self.save_dir = make_directories(os.path.join(self.model_subdirectory_name, save_dir_name))  ### make directories for saving data ###
+        else:
+            self.save_dir = None
 
         if (noise_actions_during_MPC_rollouts):
             self.noise_amount = 0.005
@@ -186,19 +191,19 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             self.replay_buffer = replay_buffer  # type: ReplayBuffer
 
         ### Get Training Data  ##########################################################################
-        if (use_existing_training_data):
+        if (load_existing_training_data):
             if (verbose):
                 print("\n#####################################")
                 print("Retrieving training data & policy from saved files")
                 print("#####################################\n")
 
-            self.dataX = np.load(self.save_dir + '/training_data/dataX.npy')  # input1: state
-            self.dataY = np.load(self.save_dir + '/training_data/dataY.npy')  # input2: control
-            self.dataZ = np.load(self.save_dir + '/training_data/dataZ.npy')  # output: nextstate-state
-            self.states_val = np.load(self.save_dir + '/training_data/states_val.npy')
-            self.controls_val = np.load(self.save_dir + '/training_data/controls_val.npy')
-            # self.forwardsim_x_true = np.load(self.save_dir + '/training_data/forwardsim_x_true.npy')
-            # self.forwardsim_y = np.load(self.save_dir + '/training_data/forwardsim_y.npy')
+            self.dataX = np.load(self.load_dir + '/training_data/dataX.npy')  # input1: state
+            self.dataY = np.load(self.load_dir + '/training_data/dataY.npy')  # input2: control
+            self.dataZ = np.load(self.load_dir + '/training_data/dataZ.npy')  # output: nextstate-state
+            self.states_val = np.load(self.load_dir + '/training_data/states_val.npy')
+            self.controls_val = np.load(self.load_dir + '/training_data/controls_val.npy')
+            # self.forwardsim_x_true = np.load(self.load_dir + '/training_data/forwardsim_x_true.npy')
+            # self.forwardsim_y = np.load(self.load_dir + '/training_data/forwardsim_y.npy')
         else:
             random_policy = Policy_Random(env)  # create random policy for data collection
 
@@ -275,13 +280,14 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                 print("Saving data")
                 print("#####################################\n")
 
-            np.save(self.save_dir + '/training_data/dataX.npy', self.dataX)
-            np.save(self.save_dir + '/training_data/dataY.npy', self.dataY)
-            np.save(self.save_dir + '/training_data/dataZ.npy', self.dataZ)
-            np.save(self.save_dir + '/training_data/states_val.npy', self.states_val)
-            np.save(self.save_dir + '/training_data/controls_val.npy', self.controls_val)
-            # np.save(self.save_dir + '/training_data/forwardsim_x_true.npy', self.forwardsim_x_true)
-            # np.save(self.save_dir + '/training_data/forwardsim_y.npy', self.forwardsim_y)
+            if save_training_data:
+                np.save(self.save_dir + '/training_data/dataX.npy', self.dataX)
+                np.save(self.save_dir + '/training_data/dataY.npy', self.dataY)
+                np.save(self.save_dir + '/training_data/dataZ.npy', self.dataZ)
+                np.save(self.save_dir + '/training_data/states_val.npy', self.states_val)
+                np.save(self.save_dir + '/training_data/controls_val.npy', self.controls_val)
+                # np.save(self.save_dir + '/training_data/forwardsim_x_true.npy', self.forwardsim_x_true)
+                # np.save(self.save_dir + '/training_data/forwardsim_y.npy', self.forwardsim_y)
 
         # XYZ variable data #############################################################################
         # every component (i.e. x position) should become mean 0, std 1
@@ -318,8 +324,6 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         # randomly initialize all vars
         self.sess.run(tf.global_variables_initializer())
         self.saver = tf.train.Saver(max_to_keep=0)
-
-        # TODO: ROLLOUTS FOR TRAINING DATA!!!!!
 
     def get_action(self, state):
         return self.get_action_with_predicted_states(state)[0]
@@ -435,7 +439,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
         # train model or restore model
         if (self.use_existing_dynamics_model):
-            restore_path = self.save_dir + '/models/finalModel.ckpt'
+            restore_path = self.load_dir + '/models/finalModel.ckpt'
             self.saver.restore(self.sess, restore_path)
             print("Model restored from ", restore_path)
             training_loss = 0
@@ -445,12 +449,13 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
             training_loss, old_loss, new_loss = self.dyn_model.train(self.inputs, self.outputs,
                                                                      inputs_new, outputs_new,
                                                                      self.nEpochs, self.save_dir,
-                                                                     self.fraction_use_new)
-
-        save_path = self.saver.save(self.sess, self.save_dir + '/models/model_numTrain' +
-                                    str(1 + (
-                                            self.num_episodes_finished // self.num_episodes_for_aggregation)) + '.ckpt')
-        save_path = self.saver.save(self.sess, self.save_dir + '/models/finalModel.ckpt')
+                                                                     self.fraction_use_new,
+                                                                     save_results=self.save_resulting_dynamics_model)
+        if self.save_resulting_dynamics_model:
+            save_path = self.saver.save(self.sess, self.save_dir + '/models/model_numTrain' +
+                                        str(1 + (
+                                                self.num_episodes_finished // self.num_episodes_for_aggregation)) + '.ckpt')
+            save_path = self.saver.save(self.sess, self.save_dir + '/models/finalModel.ckpt')
 
     @property
     def current_desired_state(self):
@@ -596,54 +601,5 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         # pick best action sequence
         best_score = np.max(scores)
         best_sim_number = np.argmax(scores)
-
-        # TODO remove following for loop:
-        # best_path = resulting_states[:,best_sim_number]
-        # sample_desired_state_index = int(self.current_desired_state_index)
-        # pt = best_path[0]  # starting state
-        # current_desired_state = self.desired_states[sample_desired_state_index]
-        # prev_distance_to_end = self.distances_left[sample_desired_state_index] + \
-        #                         self.distance_function(pt, current_desired_state)
-        # distance_to_end = 0
-        # score = 0
-        # for pt_number in range(best_path.shape[0]):
-        #     # array of "the point"... for each sim
-        #     pt = best_path[pt_number]  # N x state
-        #
-        #     # get distances to current and next waypoints
-        #     current_desired_state = self.desired_states[sample_desired_state_index]
-        #     next_desired_state = self.desired_states[
-        #         np.minimum(sample_desired_state_index + 1, len(self.desired_states) - 1)]
-        #     distance_to_current = self.distance_function(current_desired_state, pt)
-        #     distance_to_next = self.distance_function(next_desired_state, pt)
-        #
-        #     # check if each sample should move onto the next waypoint
-        #     move_to_next = self.move_to_next(pt, sample_desired_state_index, distance_to_current,
-        #                                      distance_to_next)
-        #     if move_to_next:
-        #         sample_desired_state_index += 1  # if within theta of waypoint, increment waypoint
-        #         # get distance to new/current waypoint (updated)
-        #         distance_to_current = distance_to_next
-        #
-        #     # calculated distance left on the path
-        #     distance_to_end = self.distances_left[sample_desired_state_index] + distance_to_current
-        #
-        #     # update scores as the sum of distances left on path
-        #     score += (prev_distance_to_end - distance_to_end) * (gamma ** (pt_number))  # add the delta forward
-        #     prev_distance_to_end = distance_to_end
-        #
-        #     # penalty for horizontal distance from the line segment (line segment determined by the prev and current waypoint)
-        #     if sample_desired_state_index >= 1:  # needs a current and previous waypoint
-        #         dist = dist_line_seg_to_point(
-        #             self.desired_states[sample_desired_state_index - 1],  # prev waypoint
-        #             self.desired_states[sample_desired_state_index],  # current waypoint
-        #             pt,
-        #             self.radii) * horizontal_penalty_factor
-        #         # print(dist)
-        #         score -= dist
-        # print("distance from point: " + str(self.distance_function(resulting_states[0][0],self.desired_states[0])))
-        # print("'projection' from line segment: " +
-        #       str(dist_line_seg_to_point(self.desired_states[0], self.desired_states[1],
-        #                                  resulting_states[0][0], self.radii)))
 
         return scores, best_score, best_sim_number

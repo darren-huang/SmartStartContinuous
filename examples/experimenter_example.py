@@ -6,11 +6,11 @@ from smartstart.RLDiscreteAlgorithms.qlearning import QLearning
 # from smartstart.smartexploration.smartexplorationdiscrete import generate_smartstart_object
 from smartstart.environments.gridworld import GridWorld
 from smartstart.utilities.experimenter import run_experiment
-from smartstart.utilities.utilities import get_data_directory
+from smartstart.utilities.utilities import get_default_data_directory
 
 # Get the path to the data folder in the same directory as this file.
 # If the folder does not exists it will be created
-summary_dir = get_data_directory(__file__)
+summary_dir = get_default_data_directory("")
 
 
 # Define the task function for the experiment

@@ -3,6 +3,7 @@ import gym
 from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.reinforcementLearningCore.rlTrain import rlTrain
 from smartstart.utilities.experimenter import run_experiment
+from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import set_global_seeds, get_default_data_directory
 
 
@@ -33,10 +34,10 @@ def task_run_ddpg_baselines_mc(params):
     ou_theta = params['ou_theta']
     actor_lr = params['actor_lr']
     actor_h1 = params['actor_h1']
-    actor_h2 = params['actor_h1']/2
+    actor_h2 = params['actor_h1']//2
     critic_lr = params['critic_lr']
     critic_h1 = params['critic_h1']
-    critic_h2 = params['critic_h1']/2
+    critic_h2 = params['critic_h1']//2
     gamma = params['gamma']
     tau = params['tau']
     layer_norm = params['layer_norm']
@@ -127,8 +128,8 @@ def task_print(params):
     print(params['get_extra_name'](params))
 
 def get_extra_name(params):
-    critic_string = '_c-' + str(params['critic_h1']) + "-" + str(params['critic_h1']/2) + "-" + str(params['critic_lr']).replace(".","d")
-    actor_string = '_a-' + str(params['actor_h1']) + "-" + str(params['actor_h1']/2) + "-" + str(params['actor_lr']).replace(".","d")
+    critic_string = '_c-' + str(params['critic_h1']) + "-" + str(params['critic_h1']//2) + "-" + str(params['critic_lr']).replace(".","d")
+    actor_string = '_a-' + str(params['actor_h1']) + "-" + str(params['actor_h1']//2) + "-" + str(params['actor_lr']).replace(".","d")
     return actor_string + critic_string
 
 if __name__ == "__main__":

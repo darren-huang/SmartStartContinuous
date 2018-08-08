@@ -1,14 +1,24 @@
 BIGGER POINT:
 Get Smart Start Tests running
-	First need to refactor the NND_MB_agent
-		add choosing save model directory
-			add new model gen (always new directory) ? kinda already build in
-		add choosing load model directory
-		add turning off save model
-		remove get_data_directory from utilities.py (i dont think its needed)
-			maybe update the old experimenter and plotter examples while i'm at it :)
-	Move the current run0 files into the data directory
-	Change the main methods for NND_MB and smart start to defaultly load up the default training data
-	add options into Smartstart for setting the NND_MB stuffs
+                                                                                        First need to refactor the NND_MB_agent
+                                                                                            add choosing save model directory
+                                                                                                add new model gen (always new directory) ? kinda already build in
+                                                                                            add choosing load model directory
+                                                                                            add turning off save model
+                                                                                            remove get_data_directory from utilities.py (i dont think its needed)
+                                                                                                maybe update the old experimenter and plotter examples while i'm at it :)
+                                                                                        Move the current run0 files into the data directory
+                                                                                        Change the main methods for NND_MB and smart start to defaultly load up the default training data
+                                                                                        add options into Smartstart for setting the NND_MB stuffs
 	add options into Smartstart experimenter
 	RUN THEN WE GOOOOOOD!?
+
+Decaying SmartStart change (eta) value -> exploration decay
+plotting options
+
+
+Document Stuffs
+Installation guide: -> explain how to setup pipenv stuffs
+Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
+
+Refactor it such that "get default data directory" uses relative paths, not absolute

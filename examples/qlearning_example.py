@@ -34,8 +34,6 @@ summary = rlTrain(agent, grid_world, render=True,
                   print_results=True, num_episodes=500, max_steps=1000)
 
 # Plot results
-plot_summary(summary, mean_reward_episode, ma_window=5,
-             title="Easy GridWorld Q-Learning Average Reward per Episode")
-plot_summary(summary, steps_episode, ma_window=5,
-             title="Easy GridWorld Q-Learning Steps per Episode")
+plot_summary(summary, mean_reward_episode, ma_window=5, title="Easy GridWorld Q-Learning Average Reward per Episode")
+plot_summary(summary, steps_episode, ma_window=5, title="Easy GridWorld Q-Learning Steps per Episode")
 show_plot()

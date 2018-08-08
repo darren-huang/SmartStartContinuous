@@ -147,7 +147,7 @@ class Summary(object):
     """
     def __init__(self, name=None, last_x=5):
         super().__init__()
-        self.name = name
+        self.name = name #should contain both Agent and Environment name
         self.episodes = []
         self.best_path = None
         self.best_reward = -sys.maxsize

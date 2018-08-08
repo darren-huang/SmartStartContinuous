@@ -3,6 +3,7 @@
 """
 import os
 import random
+import glob
 
 import numpy as np
 
@@ -11,32 +12,37 @@ DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
 if not os.path.exists(DIR):
     os.makedirs(DIR)
 
+def get_glob_summaries(file_name):
+    from smartstart.utilities.datacontainers import Summary
 
-def get_data_directory(file):
-    """Creates and returns a data directory at the file's location
+    fps = glob.glob(file_name)
+    summaries = [Summary.load(fp) for fp in fps]
+    return summaries
 
-    Parameters
-    ----------
-    file :
-        python file
 
-    Returns
-    -------
-    :obj:`str`
-        filepath to the data directory
-
+def get_default_data_directory(foldername, create=True):
     """
-    fp = os.path.dirname(os.path.abspath(file))
-    fp = os.path.join(fp, 'data')
-    if not os.path.exists(fp):
-        os.makedirs(fp)
-    return fp
-
-def get_default_data_directory(foldername):
+    Used for getting a filepath to a default data directory which is right next to the smartstart source folder
+    :param foldername: name of the data folder
+    :return: directory path
+    """
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
                  'data/')
     path = os.path.join(path, foldername)
-    if not os.path.exists(path):
+    if (not os.path.exists(path)) and create:
+        os.makedirs(path)
+    return path
+
+def get_default_model_directory(foldername, create=True):
+    """
+    Used for getting a filepath to a default model directory which is right next to the smartstart source folder
+    :param foldername: name of the model folder
+    :return: directory path
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
+                        'models/')
+    path = os.path.join(path, foldername)
+    if (not os.path.exists(path)) and create:
         os.makedirs(path)
     return path
 
@@ -49,8 +55,14 @@ def get_start_waypoints_final_states(path, num_waypoints):
     """
     return get_start_waypoints_final_states_steps(path, (len(path) - 1) // num_waypoints)
 
-
 def get_start_waypoints_final_states_steps(path, steps_per_waypoint):
+    """
+    Get a list of waypoints including the starting state and final state, where between each waypoint is
+    'steps_per_waypoints' steps apart
+    :param path:
+    :param steps_per_waypoint:
+    :return:
+    """
     waypoint_centers = path[:-1:steps_per_waypoint]
     waypoint_centers.append(path[-1])
     return waypoint_centers

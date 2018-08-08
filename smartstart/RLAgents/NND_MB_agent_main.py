@@ -19,18 +19,30 @@ from smartstart.utilities.utilities import get_default_data_directory, get_start
 if __name__ == "__main__":
     import gym
 
-    # intialize variables
+    # intialize variables###############################################################################
+    # directories
+    load_training = True
+    load_dir = "default"
+    save_model = False
+    save_dir = "default"
+
+    # waypoint options
     mean_per_stepsize = 1
     std_per_stepsize = 1
     stepsizes_in_waypoint_radii = 1
     steps_per_waypoint = 1
-    num_episodes = 10
-    max_steps = 1000
+
+    # MPC reward/controller
     horizon = 4
     gamma = .75
     horizontal_penalty_factor = .5
-    # horizontal_penalty_factor = .5
     N=5000
+
+    # trainer options
+    num_episodes = 10
+    max_steps = 1000
+
+    #display options
     render = False
     render_episode = False
     print_steps = False
@@ -46,8 +58,12 @@ if __name__ == "__main__":
         agent = NND_MB_agent(env, sess, steps_per_waypoint=steps_per_waypoint, mean_per_stepsize=mean_per_stepsize,
                              std_per_stepsize=std_per_stepsize, stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
                              gamma=gamma, horizontal_penalty_factor=horizontal_penalty_factor,
-                             use_existing_training_data=True, horizon=horizon, num_control_samples=N,
-                             num_episodes_for_aggregation=1)  # type: NND_MB_agent
+                             horizon=horizon, num_control_samples=N,
+                             num_episodes_for_aggregation=1,
+                             save_dir_name=save_dir,
+                             load_dir_name=load_dir,
+                             save_resulting_dynamics_model=save_model,
+                             load_existing_training_data=load_training)  # type: NND_MB_agent
 
         # intializing the desired_states
         target_default_directory = "0_ddpg_summaries_DEPRACATED"

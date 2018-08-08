@@ -49,7 +49,7 @@ class Dyn_Model:
                     if g is not None]
         self.train_step = self.opt.apply_gradients(self.gv)
 
-    def train(self, dataX, dataZ, dataX_new, dataZ_new, nEpoch, save_dir, fraction_use_new):
+    def train(self, dataX, dataZ, dataX_new, dataZ_new, nEpoch, save_dir, fraction_use_new, save_results=True):
 
         #init vars
         start = time.time()
@@ -128,7 +128,8 @@ class Dyn_Model:
                 dataZ_new = dataZ_new[p]
 
             #save losses after an epoch
-            np.save(save_dir + '/training_losses.npy', training_loss_list)
+            if save_results:
+                np.save(save_dir + '/training_losses.npy', training_loss_list)
             if(self.verbose):
                 if((i%10)==0):
                     print("\n=== Epoch {} ===".format(i))

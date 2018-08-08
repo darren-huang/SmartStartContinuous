@@ -3,7 +3,7 @@
 Defines method for generating a SmartStart object from an algorithm object. The
 SmartStart object will be a subclass of the original algorithm object.
 """
-
+import argparse
 import time
 
 import numpy as np
@@ -78,45 +78,67 @@ class SmartStartContinuous(RLAgent):
     eta : :obj:`float` or :obj:~smartstart.utilities.scheduler.Scheduler`
         change of using smart start at the start of an episode or
         executed the normal algorithm
-    m : :obj:`int`
-        number of state-action visitation counts needed before the
-        state-action pair is used in fitting the transition model.
     policy: :obj:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`
         policy used for guiding to the smart start
     """
-    agent = ...  # type: ValueFuncRLAgent
 
     def K(self, a):  # Gaussian Kernel with sigma = 1 // not normalized
         return np.exp((-.5) * (a ** 2) / (self.sigma ** 2))
 
-    def __init__(self,
-                 agent,
-                 env,
-                 sess, #tf session
-                 exploitation_param=1.,
-                 exploration_param=2.,
-                 eta=0.5,
-                 m=1,
-                 nnd_mb_run_num=None,
+    def __init__(self, agent, env, sess, buffer_size=500000, exploitation_param=1., exploration_param=2., eta=0.5,
+                 n_ss=1000,
+                 sigma=1, #used in silverman's rule of thumb?
+
+                 nnd_mb_final_steps=10,
                  nnd_mb_steps_per_waypoint=1,
                  nnd_mb_mean_per_stepsize=1,
                  nnd_mb_std_per_stepsize=1,
                  nnd_mb_stepsizes_in_waypoint_radii=1,
+
                  nnd_mb_gamma=.75,
                  nnd_mb_horizontal_penalty_factor=.5,
-                 nnd_mb_use_existing_training_data=True,
                  nnd_mb_horizon=20,
                  nnd_mb_num_control_samples=5000,
+
+                 nnd_mb_save_dir_name="save_untitled",
+                 nnd_mb_load_dir_name="untitled_load",
+                 nnd_mb_save_training_data=False,
+                 nnd_mb_save_resulting_dynamics_model=False,
+                 nnd_mb_load_existing_training_data=False,
+                 nnd_mb_load_existing_dynamics_model=False,
+
+                 nnd_mb_num_fc_layers=1,
+                 nnd_mb_depth_fc_layers=500,
+                 nnd_mb_batchsize=512,
+                 nnd_mb_lr=0.001,
+                 nnd_mb_nEpoch=30,
+                 nnd_mb_fraction_use_new=0.9,
                  nnd_mb_num_episodes_for_aggregation=3,
-                 buffer_size=500000,
-                 n_ss = 1000,
-                 sigma = 1):
+                 nnd_mb_make_aggregated_dataset_noisy=True,
+                 nnd_mb_make_training_dataset_noisy=True,
+                 nnd_mb_noise_actions_during_MPC_rollouts=True,
+
+                 nnd_mb_verbose=True,
+
+                 nnd_mb_use_threading=True,
+                 nnd_mb_num_rollouts_train=25,
+                 nnd_mb_num_rollouts_val=20,
+                 nnd_mb_dt_steps=3,
+                 nnd_mb_steps_per_rollout_train=333,
+                 nnd_mb_steps_per_rollout_val=333):
+        """
+
+        :type agent: ValueFuncRLAgent
+        """
         #TODO fix naming for smartStart - this affects class not object
-        self.__class__.__name__ = "SmartStart_" + agent.__class__.__name__
+        self.param_dict = locals().copy()
+        for var_str in ['__class__', 'self', 'sess', 'env']:
+            self.param_dict[var_str] = "Not serializable"
+        self.param_dict['agent'] = agent.get_param_dict()
+
         self.exploitation_param = exploitation_param
         self.exploration_param = exploration_param
         self.eta = eta
-        self.m = m
         self.sigma = sigma
 
         # objects to interact with
@@ -141,18 +163,58 @@ class SmartStartContinuous(RLAgent):
         self.smart_start_path = None  # placeholder for smart_start_state to navigate to
 
         # the agent for navigating to the smartstart
-        self.nnd_mb_agent = NND_MB_agent(env, sess, replay_buffer=self.replay_buffer,
+        #TODO optimally you have preset parameters for each environment
+        self.nnd_mb_agent = NND_MB_agent(env, sess,
+                                         replay_buffer=self.replay_buffer,
+
+                                         final_steps=nnd_mb_final_steps,
                                          steps_per_waypoint=nnd_mb_steps_per_waypoint,
                                          mean_per_stepsize=nnd_mb_mean_per_stepsize,
                                          std_per_stepsize=nnd_mb_std_per_stepsize,
                                          stepsizes_in_waypoint_radii=nnd_mb_stepsizes_in_waypoint_radii,
-                                         gamma=nnd_mb_gamma, horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
-                                         save_dir_name=nnd_mb_run_num,
-                                         use_existing_training_data=nnd_mb_use_existing_training_data,
-                                         horizon=nnd_mb_horizon, num_control_samples=nnd_mb_num_control_samples,
-                                         num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation)
+
+                                         gamma=nnd_mb_gamma,
+                                         horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
+                                         horizon=nnd_mb_horizon,
+                                         num_control_samples=nnd_mb_num_control_samples,
+
+                                         save_dir_name=nnd_mb_save_dir_name,
+                                         load_dir_name=nnd_mb_load_dir_name,
+                                         save_training_data=nnd_mb_save_training_data,
+                                         save_resulting_dynamics_model=nnd_mb_save_resulting_dynamics_model,
+                                         load_existing_training_data=nnd_mb_load_existing_training_data,
+                                         load_existing_dynamics_model=nnd_mb_load_existing_dynamics_model,
+
+                                         num_fc_layers=nnd_mb_num_fc_layers,
+                                         depth_fc_layers=nnd_mb_depth_fc_layers,
+                                         batchsize=nnd_mb_batchsize,
+                                         lr=nnd_mb_lr,
+                                         nEpoch=nnd_mb_nEpoch,
+                                         fraction_use_new=nnd_mb_fraction_use_new,
+                                         num_episodes_for_aggregation=nnd_mb_num_episodes_for_aggregation,
+                                         make_aggregated_dataset_noisy=nnd_mb_make_aggregated_dataset_noisy,
+                                         make_training_dataset_noisy=nnd_mb_make_training_dataset_noisy,
+                                         noise_actions_during_MPC_rollouts=nnd_mb_noise_actions_during_MPC_rollouts,
+
+                                         verbose=nnd_mb_verbose,
+
+                                         use_threading=nnd_mb_use_threading,
+                                         num_rollouts_train=nnd_mb_num_rollouts_train,
+                                         num_rollouts_val=nnd_mb_num_rollouts_val,
+                                         dt_steps=nnd_mb_dt_steps,
+                                         steps_per_rollout_train=nnd_mb_steps_per_rollout_train,
+                                         steps_per_rollout_val=nnd_mb_steps_per_rollout_val)
 
         self.times_for_smart_start = []
+
+    def get_param_dict(self):
+        return self.param_dict
+
+    def get_summary_name(self):
+        if hasattr(self.agent, 'get_summary_name'):
+            return "SmartStartC_" + self.agent.get_summary_name()
+        else:
+            return "SmartStartC_" + self.agent.__class__.__name__
 
     @property
     def normal_agent_pathing(self):
@@ -276,43 +338,118 @@ class SmartStartContinuous(RLAgent):
     def render(self, env, **kwargs):
         return env.render()
 
+import time
+
+parser = argparse.ArgumentParser(description='Set some flages')
+parser.add_argument('--render', action='store_true', default=False)
+parser.add_argument('--noGpu', action='store_true', help='If included, stops the gpu from being used')
+parser.add_argument('-s', '--seed', dest="seed", default=int(time.time() * 10) % (2 ** 32 - 1), type=int)
+args = parser.parse_args()
+noGpu = args.noGpu
+RANDOM_SEED = args.seed
+
 if __name__ == "__main__":
     import random
     import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
 
+    episodes = 1000
+    lastLayerTanh = True
+
     # configuring environment
     ENV_NAME = 'MountainCarContinuous-v0'
     env = gym.make(ENV_NAME)
 
-    # Reset the seed for random number generation
-    RANDOM_SEED = 1234
-    set_global_seeds(RANDOM_SEED)
-    env.seed(RANDOM_SEED)
-    with tf.Session() as sess:
-        # Initialize agent, see class for available parameters
-        base_agent = DDPG_Baselines_agent(env, sess, buffer_size=10000, num_train_iterations=1,
-                                          num_steps_before_train=1, actor_lr=0.01, critic_lr=0.005)
+    if noGpu:
+        tfConfig = tf.ConfigProto(device_count={'GPU': 0})
+    else:
+        tfConfig = None
 
-        smart_start_agent = SmartStartContinuous(base_agent, env, sess,
-                                                 buffer_size=10000,
-                                                 nnd_mb_run_num=0,
-                                                 nnd_mb_steps_per_waypoint=1,
-                                                 nnd_mb_mean_per_stepsize=1,
-                                                 nnd_mb_std_per_stepsize=1,
-                                                 nnd_mb_stepsizes_in_waypoint_radii=1,
-                                                 nnd_mb_gamma=.75,
-                                                 nnd_mb_horizontal_penalty_factor=.5,
-                                                 nnd_mb_use_existing_training_data=True,
-                                                 nnd_mb_horizon=4,
-                                                 nnd_mb_num_control_samples=5000,
-                                                 nnd_mb_num_episodes_for_aggregation=5,
-                                                 n_ss=2000)
-        sess.graph.finalize()
+    with tf.Graph().as_default() as graph:
+        with tf.Session(config=tfConfig, graph=graph) as sess:
+            # Reset the seed for random number generation
+            set_global_seeds(RANDOM_SEED)
+            env.seed(RANDOM_SEED)
 
-        # Train the agent, summary contains training data
-        summary = rlTrain(smart_start_agent, env, render=False,
-                          render_episode=False,
-                          print_results=True, num_episodes=1000)  # type: Summary
+            # Initialize agent, see class for available parameters
+            base_agent = DDPG_Baselines_agent(env, sess,
+                                             replay_buffer=None,
+                                             buffer_size=100000,
+                                             batch_size=64,
+                                             num_train_iterations=1,
+                                             num_steps_before_train=1,
+                                             ou_epsilon=1.0,
+                                             ou_min_epsilon=0.01,
+                                             ou_epsilon_decay_factor=.99,
+                                             ou_mu=0.4,
+                                             ou_sigma=0.6,
+                                             ou_theta=.15,
+                                             actor_lr=0.001,
+                                             actor_h1=200,
+                                             actor_h2=100,
+                                             critic_lr=0.005,
+                                             critic_h1=200,
+                                             critic_h2=100,
+                                             gamma=0.99,
+                                             tau=0.001,
+                                             layer_norm=False,
+                                             normalize_observations=False,
+                                             normalize_returns=False,
+                                             critic_l2_reg=0,
+                                             enable_popart=False,
+                                             clip_norm=None,
+                                             reward_scale=1.,
+                                             lastLayerTanh=lastLayerTanh,
+                                             finalizeGraph=False)
 
-    summary.save(get_default_data_directory("smart_start_continuous_summaries"), extra_name_append="-1000ep-2000n_ss")
+            smart_start_agent = SmartStartContinuous(base_agent, env, sess,
+
+                                                     buffer_size=100000,
+                                                     exploitation_param=1.,
+                                                     exploration_param=2.,
+                                                     eta=0.5,
+                                                     n_ss=2000,
+                                                     sigma=1,
+
+                                                     nnd_mb_final_steps=10,
+                                                     nnd_mb_steps_per_waypoint=1,
+                                                     nnd_mb_mean_per_stepsize=1,
+                                                     nnd_mb_std_per_stepsize=1,
+                                                     nnd_mb_stepsizes_in_waypoint_radii=1,
+
+                                                     nnd_mb_gamma=.75,
+                                                     nnd_mb_horizontal_penalty_factor=.5,
+                                                     nnd_mb_horizon=4,
+                                                     nnd_mb_num_control_samples=5000,
+
+                                                     nnd_mb_load_dir_name="default",
+                                                     nnd_mb_load_existing_training_data=True,
+
+                                                     nnd_mb_num_fc_layers=1,
+                                                     nnd_mb_depth_fc_layers=500,
+                                                     nnd_mb_batchsize=512,
+                                                     nnd_mb_lr=0.001,
+                                                     nnd_mb_nEpoch=30,
+                                                     nnd_mb_fraction_use_new=0.9,
+                                                     nnd_mb_num_episodes_for_aggregation=4,
+                                                     nnd_mb_make_aggregated_dataset_noisy=True,
+                                                     nnd_mb_make_training_dataset_noisy=True,
+                                                     nnd_mb_noise_actions_during_MPC_rollouts=True,
+
+                                                     nnd_mb_verbose=True)
+            sess.graph.finalize()
+
+            # Train the agent, summary contains training data
+            summary = rlTrain(smart_start_agent, env, render=args.render,
+                              render_episode=False,
+                              print_results=True, num_episodes=episodes)  # type: Summary
+
+            noGpu_str = "-NoGPU" if noGpu else ""
+            llTanh_str = "-LLTanh" if lastLayerTanh else ""
+            summary.add_params_to_param_dict(zz_RANDOM_SEED=RANDOM_SEED, zz_episodes=episodes, noGpu=noGpu)
+            fp = summary.save(get_default_data_directory("smart_start_continuous_summaries/0/"),
+                              extra_name_append="-" + str(
+                                  episodes) + "ep" + noGpu_str + "-noNorm" + llTanh_str + "-decayingNoise" + "-2000n_ss")
+
+            train_writer = tf.summary.FileWriter(fp[:-5])
+            train_writer.add_graph(sess.graph)
