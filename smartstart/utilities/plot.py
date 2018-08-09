@@ -9,6 +9,7 @@ saved as JSON strings.
 """
 import glob
 import os
+import time
 
 import matplotlib.axes
 import matplotlib.colorbar
@@ -21,6 +22,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Circle, Ellipse
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import matplotlib.lines as mlines
 
@@ -41,26 +43,26 @@ def cmap_map(function, cmap):
     step_list = sum(step_dict.values(), [])
     step_list = np.array(list(set(step_list)))
     # Then compute the LUT, and apply the function to the LUT
-    reduced_cmap = lambda step : np.array(cmap(step)[0:3])
+    reduced_cmap = lambda step: np.array(cmap(step)[0:3])
     old_LUT = np.array(list(map(reduced_cmap, step_list)))
     new_LUT = np.array(list(map(function, old_LUT)))
     # Now try to make a minimal segment definition of the new LUT
     cdict = {}
-    for i, key in enumerate(['red','green','blue']):
+    for i, key in enumerate(['red', 'green', 'blue']):
         this_cdict = {}
         for j, step in enumerate(step_list):
             if step in step_dict[key]:
                 this_cdict[step] = new_LUT[j, i]
-            elif new_LUT[j,i] != old_LUT[j, i]:
+            elif new_LUT[j, i] != old_LUT[j, i]:
                 this_cdict[step] = new_LUT[j, i]
-        colorvector = list(map(lambda x: x + (x[1], ), this_cdict.items()))
+        colorvector = list(map(lambda x: x + (x[1],), this_cdict.items()))
         colorvector.sort()
         cdict[key] = colorvector
 
-    return matplotlib.colors.LinearSegmentedColormap('colormap',cdict,1024)
+    return matplotlib.colors.LinearSegmentedColormap('colormap', cdict, 1024)
 
 
-def reverse_colourmap(cmap, name = 'my_cmap_r'):
+def reverse_colourmap(cmap, name='my_cmap_r'):
     """
     In:
     cmap, name
@@ -89,10 +91,10 @@ def reverse_colourmap(cmap, name = 'my_cmap_r'):
         data = []
 
         for t in channel:
-            data.append((1-t[0],t[2],t[1]))
+            data.append((1 - t[0], t[2], t[1]))
         reverse.append(sorted(data))
 
-    LinearL = dict(zip(k,reverse))
+    LinearL = dict(zip(k, reverse))
     my_cmap_r = matplotlib.colors.LinearSegmentedColormap(name, LinearL)
     return my_cmap_r
 
@@ -127,7 +129,6 @@ def mean_reward_std_episode(summaries, ma_window=1, color=None, linestyle=None, 
         print('dots for mean reward std not implemented')
 
 
-
 def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False, linewidth=1.):
     """Plot mean reward per episode
 
@@ -154,12 +155,12 @@ def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None, dots
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
-        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
+        plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
 
 
-def steps_episode(summaries, ma_window=1, color=None, linestyle=None, dots = False, linewidth=1.):
+def steps_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False, linewidth=1.):
     """Plot number of steps per episode
 
 
@@ -186,11 +187,12 @@ def steps_episode(summaries, ma_window=1, color=None, linestyle=None, dots = Fal
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
-        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
+        plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
 
-def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None, dots = False, linewidth=1.):
+
+def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False, linewidth=1.):
     """Plot total_rewards
 
     """
@@ -205,9 +207,10 @@ def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None, do
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes,mean_array[smart_start_episodes] , 'ro', color = 'red')
-        plt.plot(not_smart_start_episodes,mean_array[not_smart_start_episodes] , 'bo', color = 'blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
+        plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
+
 
 def plot_set_legend_patches(colors, names, axis=None):
     assert len(colors) == len(names)
@@ -218,6 +221,7 @@ def plot_set_legend_patches(colors, names, axis=None):
     for i in range(len(colors)):
         patches.append(mpatches.Patch(color=colors[i], label=names[i]))
     plt.legend(patches, names)
+
 
 def plot_set_legend_lines(colors, names, linestyles=None, axis=None):
     assert len(colors) == len(names)
@@ -239,6 +243,7 @@ labels = {
     total_rewards_episode: ["Episode", "Total Reward"]
 }
 
+
 def plot_get_axes_and_fig(ncols, nrows, fig_size_x=18, fig_size_y=10):
     """
     :param ncols:
@@ -247,7 +252,6 @@ def plot_get_axes_and_fig(ncols, nrows, fig_size_x=18, fig_size_y=10):
     """
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(fig_size_x, fig_size_y))
     return axes, fig
-
 
 
 def plot_summary(files, plot_type, ma_window=1, title=None, legend=None, output_dir=None, colors=None, linestyles=None,
@@ -330,7 +334,7 @@ def plot_summary(files, plot_type, ma_window=1, title=None, legend=None, output_
         if linestyles is not None:
             linestyle = linestyles.pop()
 
-        plot_type(summaries, ma_window, color, linestyle, dots = dots, linewidth = linewidth)
+        plot_type(summaries, ma_window, color, linestyle, dots=dots, linewidth=linewidth)
 
     if baseline is not None:
         plt.hlines(y=baseline, xmin=0, xmax=xmax, color="black", linestyle="dotted")
@@ -348,9 +352,6 @@ def plot_summary(files, plot_type, ma_window=1, title=None, legend=None, output_
         save_plot(output_dir, title, format)
 
     # plt.tight_layout()
-
-
-
 
 
 def save_plot(output_dir, title, format="eps"):
@@ -382,21 +383,21 @@ def save_plot(output_dir, title, format="eps"):
                 dpi=1200,
                 bbox_inches="tight")
 
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     new_cmap = LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
+
 def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None, y_label=None, waypoint_centers=(),
-              highlight_waypoint_index = None, radii=(0, 0), linewidth=3):
+              highlight_waypoint_index=None, radii=(0, 0), linewidth=3):
     assert len(path[0]) == 2
 
     if reward is not None:
         title += " | Total Reward: {0:.2f}".format(reward)
     title += " | Steps: " + str(len(path) - 1)
-
-
 
     # get x's and y's
     x = [s[0] for s in path]
@@ -405,7 +406,7 @@ def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None,
     color_num_scale = np.linspace(0, len(path), len(path))
     cmap = truncate_colormap(plt.get_cmap('gnuplot2_r'), minval=.1, maxval=.9)
     norm = plt.Normalize(0, len(path))
-    #draw trajectory
+    # draw trajectory
     line_collection = make_line_collection(x, y, color_num_scale, cmap=cmap, norm=norm, linewidth=linewidth)
     line_collection2 = None
     line_collection3 = None
@@ -425,7 +426,8 @@ def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None,
         y += y2
 
         figure, (axis0, axis1, axis2) = plt.subplots(1, 3, gridspec_kw={
-            'width_ratios': [24, 1, 1]})  # type: (matplotlib.figure.Figure, (matplotlib.axes.Axes, matplotlib.axes.Axes))
+            'width_ratios': [24, 1,
+                             1]})  # type: (matplotlib.figure.Figure, (matplotlib.axes.Axes, matplotlib.axes.Axes))
         cb2 = matplotlib.colorbar.ColorbarBase(axis2, cmap=cmap2,
                                                norm=norm2,
                                                orientation='vertical')
@@ -446,7 +448,7 @@ def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None,
         # draw trajectory
         line_collection3 = make_line_collection(x3, y3, color_num_scale3, cmap=cmap3, norm=norm3, linewidth=linewidth)
 
-    #maybe draw waypoints along trajectory
+    # maybe draw waypoints along trajectory
     if waypoint_centers:
         waypoint_cmap = plt.get_cmap('binary')
         waypoint_color_num_scale = np.linspace(.2, .6, len(waypoint_centers))
@@ -463,23 +465,24 @@ def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None,
                             color="#ff8080")
         axis0.add_patch(highlight)
 
-    axis0.set_title(title) #labels/titles
+    axis0.set_title(title)  # labels/titles
     axis0.set_xlabel(x_label)
     axis0.set_ylabel(y_label)
     if path2:
         axis0.add_collection(line_collection2)
     if path3 is not None:
         axis0.add_collection(line_collection3)
-    axis0.add_collection(line_collection) # add main path
-    axis0.set_xlim(min(x) - radii[0], max(x) + radii[0]) #set graph view cropping thingy
+    axis0.add_collection(line_collection)  # add main path
+    axis0.set_xlim(min(x) - radii[0], max(x) + radii[0])  # set graph view cropping thingy
     axis0.set_ylim(min(y) - radii[1], max(y) + radii[1])
-    cb1 = matplotlib.colorbar.ColorbarBase(axis1, cmap=cmap, #color bar
+    cb1 = matplotlib.colorbar.ColorbarBase(axis1, cmap=cmap,  # color bar
                                            norm=norm,
                                            orientation='vertical')
     cb1.set_label('Step')
     plt.tight_layout()
 
     return axis0, line_collection, line_collection2, line_collection3, highlight
+
 
 def update_path(axis, old_line_collection, old_line_collection2, old_line_collection3, old_highlihgt, new_path,
                 new_path3, new_center, radii, linewidth=3):
@@ -488,7 +491,7 @@ def update_path(axis, old_line_collection, old_line_collection2, old_line_collec
     old_line_collection3.remove()
     old_highlihgt.remove()
     new_highlight = Ellipse((new_center[0], new_center[1]), radii[0] * 2, radii[1] * 2, 0,
-                        color="#ff8080")
+                            color="#ff8080")
     axis.add_patch(new_highlight)
 
     axis.add_collection(old_line_collection)
@@ -525,10 +528,11 @@ def make_circle_collection(circle_centers, color_num_scale, radius=5,
     p.set_array(color_num_scale)
     return p
 
+
 def make_ellipse_collection(ellipse_centers, color_num_scale, x_radius=1, y_radius=1, angle=0,
-                           cmap=plt.get_cmap('gnuplot2_r'),
-                           norm=plt.Normalize(0, 1.0),
-                            highlight_waypoint_index = None):
+                            cmap=plt.get_cmap('gnuplot2_r'),
+                            norm=plt.Normalize(0, 1.0),
+                            highlight_waypoint_index=None):
     ellipses = [Ellipse((c[0], c[1]), x_radius * 2, y_radius * 2, angle) for c in ellipse_centers]
     p = PatchCollection(ellipses,
                         cmap=cmap, norm=norm)
@@ -536,9 +540,10 @@ def make_ellipse_collection(ellipse_centers, color_num_scale, x_radius=1, y_radi
 
     return p
 
+
 def make_line_collection(x, y, color_num_scale,
                          cmap=plt.get_cmap('gnuplot2_r'),
-                         norm =plt.Normalize(0, 1.0), linewidth=3):
+                         norm=plt.Normalize(0, 1.0), linewidth=3):
     """
     Create list of line segments from x and y coordinates, in the correct format
     for LineCollection: an array of the form numlines x (points per line) x 2 (x
@@ -555,6 +560,28 @@ def make_line_collection(x, y, color_num_scale,
     lc.set_linewidth(linewidth)
     return lc
 
+def plot_2d_density(m1, m2, kernel):
+    xmin, xmax, ymin, ymax = m1.min(), m1.max(), m2.min(), m2.max()
+    X, Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([X.ravel(), Y.ravel()]) #generates x,y pairs corresponding to a fine grid
+    t1 = time.time()
+    Z = np.reshape(kernel(positions).T, X.shape)
+    print(time.time() - t1)
+
+    fig, ax = plt.subplots()
+    mappable = ax.imshow(np.rot90(Z), cmap=plt.cm.gist_earth_r, #need to rotate because 0,0 is top left
+               extent=[xmin, xmax, ymin, ymax], aspect='auto')
+
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(mappable=mappable, cax=cax, orientation='vertical')
+
+    ax.plot(m1, m2, 'k.', markersize=2)
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
+    plt.show()
+
 def ion_plot():
     """
     makes interactive?
@@ -562,8 +589,10 @@ def ion_plot():
     """
     plt.ion()
 
+
 def ioff_plot():
     plt.ioff()
+
 
 def show_plot():
     """Render the plots on screen
@@ -571,6 +600,7 @@ def show_plot():
     Must be run after initializing the plots to actually show them on screen.
     """
     plt.show()
+
 
 def pause_plot(interval):
     """

@@ -160,6 +160,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.actions_done_for_current_waypoint = None
         self.radii = None
         self.distance_function = None
+        self.stds = None
         self.path_to_follow = None
         self.desired_states = None
         self.current_desired_state_index = None  # will start at 0 when a new episode begins otherwise error
@@ -378,6 +379,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
 
         # radii calc (based off of standard deviation and mean of step sizes)
         stds, means = path_deltas_stds_and_means_per_dim(path_to_follow)
+        self.stds = stds
         self.radii = radii_calc(means, stds, self.mean_per_stepsize, self.std_per_stepsize,
                                 self.stepsizes_in_waypoint_radii)
 

@@ -172,19 +172,19 @@ class ReplayBuffer(object):
                [self.step_to_s2(self.buffer[buffer_index])]
 
     def step_to_s(self, step):
-        return step[0]
+        return np.array(step[0])
 
     def step_to_a(self, step):
-        return step[1]
+        return np.array(step[1])
 
     def step_to_r(self, step):
-        return step[2]
+        return np.array(step[2])
 
     def step_to_t(self, step):
-        return step[3]
+        return np.array(step[3])
 
     def step_to_s2(self, step):
-        return step[4]
+        return np.array(step[4])
 
     # PRIVATE
     def episode_number_to_buffer_index(self, episode_number):

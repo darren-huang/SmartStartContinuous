@@ -4,6 +4,7 @@ Defines method for generating a SmartStart object from an algorithm object. The
 SmartStart object will be a subclass of the original algorithm object.
 """
 import argparse
+import scipy.stats
 import time
 
 import numpy as np
@@ -15,6 +16,7 @@ from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
 from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds
+from utilities.plot import plot_2d_density
 
 
 class SmartStartContinuous(RLAgent):
@@ -82,12 +84,18 @@ class SmartStartContinuous(RLAgent):
         policy used for guiding to the smart start
     """
 
-    def K(self, a):  # Gaussian Kernel with sigma = 1 // not normalized
-        return np.exp((-.5) * (a ** 2) / (self.sigma ** 2))
+    # def K(self, a):  # Gaussian Kernel with sigma = 1  TODO normalize
+    #     return np.exp((-.5) * (a ** 2) / (self.sigma ** 2)) / ((2 * np.pi * (self.sigma ** 2)) ** .5)
 
-    def __init__(self, agent, env, sess, buffer_size=500000, exploitation_param=1., exploration_param=2., eta=0.5,
+    def __init__(self, agent, env, sess,
+                 buffer_size=500000,
+                 exploitation_param=1.,
+                 exploration_param=2.,
+                 eta=0.5,
+                 eta_decay_factor=1,
                  n_ss=1000,
-                 sigma=1, #used in silverman's rule of thumb?
+                 # sigma=1, #used in silverman's rule of thumb?
+                 smart_start_selection_modified_distance_function=True,
 
                  nnd_mb_final_steps=10,
                  nnd_mb_steps_per_waypoint=1,
@@ -128,6 +136,22 @@ class SmartStartContinuous(RLAgent):
                  nnd_mb_steps_per_rollout_val=333):
         """
 
+        :param agent: base agent smart start builds on top of
+        :param env: environment to run on
+        :param sess: tensorflow session
+        :param buffer_size: size of the buffer ONLY WORKS if base agent does NOT have a buffer already
+        :param exploitation_param: used in the UCB algorithm/multi-arm bandit problem (choosing which smart start to use)
+        :param exploration_param: used in the UCB algorithm/multi-arm bandit problem (choosing which smart start to use)
+        :param eta: probability of smart start
+        :param eta_decay_factor: the factor that multiplies with eta after each episode (example eta *= eta_decay_factor)
+        :param n_ss: number of states from replay_buffer to consider as potential smartstart states
+        :param sigma: Used in silverman's rule of thumb?
+        :param smart_start_selection_modified_distance_function: Use Neural Network Dynamics Model Based Agent distance function
+                                            in calculating kernel density estimation (function uses mean/std of stepsizes of a specific path)
+                                            if false, simply uses euclidean distance
+
+        for all parameters with 'nnd_mb' please see their descriptions under NND_MB_agent
+
         :type agent: ValueFuncRLAgent
         """
         #TODO fix naming for smartStart - this affects class not object
@@ -139,7 +163,9 @@ class SmartStartContinuous(RLAgent):
         self.exploitation_param = exploitation_param
         self.exploration_param = exploration_param
         self.eta = eta
-        self.sigma = sigma
+        self.eta_decay_factor = eta_decay_factor
+        # self.sigma = 1
+        self.smart_start_selection_modified_distance_function = smart_start_selection_modified_distance_function
 
         # objects to interact with
         self.agent = agent
@@ -220,6 +246,9 @@ class SmartStartContinuous(RLAgent):
     def normal_agent_pathing(self):
         return not self.smart_start_pathing
 
+    def reduce_eta(self):
+        self.eta = self.eta * self.eta_decay_factor
+
     def get_smart_start_path(self):
         """Determines the smart start state
 
@@ -250,26 +279,36 @@ class SmartStartContinuous(RLAgent):
         smart_start_index = None
         max_ucb = -float('inf')
 
-        #find the smart_start state TODO PARALLELEIZE WITH NUMPY
+        # if self.nnd_mb_agent.stds is not None:
+        #     self.sigma = self.nnd_mb_agent.stds
+
+        #find the smart_start state TODO PARALLELEIZE WITH NUMPY (if self.agent.get_state_value can do states in parallel we can parallelize it)
+
+        all_states = self.replay_buffer.get_all_states()  # n x d matrix where n is the number of states and d is dim
+        kernel = scipy.stats.gaussian_kde(all_states.T, bw_method='scott') #TODO options for what type of bandwith calc
+        plot_2d_density(all_states.T[0], all_states.T[1], kernel) #TODO remove plot
+
         for main_step_index in possible_start_indices:
             # state value
             main_step = self.replay_buffer.buffer[main_step_index]
             state = self.replay_buffer.step_to_s2(main_step)
             state_value = self.agent.get_state_value(state)
 
-            #C_hat calculation###############
-            #bandwith
-            h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma #silverman's rule of thumb
 
-            # #iterate over all states in replay buffer, calculated the kernel density estimation
-            # other_state = self.replay_buffer.step_to_s(self.replay_buffer.buffer[0])
-            # C_hat += self.K((np.linalg.norm(state - other_state)) / h)
-            # for other_step in self.replay_buffer.buffer:
-            #     other_state = self.replay_buffer.step_to_s2(other_step)
-            #     C_hat += self.K((np.linalg.norm(state - other_state)) / h)
-            all_states = self.replay_buffer.get_all_states()
-            C_hat_temp_arr = self.K((np.linalg.norm(state - all_states, axis=1)) / h)
-            C_hat = np.sum(C_hat_temp_arr) / h
+            #MANUAL CALCULATION, seems wrong (univariate kernel density estimation was used, but i have multivariable data)
+            # # C_hat calculation###############
+            # # bandwith
+            # h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma  # silverman's rule of thumb
+            # if self.smart_start_selection_modified_distance_function and self.nnd_mb_agent.distance_function:
+            #     C_hat_temp_arr = self.K((self.nnd_mb_agent.distance_function(state / h, all_states / h)))
+            # else:
+            #     C_hat_temp_arr = self.K(np.linalg.norm((state / h) - (all_states / h), axis=1))
+            # C_hat = np.sum(C_hat_temp_arr / h)
+
+
+            #SCIPY Kernel Density Estimation
+            probability_density = kernel(state.T) # TODO MUST BE MULTIPLIED WITH AREA (must be multi-dimensional area)
+            C_hat = len(all_states) * probability_density
 
             #ucb calculation
             ucb = self.exploitation_param * state_value + \
@@ -334,6 +373,8 @@ class SmartStartContinuous(RLAgent):
         self.agent.start_new_episode(state)
         self.replay_buffer.start_new_episode(self)
 
+    def end_episode(self):
+        self.reduce_eta() #reduces the change of smart start
 
     def render(self, env, **kwargs):
         return env.render()
@@ -408,8 +449,9 @@ if __name__ == "__main__":
                                                      exploitation_param=1.,
                                                      exploration_param=2.,
                                                      eta=0.5,
+                                                     eta_decay_factor=1,
                                                      n_ss=2000,
-                                                     sigma=1,
+                                                     smart_start_selection_modified_distance_function=True,
 
                                                      nnd_mb_final_steps=10,
                                                      nnd_mb_steps_per_waypoint=1,
