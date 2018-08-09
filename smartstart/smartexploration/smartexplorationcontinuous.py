@@ -16,6 +16,7 @@ from smartstart.RLAgents.replay_buffer import ReplayBuffer
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncRLAgent, ReplayBufferRLAgent
 from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds
+from utilities.numerical import volume_of_n_dimensional_hyperellipsoid
 from utilities.plot import plot_2d_density
 
 
@@ -95,7 +96,7 @@ class SmartStartContinuous(RLAgent):
                  eta_decay_factor=1,
                  n_ss=1000,
                  # sigma=1, #used in silverman's rule of thumb?
-                 smart_start_selection_modified_distance_function=True,
+                 # smart_start_selection_modified_distance_function=True,
 
                  nnd_mb_final_steps=10,
                  nnd_mb_steps_per_waypoint=1,
@@ -165,7 +166,7 @@ class SmartStartContinuous(RLAgent):
         self.eta = eta
         self.eta_decay_factor = eta_decay_factor
         # self.sigma = 1
-        self.smart_start_selection_modified_distance_function = smart_start_selection_modified_distance_function
+        # self.smart_start_selection_modified_distance_function = smart_start_selection_modified_distance_function
 
         # objects to interact with
         self.agent = agent
@@ -283,10 +284,18 @@ class SmartStartContinuous(RLAgent):
         #     self.sigma = self.nnd_mb_agent.stds
 
         #find the smart_start state TODO PARALLELEIZE WITH NUMPY (if self.agent.get_state_value can do states in parallel we can parallelize it)
-
         all_states = self.replay_buffer.get_all_states()  # n x d matrix where n is the number of states and d is dim
+
+        ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ######################################################
         kernel = scipy.stats.gaussian_kde(all_states.T, bw_method='scott') #TODO options for what type of bandwith calc
-        plot_2d_density(all_states.T[0], all_states.T[1], kernel) #TODO remove plot
+        # plot_2d_density(all_states.T[0], all_states.T[1], kernel) #TODO remove plot
+        if self.nnd_mb_agent.radii is not None:
+            one_radii_volume = volume_of_n_dimensional_hyperellipsoid(self.nnd_mb_agent.radii)
+            # for a n-dimensional state vector, self.nn_mb_agent.radii is a n- long vector which each
+            # value represents some combination of the mean and std of that index per step
+            # the volume is the volume of a hyperellipsoid with those radii
+        else:
+            one_radii_volume = 1  # 100% arbitrary TODO: get std of last path maybe for both of these
 
         for main_step_index in possible_start_indices:
             # state value
@@ -306,8 +315,8 @@ class SmartStartContinuous(RLAgent):
             # C_hat = np.sum(C_hat_temp_arr / h)
 
 
-            #SCIPY Kernel Density Estimation
-            probability_density = kernel(state.T) # TODO MUST BE MULTIPLIED WITH AREA (must be multi-dimensional area)
+            #SCIPY Kernel Density Estimation TODO document what math was used and what resources
+            probability_density = (kernel(state.T) * one_radii_volume)[0]
             C_hat = len(all_states) * probability_density
 
             #ucb calculation
@@ -451,7 +460,7 @@ if __name__ == "__main__":
                                                      eta=0.5,
                                                      eta_decay_factor=1,
                                                      n_ss=2000,
-                                                     smart_start_selection_modified_distance_function=True,
+                                                     # smart_start_selection_modified_distance_function=True,
 
                                                      nnd_mb_final_steps=10,
                                                      nnd_mb_steps_per_waypoint=1,

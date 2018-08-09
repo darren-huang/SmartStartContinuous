@@ -1,6 +1,6 @@
 from unittest import TestCase
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, \
-    projection_of_a_onto_b, dist_line_seg_to_point
+    projection_of_a_onto_b, dist_line_seg_to_point, volume_of_n_dimensional_hyperellipsoid
 import numpy as np
 
 class TestNumerical(TestCase):
@@ -51,3 +51,23 @@ class TestNumerical(TestCase):
         pt = np.array([2,1*stretch])
         assert np.isclose(dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, [1,stretch]), 2 ** .5)
 
+    def test_volume_of_n_dimensional_hyperellipsoid_circle(self):
+        for r in range(1,20):
+            assert volume_of_n_dimensional_hyperellipsoid([r, r]) == np.pi * (r ** 2)
+
+    def test_volume_of_n_dimensional_hyperellipsoid_ellipse(self):
+        for r1 in range(1,20):
+            for r2 in range(1,20):
+                assert volume_of_n_dimensional_hyperellipsoid([r1, r2]) == np.pi * (r1 * r2)
+
+    def test_volume_of_n_dimensional_hyperellipsoid_sphere(self):
+        for r in range(1,20):
+            correct = ((4 / 3) * np.pi * (r ** 3))
+            assert abs(volume_of_n_dimensional_hyperellipsoid([r, r, r]) - correct) < 10. ** -10
+
+    def test_volume_of_n_dimensional_hyperellipsoid_ellipsoid(self):
+        for r1 in range(1,20):
+            for r2 in range(1,20):
+                for r3 in range(1, 20):
+                    correct = ((4/3) * np.pi * (r1 * r2 * r3))
+                    assert abs(volume_of_n_dimensional_hyperellipsoid([r1, r2, r3]) - correct) < 10 ** -10

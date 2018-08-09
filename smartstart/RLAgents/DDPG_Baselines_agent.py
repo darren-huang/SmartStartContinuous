@@ -198,7 +198,7 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
     def get_state_value(self, state):
         raw_action, q = self.inner_ddpg.pi(state, apply_noise=True,
                                            compute_Q=True)  # DDPG action is always [-1,1]
-        return q
+        return q[0][0] #TODO undo [0][0] so u can parallelize
 
     def get_action(self, state):
         """Returns action for obs

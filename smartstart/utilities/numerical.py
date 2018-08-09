@@ -2,7 +2,7 @@
 
 """
 import numpy as np
-
+import scipy.special
 
 # Moving average
 def moving_average(values, window=10):
@@ -125,3 +125,12 @@ def elliptical_euclidean_distance_function_generator(radii):
         return np.sum(((state - other_state) / radii) ** 2, axis=axis) ** 0.5
 
     return distance_func
+
+def volume_of_n_dimensional_hyperellipsoid(radii):
+    """
+    n = dimension = len(radii)
+    :param radii: the radii of each dimension (should be a list that is 'dim' long)
+    :return: volume
+    """
+    dim = len(radii)
+    return ((np.pi ** (dim / 2.)) / scipy.special.gamma((dim / 2.) + 1)) * np.product(radii)

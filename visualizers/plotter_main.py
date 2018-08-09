@@ -145,11 +145,11 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 10
     num_plots_per_graph = len(colors)
-    plot_path_bool = False
+    plot_path_bool = True
     print_param_dict = False
     smart_start_dots = False
-    average_over_glob_wildcards=False
-    show_seed=True
+    average_over_glob_wildcards=True
+    show_seed=False
     linewidth = 2
 
 

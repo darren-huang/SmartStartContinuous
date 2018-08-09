@@ -133,16 +133,16 @@ def task_print(params):
     # print(sorted(params.items(), key=lambda x: x[0]))
     print(params['get_extra_name'](params))
 
-# def get_extra_name(params):
-#     critic_string = '_c-' + str(params['critic_h1']) + "-" + str(params['critic_h1']//2) + "-" + str(params['critic_lr']).replace(".","d")
-#     actor_string = '_a-' + str(params['actor_h1']) + "-" + str(params['actor_h1']//2) + "-" + str(params['actor_lr']).replace(".","d")
-#     return actor_string + critic_string
+def get_extra_name(params):
+    exploration_param_str = "_explorP-" + str(params['exploration_param'])
+    eta_decay_str = "_etaDecay-" + str(params['eta_decay_factor'])
+    return exploration_param_str + eta_decay_str
 
 if __name__ == "__main__":
     experiment_task = task_run_ss_ddpg_baselines_mc
 
     #changeable parameter
-    num_exp_per_param = 5
+    num_exp_per_param = 25
     episodes = 1000
     noGpu = True
     lastLayerTanh = True
@@ -191,12 +191,12 @@ if __name__ == "__main__":
         'lastLayerTanh': [lastLayerTanh],
 
         'exploitation_param': [1.],
-        'exploration_param': [2.],
+        'exploration_param': [1., 2., 5.], #NOT CONSTANT
         'eta': [0.5],
-        'eta_decay_factor': [.99], # NOT CONSTANT
-        'n_ss': [2000], # NOT CONSTANT
+        'eta_decay_factor': [.99, .98], # NOT CONSTANT
+        'n_ss': [2000],
         # 'sigma': [1],
-        'smart_start_selection_modified_distance_function': [True, False], #NOT CONSTANT
+        # 'smart_start_selection_modified_distance_function': [True, False], #NOT CONSTANT
         'nnd_mb_final_steps': [10],
         'nnd_mb_steps_per_waypoint': [1],
         'nnd_mb_mean_per_stepsize': [1],

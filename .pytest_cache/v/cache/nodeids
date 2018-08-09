@@ -1,13 +1,15 @@
 [
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_add_normal",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episode_number_to_buffer_index",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episode_removal",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episode_removal_indexing",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episodes",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_episodes_multiple",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_multiple_episodes",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_multiple_same_episodes",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_size",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_size_max",
-  "tests/RLAgents/test_replayBuffer.py::TestReplayBuffer::test_size_max_replace"
+  "tests/utilities/test_numerical.py::TestNumerical::test_dist_line_seg_to_point_simple",
+  "tests/utilities/test_numerical.py::TestNumerical::test_dist_line_seg_to_point_stretched",
+  "tests/utilities/test_numerical.py::TestNumerical::test_means",
+  "tests/utilities/test_numerical.py::TestNumerical::test_projection_of_a_onto_b_2d_simple",
+  "tests/utilities/test_numerical.py::TestNumerical::test_projection_of_a_onto_b_3d_simple",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_one_dim",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim_moving",
+  "tests/utilities/test_numerical.py::TestNumerical::test_std_two_dim_nonzero",
+  "tests/utilities/test_numerical.py::TestNumerical::test_volume_of_n_dimensional_hyperellipsoid_circle",
+  "tests/utilities/test_numerical.py::TestNumerical::test_volume_of_n_dimensional_hyperellipsoid_ellipse",
+  "tests/utilities/test_numerical.py::TestNumerical::test_volume_of_n_dimensional_hyperellipsoid_ellipsoid",
+  "tests/utilities/test_numerical.py::TestNumerical::test_volume_of_n_dimensional_hyperellipsoid_sphere"
 ]
