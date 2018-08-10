@@ -95,6 +95,7 @@ class SmartStartContinuous(RLAgent):
                  eta=0.5,
                  eta_decay_factor=1,
                  n_ss=1000,
+                 print_ss_stuff=True,
                  # sigma=1, #used in silverman's rule of thumb?
                  # smart_start_selection_modified_distance_function=True,
 
@@ -184,6 +185,7 @@ class SmartStartContinuous(RLAgent):
 
 
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
+        self.print_ss_stuff = print_ss_stuff
 
         # keep track of SmartStartPathing vs. NormalAgentPathing
         self.smart_start_pathing = False
@@ -271,22 +273,16 @@ class SmartStartContinuous(RLAgent):
         """
         if len(self.replay_buffer) == 0: # if buffer is emtpy, nothing to evaluate
             return None
-
-        possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
-
-        if not possible_start_indices: # no valid states then return None
-            return None
-
-        smart_start_index = None
-        max_ucb = -float('inf')
-
         # if self.nnd_mb_agent.stds is not None:
         #     self.sigma = self.nnd_mb_agent.stds
 
+        possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
+        if possible_start_indices is None: # no valid states then return None
+            return None
         #find the smart_start state TODO PARALLELEIZE WITH NUMPY (if self.agent.get_state_value can do states in parallel we can parallelize it)
         all_states = self.replay_buffer.get_all_states()  # n x d matrix where n is the number of states and d is dim
 
-        ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ######################################################
+        ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ############################
         kernel = scipy.stats.gaussian_kde(all_states.T, bw_method='scott') #TODO options for what type of bandwith calc
         # plot_2d_density(all_states.T[0], all_states.T[1], kernel) #TODO remove plot
         if self.nnd_mb_agent.radii is not None:
@@ -297,11 +293,26 @@ class SmartStartContinuous(RLAgent):
         else:
             one_radii_volume = 1  # 100% arbitrary TODO: get std of last path maybe for both of these
 
+        ################### PARALLEL UCB CALC #########################################################
+        possible_ss_steps = np.array(self.replay_buffer.buffer)[possible_start_indices]
+        possible_ss_states = np.asarray(self.replay_buffer.steps_to_s2(possible_ss_steps).tolist()) #use tolist, because it renders as a numpy array of objects (not of floats)
+        ss_state_values = self.agent.get_state_value(possible_ss_states).T # 1 x n matrix (equiv n long list)
+        probability_densities = (kernel(possible_ss_states.T) * one_radii_volume) # 1 x n matrix (equiv n long list)
+        C_hats = len(self.replay_buffer) * probability_densities
+        ucb_list = self.exploitation_param * ss_state_values + \
+              np.sqrt((self.exploration_param *
+                       np.log(len(self.replay_buffer))) / C_hats)
+        smart_start_parallel_index = possible_start_indices[np.argmax(ucb_list)]
+
+        ######### For loop setup #####################################################################
+        smart_start_index = None
+        max_ucb = -float('inf')
+
         for main_step_index in possible_start_indices:
             # state value
             main_step = self.replay_buffer.buffer[main_step_index]
             state = self.replay_buffer.step_to_s2(main_step)
-            state_value = self.agent.get_state_value(state)
+            state_value = self.agent.get_state_value(state)[0][0]
 
 
             #MANUAL CALCULATION, seems wrong (univariate kernel density estimation was used, but i have multivariable data)
@@ -347,8 +358,9 @@ class SmartStartContinuous(RLAgent):
             self.nnd_mb_agent.observe(state, action, reward, new_state, done)
             if self.nnd_mb_agent.close_enough_to_goal(new_state):
                 self.smart_start_pathing = False
-                print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
-                print("END OF SMART START STUFFS")
+                if self.print_ss_stuff:
+                    print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
+                    print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
         #TO/DO REMOVE FOLLOWING THIS IS JUST FOR TESTING
@@ -368,15 +380,15 @@ class SmartStartContinuous(RLAgent):
                 #     plt.title("Times for Calculating Smart Start Path")
                 #     plt.plot(self.times_for_smart_start)
                 #     plt.show()
-                print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
-
-
-                print("\npath exists")
+                if self.print_ss_stuff:
+                    print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
+                    print("\npath exists")
                 # let neural network dynamics model based controller load the path
                 self.nnd_mb_agent.start_new_episode_plan(state, self.smart_start_path)
                 if not self.nnd_mb_agent.close_enough_to_goal(state): #ensure goal hasn't already been reached
                     self.smart_start_pathing = True #this start smart start navigation
-                    print("SMART_START START!!!")
+                    if self.print_ss_stuff:
+                        print("SMART_START START!!!")
                     return "smart_start"
 
         self.agent.start_new_episode(state)

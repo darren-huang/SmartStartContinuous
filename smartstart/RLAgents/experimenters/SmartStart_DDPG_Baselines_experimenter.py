@@ -83,8 +83,9 @@ def task_run_ss_ddpg_baselines_mc(params):
                                                     eta = params['eta'],
                                                     eta_decay_factor = params['eta_decay_factor'],
                                                     n_ss = params['n_ss'],
+                                                    print_ss_stuff=False,
                                                     # sigma=params['sigma'],
-                                                    smart_start_selection_modified_distance_function=params['smart_start_selection_modified_distance_function'],
+                                                    # smart_start_selection_modified_distance_function=params['smart_start_selection_modified_distance_function'],
                                                     nnd_mb_final_steps = params['nnd_mb_final_steps'],
                                                     nnd_mb_steps_per_waypoint = params['nnd_mb_steps_per_waypoint'],
                                                     nnd_mb_mean_per_stepsize = params['nnd_mb_mean_per_stepsize'],
@@ -218,7 +219,7 @@ if __name__ == "__main__":
         'nnd_mb_make_aggregated_dataset_noisy': [True],
         'nnd_mb_make_training_dataset_noisy': [True],
         'nnd_mb_noise_actions_during_MPC_rollouts': [True],
-        'nnd_mb_verbose': [True],
+        'nnd_mb_verbose': [False],
 
         'get_extra_name' : [get_extra_name]
     }

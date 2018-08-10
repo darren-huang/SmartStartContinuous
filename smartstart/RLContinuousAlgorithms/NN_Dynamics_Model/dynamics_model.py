@@ -130,10 +130,9 @@ class Dyn_Model:
             #save losses after an epoch
             if save_results:
                 np.save(save_dir + '/training_losses.npy', training_loss_list)
-            if(self.verbose):
-                if((i%10)==0):
-                    print("\n=== Epoch {} ===".format(i))
-                    print ("loss: ", avg_loss/num_batches)
+            if(self.verbose and (i%10)==0):
+                print("\n=== Epoch {} ===".format(i))
+                print ("loss: ", avg_loss/num_batches)
         
         if(self.verbose):
             print ("Training set size: ", (nData_old + dataX_new.shape[0]))
@@ -190,8 +189,9 @@ class Dyn_Model:
             iters_in_batch+=1
 
         #avg loss + all predictions
-        print ("Validation set size: ", nData)
-        print ("Validation set's total loss: ", avg_loss/iters_in_batch)
+        if self.verbose:
+            print ("Validation set size: ", nData)
+            print ("Validation set's total loss: ", avg_loss/iters_in_batch)
 
         return (avg_loss/iters_in_batch)
 

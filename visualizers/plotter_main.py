@@ -125,8 +125,19 @@ if __name__ == "__main__":
 # MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
 # MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
 # MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
-    files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
-
+#     files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
+    files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-64-32.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-128-64.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
+MountainCarContinuous-v0_a-64-32.0-0d005_c-200-100.0-0d005_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
 
 
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
@@ -145,7 +156,7 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 10
     num_plots_per_graph = len(colors)
-    plot_path_bool = True
+    plot_path_bool = False
     print_param_dict = False
     smart_start_dots = False
     average_over_glob_wildcards=True

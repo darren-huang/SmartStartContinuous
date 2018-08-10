@@ -139,13 +139,13 @@ class ReplayBuffer(object):
         :return: array of possible smart starts
         """
         if len(self.episode_starting_indices) == 0:
-            return []
+            return None
         #mainly has to ensure the whole episode containing the smartstart state is inside the buffer
         first_buffer_index = self.episode_number_to_buffer_index(self.episode_starting_indices[0])
         number_of_states = min(n_ss, len(self.buffer) - first_buffer_index) # max possible states to
 
         # sample WITHOUT replacement
-        return random.sample(range(first_buffer_index, len(self.buffer)), number_of_states)
+        return np.array(random.sample(range(first_buffer_index, len(self.buffer)), number_of_states))
 
     def get_episodic_path_to_buffer_index(self, buffer_index):
         """
@@ -185,6 +185,21 @@ class ReplayBuffer(object):
 
     def step_to_s2(self, step):
         return np.array(step[4])
+
+    def steps_to_s(self, step):
+        return np.array(step[:,0])
+
+    def steps_to_a(self, step):
+        return np.array(step[:,1])
+
+    def steps_to_r(self, step):
+        return np.array(step[:,2])
+
+    def steps_to_t(self, step):
+        return np.array(step[:,3])
+
+    def steps_to_s2(self, step):
+        return np.array(step[:,4])
 
     # PRIVATE
     def episode_number_to_buffer_index(self, episode_number):
