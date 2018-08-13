@@ -186,11 +186,12 @@ def binary_search_index_lower(sorted_array, target, key = lambda x:x):
             return current_i
     return end_i
 
-def length_weighted_activities_solver(activities):
+def length_weighted_activities_solver(activities, sub_extra=0):
     """
     Solves the weighted activities problem where each activity's weight is end_time - start_time
     https://en.wikipedia.org/wiki/Activity_selection_problem
     :param activities: Should be an Nx2 array, should list of [x,y]s where 0 <= x < y
+    :param sub_extra: (MUST BE POSITIVE) extra amount to subtract
     :return:
     """
     activities = sorted(activities, key=lambda x: x[1]) # sort by end times
@@ -200,11 +201,11 @@ def length_weighted_activities_solver(activities):
     for a in activities[1:]:
         latest_allowable_end_time_index = binary_search_index_lower(optimal_tuple_list, (a[0], None), key=lambda x: x[0]) #should never return None
         if a[1] == optimal_tuple_list[-1][0]: #end time same as previous end time
-            optimal_tuple_list[-1] = max((a[1], optimal_tuple_list[latest_allowable_end_time_index][1] + (a[1] - a[0]), a, latest_allowable_end_time_index), #include activity 'a'
+            optimal_tuple_list[-1] = max((a[1], optimal_tuple_list[latest_allowable_end_time_index][1] + (a[1] - a[0] - sub_extra), a, latest_allowable_end_time_index), #include activity 'a'
                                          (a[1], optimal_tuple_list[-1][1], optimal_tuple_list[-1][2], optimal_tuple_list[-1][3]),
                                          key=lambda x: x[1]) # previous calculation
         else:
-            optimal_tuple_list.append(max((a[1], optimal_tuple_list[latest_allowable_end_time_index][1] + (a[1] - a[0]), a, latest_allowable_end_time_index), #include activity 'a'
+            optimal_tuple_list.append(max((a[1], optimal_tuple_list[latest_allowable_end_time_index][1] + (a[1] - a[0] - sub_extra), a, latest_allowable_end_time_index), #include activity 'a'
                                          (a[1], optimal_tuple_list[-1][1], None, len(optimal_tuple_list) - 1),
                                           key=lambda x: x[1])) # previous calculation)  # previous calculation
     index = len(optimal_tuple_list) - 1
@@ -235,7 +236,7 @@ def path_shortcutter(path, distance_func, theta):
     ar = a.reshape((1, *a.shape))
     distances_arr = distance_func(ar.transpose((1,0,2)), ar)
     indices = np.transpose(np.where(np.triu(distances_arr <= theta, k=2))) # can't shortcut (1,2) since there is no index 1.5 in between, we are using k=2 instead of k=1
-    length_of_intervals, selected_intervals = length_weighted_activities_solver(indices.tolist())
+    length_of_intervals, selected_intervals = length_weighted_activities_solver(indices.tolist(), sub_extra=1) #sub_extra=1 because intervale (1,4) only removes index 2 and 3 therefore weight should be '2' not '4-1'
     indices_to_delete = []
     for indices_pair in selected_intervals:
         indices_to_delete.extend(range(indices_pair[0] + 1, indices_pair[1])) # want to include start and end

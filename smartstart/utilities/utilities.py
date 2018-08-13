@@ -63,6 +63,8 @@ def get_start_waypoints_final_states_steps(path, steps_per_waypoint):
     :param steps_per_waypoint:
     :return:
     """
+    if isinstance(path, np.ndarray):
+        path = path.tolist()
     waypoint_centers = path[:-1:steps_per_waypoint]
     waypoint_centers.append(path[-1])
     return waypoint_centers
