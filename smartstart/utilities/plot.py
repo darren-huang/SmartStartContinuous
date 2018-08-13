@@ -449,7 +449,7 @@ def plot_path(path, path2=None, path3=None, title="", reward=None, x_label=None,
         line_collection3 = make_line_collection(x3, y3, color_num_scale3, cmap=cmap3, norm=norm3, linewidth=linewidth)
 
     # maybe draw waypoints along trajectory
-    if waypoint_centers:
+    if waypoint_centers is not None:
         waypoint_cmap = plt.get_cmap('binary')
         waypoint_color_num_scale = np.linspace(.2, .6, len(waypoint_centers))
         waypoint_norm = plt.Normalize(0, 1.0)

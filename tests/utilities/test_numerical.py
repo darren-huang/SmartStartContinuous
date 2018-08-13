@@ -1,6 +1,7 @@
 from unittest import TestCase
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, \
-    projection_of_a_onto_b, dist_line_seg_to_point, volume_of_n_dimensional_hyperellipsoid
+    projection_of_a_onto_b, dist_line_seg_to_point, volume_of_n_dimensional_hyperellipsoid, \
+    elliptical_euclidean_distance_function_generator
 import numpy as np
 
 class TestNumerical(TestCase):
@@ -42,14 +43,18 @@ class TestNumerical(TestCase):
         line_seg_begin = np.array([0,1])
         line_seg_end = np.array([1, 2])
         pt = np.array([2,1])
-        assert np.isclose(dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, [1,1]), 2 ** .5)
+        radii = [1,1]
+        dist_func = elliptical_euclidean_distance_function_generator(radii)
+        assert np.isclose(dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, dist_func, radii), 2 ** .5)
 
     def test_dist_line_seg_to_point_stretched(self):
         stretch = 10
         line_seg_begin = np.array([0,1*stretch])
         line_seg_end = np.array([1, 2*stretch])
         pt = np.array([2,1*stretch])
-        assert np.isclose(dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, [1,stretch]), 2 ** .5)
+        radii = [1, stretch]
+        dist_func = elliptical_euclidean_distance_function_generator(radii)
+        assert np.isclose(dist_line_seg_to_point(line_seg_begin, line_seg_end, pt, dist_func, radii), 2 ** .5)
 
     def test_volume_of_n_dimensional_hyperellipsoid_circle(self):
         for r in range(1,20):

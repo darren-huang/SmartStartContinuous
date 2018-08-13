@@ -1,6 +1,7 @@
 # imports
 import os
 import re
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -26,6 +27,13 @@ if __name__ == "__main__":
     save_model = False
     save_dir = "default"
 
+    #network size
+    depth_fc_layers = 32
+    num_fc_layers = 1
+    lr = .001
+    nEpochs = 30
+    num_episodes_for_aggregation=1
+
     # waypoint options
     mean_per_stepsize = 1
     std_per_stepsize = 1
@@ -36,7 +44,7 @@ if __name__ == "__main__":
     horizon = 4
     gamma = .75
     horizontal_penalty_factor = .5
-    N=5000
+    N=500
 
     # trainer options
     num_episodes = 10
@@ -59,16 +67,20 @@ if __name__ == "__main__":
                              std_per_stepsize=std_per_stepsize, stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
                              gamma=gamma, horizontal_penalty_factor=horizontal_penalty_factor,
                              horizon=horizon, num_control_samples=N,
-                             num_episodes_for_aggregation=1,
+                             num_episodes_for_aggregation=num_episodes_for_aggregation,
                              save_dir_name=save_dir,
                              load_dir_name=load_dir,
                              save_resulting_dynamics_model=save_model,
-                             load_existing_training_data=load_training)  # type: NND_MB_agent
+                             load_existing_training_data=load_training,
+                             depth_fc_layers=depth_fc_layers,
+                             num_fc_layers=num_fc_layers,
+                             lr=lr,
+                             nEpoch=nEpochs)  # type: NND_MB_agent
 
         # intializing the desired_states
         target_default_directory = "0_ddpg_summaries_DEPRACATED"
-        target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
-        # target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
+        # target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
+        target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
         target_file_pathname = os.path.join(get_default_data_directory(target_default_directory), target_file_name)
         target_summary = Summary.load(target_file_pathname)  # type:Summary
         target_path = target_summary.get_last_path(0)
@@ -128,8 +140,9 @@ if __name__ == "__main__":
 
 
                 # agent action
+                # t1 = time.time()
                 action, predicted_sequence = agent.get_action_with_predicted_states(observation)
-
+                # print(time.time() - t1)
                 # environment processing
                 new_observation, reward, done, _ = env.step(action)  # also returns emtpy dict (to match openAI)
 

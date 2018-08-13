@@ -14,7 +14,8 @@ from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.dynamics_model import D
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add_noise, perform_rollouts
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
-from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point
+from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point, \
+    elliptical_euclidean_distance_scaled_function_generator
 from smartstart.utilities.utilities import get_start_waypoints_final_states_steps, get_default_model_directory
 from smartstart.utilities.numerical import elliptical_euclidean_distance_function_generator
 
@@ -597,6 +598,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                 self.desired_states[line_seg_begin_indices],  # prev waypoint
                 self.desired_states[line_seg_begin_indices + 1],  # current waypoint
                 pts,
+                self.distance_function,
                 self.radii)
             scores -= dist * self.horizontal_penalty_factor * self.gamma
 

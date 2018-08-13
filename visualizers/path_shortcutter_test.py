@@ -119,7 +119,8 @@ def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
 
 if __name__ == "__main__":
     first_num_episodes = None
-    target_default_directory = "ddpg_baselines_summaries/hidden_layer_size_experiment"
+    # target_default_directory = "ddpg_baselines_summaries/hidden_layer_size_experiment"
+    target_default_directory = "0_ddpg_summaries_DEPRACATED"
     notSummary = True
 
 #     files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
@@ -129,7 +130,9 @@ if __name__ == "__main__":
 # MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
 # MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
 # MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
-    files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
+#     target_file_names = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
+    # target_file_names = "DDPG_agent_MountainCarContinuous-v0-1000ep.json".split()
+    target_file_names = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json".split()
 
 
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
@@ -148,17 +151,18 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 10
     num_plots_per_graph = len(colors)
+    plot_rewards = False
     plot_path_bool = True
-    print_param_dict = False
+    print_param_dict = True
     smart_start_dots = False
-    average_over_glob_wildcards=True
+    average_over_glob_wildcards=False
     show_seed=False
     linewidth = 2
     scale_up = False
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length
-    file_path_s_all = convert_file_names_to_file_paths(target_default_directory, files)
+    file_path_s_all = convert_file_names_to_file_paths(target_default_directory, target_file_names)
     if not average_over_glob_wildcards:
         new_file_path_s_all = []
         for fp in file_path_s_all:
@@ -171,9 +175,9 @@ if __name__ == "__main__":
     for file_path_s_batch in [file_path_s_all[i:i + num_plots_per_graph] for i in range(0, len(file_path_s_all), num_plots_per_graph)]:
 
 
-
-        ax1, ax2, ax3, ax4, fig = plot_file_rewards(file_path_s_batch, ma_window=ma_window, dots=smart_start_dots,
-                                                    colors=colors, linestyles=linestyles, linewidth=linewidth)
+        if plot_rewards:
+            ax1, ax2, ax3, ax4, fig = plot_file_rewards(file_path_s_batch, ma_window=ma_window, dots=smart_start_dots,
+                                                        colors=colors, linestyles=linestyles, linewidth=linewidth)
 
         labels = []
         for file_path in file_path_s_batch:
@@ -193,7 +197,9 @@ if __name__ == "__main__":
                     print("    " + key + " : " + str(value))
                 print("")
 
-        print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch)
+        if plot_rewards:
+            print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch)
 
-        plot_set_legend_lines(colors, labels,linestyles=linestyles, axis=ax4)
+        if plot_rewards:
+            plot_set_legend_lines(colors, labels,linestyles=linestyles, axis=ax4)
         show_plot()

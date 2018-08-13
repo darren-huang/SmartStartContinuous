@@ -273,13 +273,10 @@ class SmartStartContinuous(RLAgent):
         """
         if len(self.replay_buffer) == 0: # if buffer is emtpy, nothing to evaluate
             return None
-        # if self.nnd_mb_agent.stds is not None:
-        #     self.sigma = self.nnd_mb_agent.stds
-
         possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
         if possible_start_indices is None: # no valid states then return None
             return None
-        #find the smart_start state TODO PARALLELEIZE WITH NUMPY (if self.agent.get_state_value can do states in parallel we can parallelize it)
+        #find the smart_start state
         all_states = self.replay_buffer.get_all_states()  # n x d matrix where n is the number of states and d is dim
 
         ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ############################
@@ -294,6 +291,7 @@ class SmartStartContinuous(RLAgent):
             one_radii_volume = 1  # 100% arbitrary TODO: get std of last path maybe for both of these
 
         ################### PARALLEL UCB CALC #########################################################
+        t1 = time.time()
         possible_ss_steps = np.array(self.replay_buffer.buffer)[possible_start_indices]
         possible_ss_states = np.asarray(self.replay_buffer.steps_to_s2(possible_ss_steps).tolist()) #use tolist, because it renders as a numpy array of objects (not of floats)
         ss_state_values = self.agent.get_state_value(possible_ss_states).T # 1 x n matrix (equiv n long list)
@@ -305,6 +303,7 @@ class SmartStartContinuous(RLAgent):
         smart_start_parallel_index = possible_start_indices[np.argmax(ucb_list)]
 
         ######### For loop setup #####################################################################
+        t2 = time.time()
         smart_start_index = None
         max_ucb = -float('inf')
 
@@ -313,18 +312,6 @@ class SmartStartContinuous(RLAgent):
             main_step = self.replay_buffer.buffer[main_step_index]
             state = self.replay_buffer.step_to_s2(main_step)
             state_value = self.agent.get_state_value(state)[0][0]
-
-
-            #MANUAL CALCULATION, seems wrong (univariate kernel density estimation was used, but i have multivariable data)
-            # # C_hat calculation###############
-            # # bandwith
-            # h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma  # silverman's rule of thumb
-            # if self.smart_start_selection_modified_distance_function and self.nnd_mb_agent.distance_function:
-            #     C_hat_temp_arr = self.K((self.nnd_mb_agent.distance_function(state / h, all_states / h)))
-            # else:
-            #     C_hat_temp_arr = self.K(np.linalg.norm((state / h) - (all_states / h), axis=1))
-            # C_hat = np.sum(C_hat_temp_arr / h)
-
 
             #SCIPY Kernel Density Estimation TODO document what math was used and what resources
             probability_density = (kernel(state.T) * one_radii_volume)[0]
@@ -338,6 +325,7 @@ class SmartStartContinuous(RLAgent):
                 smart_start_index = main_step_index
                 max_ucb = ucb
 
+        print("Parallel took: " + str(t2 - t1) + "      |Iterative took: " + str(time.time() - t2) + " | " + str(smart_start_index == smart_start_parallel_index))
         return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_index)
 
     def get_action(self, state):
@@ -413,7 +401,7 @@ RANDOM_SEED = args.seed
 if __name__ == "__main__":
     import random
     import gym
-    from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+    from smartstart.reinforcementLearningCore.rlTrain import rlTrain, rlTrainGraphSS
 
     episodes = 1000
     lastLayerTanh = True
@@ -472,6 +460,7 @@ if __name__ == "__main__":
                                                      eta=0.5,
                                                      eta_decay_factor=1,
                                                      n_ss=2000,
+                                                     print_ss_stuff=True,
                                                      # smart_start_selection_modified_distance_function=True,
 
                                                      nnd_mb_final_steps=10,
@@ -483,13 +472,13 @@ if __name__ == "__main__":
                                                      nnd_mb_gamma=.75,
                                                      nnd_mb_horizontal_penalty_factor=.5,
                                                      nnd_mb_horizon=4,
-                                                     nnd_mb_num_control_samples=5000,
+                                                     nnd_mb_num_control_samples=500,
 
                                                      nnd_mb_load_dir_name="default",
                                                      nnd_mb_load_existing_training_data=True,
 
                                                      nnd_mb_num_fc_layers=1,
-                                                     nnd_mb_depth_fc_layers=500,
+                                                     nnd_mb_depth_fc_layers=32,
                                                      nnd_mb_batchsize=512,
                                                      nnd_mb_lr=0.001,
                                                      nnd_mb_nEpoch=30,
@@ -499,13 +488,22 @@ if __name__ == "__main__":
                                                      nnd_mb_make_training_dataset_noisy=True,
                                                      nnd_mb_noise_actions_during_MPC_rollouts=True,
 
-                                                     nnd_mb_verbose=True)
+                                                     nnd_mb_verbose=False)
             sess.graph.finalize()
 
             # Train the agent, summary contains training data
-            summary = rlTrain(smart_start_agent, env, render=args.render,
-                              render_episode=False,
-                              print_results=True, num_episodes=episodes)  # type: Summary
+            # summary = rlTrain(smart_start_agent, env, render=args.render,
+            #                   render_episode=False,
+            #                   print_steps=False,
+            #                   print_results=False,
+            #                   num_episodes=episodes,
+            #                   print_time=True)  # type: Summary
+            summary = rlTrainGraphSS(smart_start_agent, env,
+                                     render=args.render,
+                                     render_episode=False,
+                                     print_steps=False,
+                                     print_results=False,
+                                     num_episodes=episodes)
 
             noGpu_str = "-NoGPU" if noGpu else ""
             llTanh_str = "-LLTanh" if lastLayerTanh else ""
