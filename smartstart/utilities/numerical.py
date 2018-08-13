@@ -235,6 +235,10 @@ def path_shortcutter(path, distance_func, theta):
     ar = a.reshape((1, *a.shape))
     distances_arr = distance_func(ar.transpose((1,0,2)), ar)
     indices = np.transpose(np.where(np.triu(distances_arr <= theta, k=2))) # can't shortcut (1,2) since there is no index 1.5 in between, we are using k=2 instead of k=1
-    length_shortened, selected_intervals = length_weighted_activities_solver(indices.tolist())
-    return indices
+    length_of_intervals, selected_intervals = length_weighted_activities_solver(indices.tolist())
+    indices_to_delete = []
+    for indices_pair in selected_intervals:
+        indices_to_delete.extend(range(indices_pair[0] + 1, indices_pair[1])) # want to include start and end
+    new_path = np.delete(a, indices_to_delete, axis=0)
+    return new_path
 
