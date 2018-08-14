@@ -93,7 +93,7 @@ class SmartStartContinuous(RLAgent):
                  exploitation_param=1.,
                  exploration_param=2.,
                  eta=0.5,
-                 eta_decay_factor=1,
+                 eta_decay_factor=1.,
                  n_ss=1000,
                  print_ss_stuff=True,
                  # sigma=1, #used in silverman's rule of thumb?
@@ -430,11 +430,11 @@ if __name__ == "__main__":
                                              ou_sigma=0.6,
                                              ou_theta=.15,
                                              actor_lr=0.001,
-                                             actor_h1=200,
-                                             actor_h2=100,
-                                             critic_lr=0.005,
-                                             critic_h1=200,
-                                             critic_h2=100,
+                                             actor_h1=64,
+                                             actor_h2=32,
+                                             critic_lr=0.001,
+                                             critic_h1=64,
+                                             critic_h2=32,
                                              gamma=0.99,
                                              tau=0.001,
                                              layer_norm=False,
@@ -451,9 +451,9 @@ if __name__ == "__main__":
 
                                                      buffer_size=100000,
                                                      exploitation_param=1.,
-                                                     exploration_param=2.,
+                                                     exploration_param=1.,
                                                      eta=0.5,
-                                                     eta_decay_factor=1,
+                                                     eta_decay_factor=.99,
                                                      n_ss=2000,
                                                      print_ss_stuff=True,
 
@@ -500,8 +500,8 @@ if __name__ == "__main__":
                                      print_steps=False,
                                      print_results=False,
                                      num_episodes=episodes,
-                                     plot_ss_stuff=True,
-                                     print_time=False)
+                                     plot_ss_stuff=False,
+                                     print_time=True)
 
             noGpu_str = "-NoGPU" if noGpu else ""
             llTanh_str = "-LLTanh" if lastLayerTanh else ""

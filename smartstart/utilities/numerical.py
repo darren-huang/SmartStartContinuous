@@ -192,8 +192,10 @@ def length_weighted_activities_solver(activities, sub_extra=0):
     https://en.wikipedia.org/wiki/Activity_selection_problem
     :param activities: Should be an Nx2 array, should list of [x,y]s where 0 <= x < y
     :param sub_extra: (MUST BE POSITIVE) extra amount to subtract
-    :return:
+    :return: (optimal total weight, list of intervals)
     """
+    if len(activities) == 0:
+        return 0, []
     activities = sorted(activities, key=lambda x: x[1]) # sort by end times
     a0 = activities[0]
     optimal_tuple_list = [(0, 0, None, 0),(a0[1], a0[1] - a0[0], a0, 0)]

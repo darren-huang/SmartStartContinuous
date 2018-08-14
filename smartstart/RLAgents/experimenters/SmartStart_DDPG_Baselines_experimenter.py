@@ -117,7 +117,9 @@ def task_run_ss_ddpg_baselines_mc(params):
             summary = rlTrain(smart_start_agent, env, render=render,
                               render_episode=False,
                               print_steps=False,
-                              print_results=False, num_episodes=episodes,
+                              print_results=False,
+                              num_episodes=episodes,
+                              print_time=False,
                               progress_bar=True,
                               id=params['id'],
                               num_ticks=params['num_ticks'])  # type: Summary
@@ -139,7 +141,8 @@ def task_print(params):
 def get_extra_name(params):
     exploration_param_str = "_explorP-" + str(params['exploration_param'])
     eta_decay_str = "_etaDecay-" + str(params['eta_decay_factor'])
-    return exploration_param_str + eta_decay_str
+    wp_give_up_str = "_wpGiveUp-" + str(params['nnd_mb_steps_before_giving_up_on_waypoint'])
+    return exploration_param_str + eta_decay_str + wp_give_up_str
 
 if __name__ == "__main__":
     experiment_task = task_run_ss_ddpg_baselines_mc
@@ -214,7 +217,7 @@ if __name__ == "__main__":
         'nnd_mb_load_dir_name': ["default"],
         'nnd_mb_load_existing_training_data': [True],
         'nnd_mb_num_fc_layers': [1],
-        'nnd_mb_depth_fc_layers': [500],
+        'nnd_mb_depth_fc_layers': [32],
         'nnd_mb_batchsize': [512],
         'nnd_mb_lr': [0.001],
         'nnd_mb_nEpoch': [30],
@@ -231,6 +234,10 @@ if __name__ == "__main__":
     noGpu_str = "_NoGPU" if noGpu else ""
     llTanh_str = "_LLTanh" if lastLayerTanh else ""
     decayingNoise_str = "_decayingNoise" if decaying_noise else ""
+    if len(paramsGrid['nnd_mb_num_fc_layers']) == 1 and len(paramsGrid['nnd_mb_depth_fc_layers']) == 1:
+        fc_layer_str = "_fcLayer-" + str(paramsGrid['nnd_mb_num_fc_layers'][0]) + "lyrs-" + str(paramsGrid['nnd_mb_depth_fc_layers'][0]) +"dpth"
+    else:
+        fc_layer_str = ""
     create_experimeter_info_txt(paramsGrid, get_default_data_directory(dir_name),
-                                name_append= "_" + str(episodes) + "ep" + noGpu_str + llTanh_str + decayingNoise_str)
+                                name_append= "_" + str(episodes) + "ep" + noGpu_str + llTanh_str + decayingNoise_str + fc_layer_str)
     run_experiment(paramsGrid, n_processes=-1)

@@ -94,3 +94,10 @@ class TestNumerical(TestCase):
         path = [[0,0],[1,1],[2,2],[3,3],[1,1]]
         theta = 1
         assert np.equal(path_shortcutter(path, distance_func, theta), [[0,0],[1,1],[1,1]]).all()
+
+    def test_path_shortcutter_no_shortcut(self):
+        radii = [1,1]
+        distance_func = elliptical_euclidean_distance_function_generator(radii)
+        path = [[0,0],[1,1],[2,2],[3,3],[4,4]]
+        theta = 1
+        assert np.equal(path_shortcutter(path, distance_func, theta), path).all()
