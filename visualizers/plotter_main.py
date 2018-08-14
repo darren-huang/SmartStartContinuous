@@ -130,8 +130,8 @@ if __name__ == "__main__":
     # files = "MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json".split()
 
 
-    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2"
-    files = """MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json""".split()
+    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search"
+    files = """*.json""".split()
 
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
     #COLOR PARAMETERS #################################################################################
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 1
     plot_path_bool = False
-    print_param_dict = False
+    print_param_dict = True
     smart_start_dots = True
     average_over_glob_wildcards=False
     show_seed=False
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     label_func = get_hyper_param_label
     # label_func = get_hidden_layer_label
     num_plots_per_graph = 1  # len(colors)
-    max_num_windows = 5
+    max_num_windows = 1
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length

@@ -371,6 +371,7 @@ class SmartStartContinuous(RLAgent):
 
     def end_episode(self):
         self.reduce_eta() #reduces the change of smart start
+        self.agent.end_episode()
         self.smart_start_pathing = False
         self.smart_start_path = None
 
