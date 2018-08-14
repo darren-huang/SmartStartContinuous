@@ -158,7 +158,6 @@ class SmartStartContinuous(RLAgent):
 
         :type agent: ValueFuncRLAgent
         """
-        #TODO fix naming for smartStart - this affects class not object
         self.param_dict = locals().copy()
         for var_str in ['__class__', 'self', 'sess', 'env']:
             self.param_dict[var_str] = "Not serializable"
@@ -358,8 +357,6 @@ class SmartStartContinuous(RLAgent):
         self.smart_start_path = None
 
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
-
-            #TODO remove the random plotting
             start_time = time.time()
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
             end_time = time.time()

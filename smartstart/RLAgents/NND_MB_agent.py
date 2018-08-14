@@ -190,7 +190,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         else:
             self.noise_amount = 0
 
-        self.sess = sess  # TODO: decide if i need GPU options
+        self.sess = sess
 
         # Initialize replay memory
         if replay_buffer == None:

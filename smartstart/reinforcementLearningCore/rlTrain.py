@@ -47,7 +47,7 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
               str(0) + "/" + str(num_episodes) + " episodes")
 
     #summary object
-    #TODO fix how the names are gotten (hasattr func)
+    #TODO fix how the names are gotten (hasattr func) -> maybe build it into RLAgents abstract class
     if hasattr(agent, 'get_summary_name'):
         summary = Summary(agent.get_summary_name() + "_" + env.spec.id)
     else:
