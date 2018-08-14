@@ -109,6 +109,7 @@ class SmartStartContinuous(RLAgent):
                  nnd_mb_horizontal_penalty_factor=.5,
                  nnd_mb_horizon=20,
                  nnd_mb_num_control_samples=5000,
+                 nnd_mb_path_shortcutting=True,
 
                  nnd_mb_save_dir_name="save_untitled",
                  nnd_mb_load_dir_name="untitled_load",
@@ -206,6 +207,7 @@ class SmartStartContinuous(RLAgent):
                                          horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
                                          horizon=nnd_mb_horizon,
                                          num_control_samples=nnd_mb_num_control_samples,
+                                         path_shortcutting=nnd_mb_path_shortcutting,
 
                                          save_dir_name=nnd_mb_save_dir_name,
                                          load_dir_name=nnd_mb_load_dir_name,
@@ -351,24 +353,18 @@ class SmartStartContinuous(RLAgent):
                     print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
-        #TO/DO REMOVE FOLLOWING THIS IS JUST FOR TESTING
-        # if True:
+        self.smart_start_pathing = False
+        self.smart_start_path = None
+
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
 
             #TODO remove the random plotting
             start_time = time.time()
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
-
+            end_time = time.time()
             if self.smart_start_path: #ensure path exists
-                #TODO: remove the floowing plotting
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-                # self.times_for_smart_start.append(elapsed_time)
-                # if len(self.times_for_smart_start) % 10 == 0:
-                #     plt.title("Times for Calculating Smart Start Path")
-                #     plt.plot(self.times_for_smart_start)
-                #     plt.show()
                 if self.print_ss_stuff:
+                    elapsed_time = end_time - start_time
                     print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
                     print("\npath exists")
                 # let neural network dynamics model based controller load the path
@@ -377,13 +373,14 @@ class SmartStartContinuous(RLAgent):
                     self.smart_start_pathing = True #this start smart start navigation
                     if self.print_ss_stuff:
                         print("SMART_START START!!!")
-                    return "smart_start"
 
         self.agent.start_new_episode(state)
         self.replay_buffer.start_new_episode(self)
 
     def end_episode(self):
         self.reduce_eta() #reduces the change of smart start
+        self.smart_start_pathing = False
+        self.smart_start_path = None
 
     def render(self, env, **kwargs):
         return env.render()
@@ -461,7 +458,6 @@ if __name__ == "__main__":
                                                      eta_decay_factor=1,
                                                      n_ss=2000,
                                                      print_ss_stuff=True,
-                                                     # smart_start_selection_modified_distance_function=True,
 
                                                      nnd_mb_final_steps=10,
                                                      nnd_mb_steps_per_waypoint=1,
@@ -473,6 +469,7 @@ if __name__ == "__main__":
                                                      nnd_mb_horizontal_penalty_factor=.5,
                                                      nnd_mb_horizon=4,
                                                      nnd_mb_num_control_samples=500,
+                                                     nnd_mb_path_shortcutting=True,
 
                                                      nnd_mb_load_dir_name="default",
                                                      nnd_mb_load_existing_training_data=True,
@@ -503,7 +500,9 @@ if __name__ == "__main__":
                                      render_episode=False,
                                      print_steps=False,
                                      print_results=False,
-                                     num_episodes=episodes)
+                                     num_episodes=episodes,
+                                     plot_ss_stuff=True,
+                                     print_time=False)
 
             noGpu_str = "-NoGPU" if noGpu else ""
             llTanh_str = "-LLTanh" if lastLayerTanh else ""

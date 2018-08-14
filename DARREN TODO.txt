@@ -16,8 +16,8 @@ Get Smart Start Tests running
 
 
                                                 adjust distance function (currently 1 step in one dimension = distance of 1, switch to 1 step in ALL dimensions = distance of 1)
-    Change distance function to take in multiple (from both sides, output matrix)
-    Path shortcuts
+                                                Change distance function to take in multiple (from both sides, output matrix)
+                                                Path shortcuts
     Fully switch to parallel smart start calc
 
 

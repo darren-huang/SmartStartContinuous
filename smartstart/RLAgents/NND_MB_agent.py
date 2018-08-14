@@ -15,7 +15,7 @@ from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.helper_funcs import add
 from smartstart.RLContinuousAlgorithms.NN_Dynamics_Model.policy_random import Policy_Random
 from smartstart.reinforcementLearningCore.agents_abstract_classes import NavigationRLAgent
 from smartstart.utilities.numerical import path_deltas_stds_and_means_per_dim, radii_calc, dist_line_seg_to_point, \
-    elliptical_euclidean_distance_scaled_function_generator
+    elliptical_euclidean_distance_scaled_function_generator, path_shortcutter
 from smartstart.utilities.utilities import get_start_waypoints_final_states_steps, get_default_model_directory
 from smartstart.utilities.numerical import elliptical_euclidean_distance_function_generator
 
@@ -59,7 +59,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                  final_steps=10, steps_per_waypoint=1, mean_per_stepsize=1, std_per_stepsize=1,
                  stepsizes_in_waypoint_radii=1,
 
-                 gamma=.75, horizontal_penalty_factor=.5, horizon=20, num_control_samples=5000,
+                 gamma=.75, horizontal_penalty_factor=.5, horizon=20, num_control_samples=5000, path_shortcutting=True,
+                 steps_before_giving_up_on_waypoint = 5,
 
                  save_dir_name="save_untitled", load_dir_name="untitled_load",
                  save_training_data=False, save_resulting_dynamics_model=False,
@@ -99,6 +100,7 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
                         the best sequence will be selected (only first action is taken)
         :param num_control_samples: Path following generates this many random sequences of actions (each sequence is 'horizon' long)
                                     Controller will choose the action sequence with the best reward
+        :param path_shortcutting: given a path to follow, whether or not to try to take shortcuts (based on numerical.py's 'path_shortcutter')
 
         ##################################    SAVING/LOADING STUFFS       #########################################################
         :param save_dir_name: the name of the directory the model will be saved
@@ -157,6 +159,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         self.nEpochs = nEpoch
         self.fraction_use_new = fraction_use_new
         self.num_episodes_for_aggregation = num_episodes_for_aggregation
+        self.path_shortcutting = path_shortcutting
+        self.steps_before_giving_up_on_waypoint = steps_before_giving_up_on_waypoint
         self.num_episodes_finished = 0
         self.actions_done_for_current_waypoint = None
         self.radii = None
@@ -359,7 +363,9 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         distance_to_next = self.distance_function(new_state, self.next_desired_state)
 
         # TODO decide which one to use or to use both (theta, or distances to next<=current)
-        if self.move_to_next(new_state, self.current_desired_state_index, distance_to_current, distance_to_next):
+        if self.move_to_next(new_state, self.current_desired_state_index, distance_to_current, distance_to_next) or \
+                (self.actions_done_for_current_waypoint > self.steps_before_giving_up_on_waypoint and
+                 self.current_desired_state_index != len(self.desired_states) - 1): #if spending too long just give up
             # close enough to curr_waypoint, move on to next waypoint
             self.current_desired_state_index += 1
             self.actions_done_for_current_waypoint = 0
@@ -368,15 +374,13 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         """
         Called at the beginning of an episode.
         :param starting_state: the starting state of the episode
-        :param desired_states: the states it wants to navigate through, agent will try to follow
+        :param path_to_follow: the states it wants to navigate through, agent will try to follow
             route and end up within close proximity to the last state
         """
-        # set variables for the new episode
+        # set reset variables for the new episode
         self.current_desired_state_index = 0
         self.actions_done_for_current_waypoint = 0
-        self.path_to_follow = path_to_follow
-        desired_states = np.asarray(get_start_waypoints_final_states_steps(path_to_follow, self.steps_per_waypoint))
-        self.desired_states = desired_states
+
 
         # radii calc (based off of standard deviation and mean of step sizes)
         stds, means = path_deltas_stds_and_means_per_dim(path_to_follow)
@@ -387,6 +391,19 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         # set the distance function to have everything on the ellipse defined by 'radii' to be exactly a distance of 1
         self.distance_function = \
             elliptical_euclidean_distance_function_generator(self.radii)
+
+        #shorten path if necessary (note: radii calculations will be based off of given path, not shortcutted path)
+        if self.path_shortcutting:
+            self.path_to_follow = path_shortcutter(path_to_follow, self.distance_function, self.theta)
+        else:
+            self.path_to_follow = path_to_follow
+        # ADDING EXTRA WAYPOINTS, doesn't really help
+        # dist_to_start = self.distance_function(starting_state, self.path_to_follow[0])
+        # extra_waypoints = int(np.ceil(dist_to_start))
+        # delta = (self.path_to_follow[0] - np.array(starting_state))/extra_waypoints
+        # self.path_to_follow = np.vstack(([(starting_state + (delta * i)).tolist() for i in range(extra_waypoints)],self.path_to_follow))
+        desired_states = np.asarray(get_start_waypoints_final_states_steps(self.path_to_follow, self.steps_per_waypoint))
+        self.desired_states = desired_states
 
         # calculate distances for the MPC reward function
         if len(desired_states) >= 2:

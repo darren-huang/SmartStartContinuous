@@ -45,6 +45,7 @@ if __name__ == "__main__":
     gamma = .75
     horizontal_penalty_factor = .5
     N=500
+    path_shortcutting = True
 
     # trainer options
     num_episodes = 10
@@ -67,6 +68,7 @@ if __name__ == "__main__":
                              std_per_stepsize=std_per_stepsize, stepsizes_in_waypoint_radii=stepsizes_in_waypoint_radii,
                              gamma=gamma, horizontal_penalty_factor=horizontal_penalty_factor,
                              horizon=horizon, num_control_samples=N,
+                             path_shortcutting=path_shortcutting,
                              num_episodes_for_aggregation=num_episodes_for_aggregation,
                              save_dir_name=save_dir,
                              load_dir_name=load_dir,
@@ -77,7 +79,7 @@ if __name__ == "__main__":
                              lr=lr,
                              nEpoch=nEpochs)  # type: NND_MB_agent
 
-        # intializing the desired_states
+        # intializing path
         target_default_directory = "0_ddpg_summaries_DEPRACATED"
         # target_file_name = "DDPG_agent_MountainCarContinuous-v0-1000ep.json"
         target_file_name = "DDPG_agent_MountainCarContinuous-v0_test-2ep.json"
@@ -87,7 +89,7 @@ if __name__ == "__main__":
         target_reward = target_summary.get_last_reward(0)
         # target_path = target_summary.best_path
         # target_reward = target_summary.best_reward
-        desired_states = get_start_waypoints_final_states_steps(target_path, steps_per_waypoint)
+
 
         # summary object
         summary = Summary(agent.__class__.__name__ + "_" + env.spec.id)
@@ -103,8 +105,9 @@ if __name__ == "__main__":
             agent.start_new_episode_plan(observation, target_path)  # only needed for smartStart
 
             # radii calc (based off of standard deviation and mean of step sizes) for the Plotting
-            stds, means = path_deltas_stds_and_means_per_dim(target_path)
+            stds, means = path_deltas_stds_and_means_per_dim(agent.path_to_follow)
             radii = radii_calc(means, stds, mean_per_stepsize, std_per_stepsize, stepsizes_in_waypoint_radii)
+            desired_states = agent.desired_states
 
             # plot settings
             plot = True
@@ -162,7 +165,7 @@ if __name__ == "__main__":
 
                 if not plotted:
                     axis0, line_collection, line_collection2, line_collection3, \
-                    highlight = plot_path(target_path,
+                    highlight = plot_path(agent.path_to_follow,
                                           path2=episode.get_total_path(),
                                           path3=predicted_sequence,
                                           title="Desired Path rw({0:.2f}) vs. Current Path rw({0:.2f})".format(

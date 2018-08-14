@@ -68,8 +68,8 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
         observation = env.reset() #setup env
 
         # Step through the Episode
-        ret = agent.start_new_episode(observation) # only needed for smartStart
-        if ret == 'smart_start':
+        agent.start_new_episode(observation) # only needed for smartStart
+        if isinstance(agent, SmartStartContinuous) and agent.smart_start_pathing:
             summary.start_smart_start_episode()
 
         for step in range(max_steps):
@@ -136,7 +136,9 @@ def rlTrain(agent, env, render=False, render_episode=False, print_results=True, 
 def rlTrainGraphSS(agent, env,
                    render=False, render_episode=False, print_results=True, print_steps=True,
                    num_episodes=500,
-                   max_steps=1000):
+                   max_steps=1000,
+                   plot_ss_stuff=True,
+                   print_time=False):
     """
 
     :type agent: SmartStartContinuous
@@ -150,26 +152,32 @@ def rlTrainGraphSS(agent, env,
 
     np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})  # for printing
 
+    times = [time.time()]
+
     # begin training episodes(1)
     for i_episode in range(num_episodes):
+        if print_time:
+            print("\nEpisode " + str(i_episode) + " begins!")
+
         episode = Episode()  # type: Episode # record the episode
         observation = env.reset()  # setup env
 
         # Step through the Episode
         agent.start_new_episode(observation)  # only needed for smartStart
-        plot_this_episode = agent.smart_start_pathing
+        if isinstance(agent, SmartStartContinuous) and agent.smart_start_pathing:
+            summary.start_smart_start_episode()
+
+        plot_this_episode = agent.smart_start_pathing and plot_ss_stuff
 
         # radii calc (based off of standard deviation and mean of step sizes) for the Plotting
         radii = agent.nnd_mb_agent.radii
 
         # plot settings
-        plot = True
         ion_plot()
         axis0, line_collection, line_collection2, line_collection3, highlight = None, None, None, None, None
         plotted = False
 
         # plot pauser / controller
-        pauser = True
         prev_command = "0"
         num_steps_left = 1
         patt = "^(\d+|pause\d+\.?\d*|p\d+\.?\d*)?$"
@@ -223,7 +231,7 @@ def rlTrainGraphSS(agent, env,
             if plot_this_episode:
                 if not plotted:
                     axis0, line_collection, line_collection2, line_collection3, \
-                    highlight = plot_path(agent.smart_start_path,
+                    highlight = plot_path(agent.nnd_mb_agent.path_to_follow,
                                           path2=episode.get_total_path(),
                                           path3=predicted_sequence,
                                           title="Desired Path vs. Current Path",
@@ -231,6 +239,7 @@ def rlTrainGraphSS(agent, env,
                                           waypoint_centers=agent.nnd_mb_agent.desired_states,
                                           highlight_waypoint_index=agent.nnd_mb_agent.current_desired_state_index,
                                           radii=radii)
+                    plot_path(agent.smart_start_path)
                     show_plot()
                     plotted = True
                     pause_plot(0.001)
@@ -248,7 +257,6 @@ def rlTrainGraphSS(agent, env,
             else:
                 observation = new_observation  # increment local observation
 
-        ioff_plot()
         agent.end_episode()  # needed for continuous stuffs
         # Episode over
 
@@ -264,8 +272,16 @@ def rlTrainGraphSS(agent, env,
         # update summary
         summary.append(episode)
 
-        ioff_plot()
-        show_plot()
+        if print_time:
+            times.append(time.time())
+            if len(times) >= 2:
+                print("took: " + str(times[-1] - times[-2]))
+            print("end")
+
+        if plot_this_episode:
+            ioff_plot()
+            show_plot()
+
 
     # render results
     while render:
