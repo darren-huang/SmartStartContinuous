@@ -157,7 +157,7 @@ if __name__ == "__main__":
     #naming / display
     num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
-    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2'
+    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix'
 
     paramsGrid = {
         'task' : experiment_task,
@@ -197,12 +197,10 @@ if __name__ == "__main__":
         'lastLayerTanh': [lastLayerTanh],
 
         'exploitation_param': [1.],
-        'exploration_param': [2.], #NOT CONSTANT
+        'exploration_param': [2.], #  CONSTANT
         'eta': [0.5],
-        'eta_decay_factor': [.99, .98, .95], # NOT CONSTANT
+        'eta_decay_factor': [.99], #  CONSTANT
         'n_ss': [2000],
-        # 'sigma': [1],
-        # 'smart_start_selection_modified_distance_function': [True, False], #NOT CONSTANT
         'nnd_mb_final_steps': [10],
         'nnd_mb_steps_per_waypoint': [1],
         'nnd_mb_mean_per_stepsize': [1],
@@ -213,7 +211,7 @@ if __name__ == "__main__":
         'nnd_mb_horizon': [4],
         'nnd_mb_num_control_samples': [5000],
         'nnd_mb_path_shortcutting' : [True],
-        'nnd_mb_steps_before_giving_up_on_waypoint' : [3, 5, 8], #NOT CONSTANT
+        'nnd_mb_steps_before_giving_up_on_waypoint' : [5], # CONSTANT
         'nnd_mb_load_dir_name': ["default"],
         'nnd_mb_load_existing_training_data': [True],
         'nnd_mb_num_fc_layers': [1],
