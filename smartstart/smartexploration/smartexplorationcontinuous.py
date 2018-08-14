@@ -1,7 +1,6 @@
 """SmartStart module
 
-Defines method for generating a SmartStart object from an algorithm object. The
-SmartStart object will be a subclass of the original algorithm object.
+Defines method for generating a SmartStart object from an algorithm object.
 """
 import argparse
 import scipy.stats
@@ -28,65 +27,30 @@ class SmartStartContinuous(RLAgent):
         1.  Select smart start
         2.  Guide to smart start
 
-    The smart start is selected using the UCB1 algorithm,
-    as described at by the get_start method.
 
-    The guiding to the smart start is done using model-based
-    reinforcement learning. A transition model is fit using the
-    visitation counts. A reward function that is zero expect for
-    transitions that directly transition to the smart start,
-    those transitions get a reward of one.
+    1. The smart start is selected using the UCB1 algorithm,
+        as described at by the get_start method. UCB1 algorithm is for the multi-arm bandit problem
+        (envision the problem as finding which slot machine arm to pull)
+        Therefore the Smart Start Selection has 2 aspects to it.
+            a. State value estimation: this is supposed to behave like the "reward" recieved from previous
+                "pulls" of the slot machine. The base agent must be able to predict state values (expected reward at a given state)
+            b. State visitation estimation: this is supposed to behave like the "number of times" a slot machine has been "pulled"
+                This is estimated by using multivariate Kernel Density Estimation its implementation can be found at
+            #TODO link SciPy KDE method
 
-    Subsequently this transition model and the reward function are
-    used to find a optimal policy using dynamic programming. This
-    implementation uses
-    :class:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`.
+    2. The Smart Start Navigation is done using a Neural Network Dynamics estimator and a model predictive controller that
+        generates random action sequences, predicts where the agent would go, and chooses the first action of the best
+        sequence. #TODO link the neural network dynamics paper
+        The Smart Start Navigation rather than trying to directly walk to the smart start state (which is often
+        impossible to go towards in a straight line), it will try to walk the path it previously took to get to the smart
+        start state. The "best action sequence" is the one that maximizes the built in reward function.
+            The reward function rewards shortening the distance left on the path to get the goal and penalizes the agent
+            for being too far perpendicularly from the current line segment it is following
+        You can find the algorithm used for this inside 'smartstart/RLAgents/NND_MB_agent.py'
 
     After reaching the smart start the agent will continue with the
     normal reinforcement learning as described by the base class.
-
-    Parameters
-    ----------
-    agent : :obj:'~smartstart.reinforcementLearningCore.agents.ValueFuncRLAgent'
-        agent that runs once smartstart pathing is over (must also be a Counter, and have a .get_state_value func)
-    env : :obj:`~smartstart.environments.environment.Environment`
-        environment
-    exploitation_param : :obj:`float`
-        scaling factor for value function in smart start selection
-    exploration_param : :obj:`float`
-        scaling factor for density in the smart start selection
-    eta : :obj:`float` or :obj:~smartstart.utilities.scheduler.Scheduler`
-        change of using smart start at the start of an episode or
-        executed the normal algorithm
-    m : :obj:`int`
-        number of state-action visitation counts needed before the
-        state-action pair is used in fitting the transition model.
-    vi_gamma : :obj:`float`
-        discount factor for value iteration
-    vi_min_error : :obj:`float`
-        minimum error for convergence of value iteration
-    vi_max_itr : :obj:`int`
-        maximum number of iteration of value iteration
-    *args :
-        see the base class for possible parameters
-    **kwargs :
-        see the base class for possible parameters
-
-    Parameters
-    ----------
-    exploitation_param : :obj:`float`
-        scaling factor for value function in smart start selection
-    exploration_param : :obj:`float`
-        scaling factor for density in the smart start selection
-    eta : :obj:`float` or :obj:~smartstart.utilities.scheduler.Scheduler`
-        change of using smart start at the start of an episode or
-        executed the normal algorithm
-    policy: :obj:`~smartstart.RLDiscreteAlgorithms.valueiteration.ValueIteration`
-        policy used for guiding to the smart start
     """
-
-    # def K(self, a):  # Gaussian Kernel with sigma = 1  TODO normalize
-    #     return np.exp((-.5) * (a ** 2) / (self.sigma ** 2)) / ((2 * np.pi * (self.sigma ** 2)) ** .5)
 
     def __init__(self, agent, env, sess,
                  buffer_size=500000,
@@ -96,8 +60,6 @@ class SmartStartContinuous(RLAgent):
                  eta_decay_factor=1.,
                  n_ss=1000,
                  print_ss_stuff=True,
-                 # sigma=1, #used in silverman's rule of thumb?
-                 # smart_start_selection_modified_distance_function=True,
 
                  nnd_mb_final_steps=10,
                  nnd_mb_steps_per_waypoint=1,
@@ -141,6 +103,8 @@ class SmartStartContinuous(RLAgent):
         """
 
         :param agent: base agent smart start builds on top of
+            NOTE: if the agent inherits from ReplayBufferRLAgent, then SmartStartContinuous will assign itself as the
+                main observer of the replay buffer (but this allows them to share the same replay buffer)
         :param env: environment to run on
         :param sess: tensorflow session
         :param buffer_size: size of the buffer ONLY WORKS if base agent does NOT have a buffer already
@@ -149,10 +113,7 @@ class SmartStartContinuous(RLAgent):
         :param eta: probability of smart start
         :param eta_decay_factor: the factor that multiplies with eta after each episode (example eta *= eta_decay_factor)
         :param n_ss: number of states from replay_buffer to consider as potential smartstart states
-        :param sigma: Used in silverman's rule of thumb?
-        :param smart_start_selection_modified_distance_function: Use Neural Network Dynamics Model Based Agent distance function
-                                            in calculating kernel density estimation (function uses mean/std of stepsizes of a specific path)
-                                            if false, simply uses euclidean distance
+        :param print_ss_stuff: Printing out smart start messages
 
         for all parameters with 'nnd_mb' please see their descriptions under NND_MB_agent
 
@@ -167,8 +128,6 @@ class SmartStartContinuous(RLAgent):
         self.exploration_param = exploration_param
         self.eta = eta
         self.eta_decay_factor = eta_decay_factor
-        # self.sigma = 1
-        # self.smart_start_selection_modified_distance_function = smart_start_selection_modified_distance_function
 
         # objects to interact with
         self.agent = agent
@@ -183,7 +142,6 @@ class SmartStartContinuous(RLAgent):
             agent.set_replay_buffer_main_agent(self)
         else:
             self.replay_buffer = ReplayBuffer(self, buffer_size)  # FIFO replacement strategy
-
 
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
         self.print_ss_stuff = print_ss_stuff
@@ -243,6 +201,10 @@ class SmartStartContinuous(RLAgent):
         return self.param_dict
 
     def get_summary_name(self):
+        """
+        This is just for smartstart.reinforcementLearningCore.rlTrain.rlTrain
+        :return: SmartStart string including the name of the base agent
+        """
         if hasattr(self.agent, 'get_summary_name'):
             return "SmartStartC_" + self.agent.get_summary_name()
         else:
@@ -253,6 +215,9 @@ class SmartStartContinuous(RLAgent):
         return not self.smart_start_pathing
 
     def reduce_eta(self):
+        """
+        Reduces the chance of smart start happening (eta) (should happen after each episode)
+        """
         self.eta = self.eta * self.eta_decay_factor
 
     def get_smart_start_path(self):
@@ -263,16 +228,25 @@ class SmartStartContinuous(RLAgent):
         bandit problems. The smart start is chosen according to
 
         smart_start = \arg\max\limits_s\left(alpha * \max\limits_a Q(s,
-        a) + \sqrt{\frac{beta * \log\sum\limits_{s'} C(s'}{C(s}} \right)
+        a) + \sqrt{\frac{beta * \log |D| }{C(s}} \right)
 
         Where
             * \alpha = exploitation_param
             * \beta  = exploration_param
 
-        Returns
-        -------
-        :obj:`np.ndarray`
-            smart start
+        \max\limits_a Q(s,a) corresponds to V(s) which is determined by the agent
+
+        |D| is the size of the replay buffer
+
+        C(s) is the "visitation count" of the state. This is estimated through KDE #TODO scipy link
+        KDE uses gaussian functions (could be other functions) around each given point, to create an estimated
+        probability density function. This probability density estimates how likeley (if you were to stop the robot randomly)
+        the robot would be at that state. To create a "count", we find the probability of a given state, by
+        "integrating" over a single stepsize volume (volume of a hyperellipsoid where each radii is the average stepsize in that direction)
+        (intrgration is approximate, we just take PDF at the state point, and multiply by volume)
+        Then with the probability for that state, we multiply by the total number of states (|D|) to get a count
+
+        Returns: Smart Start Path (list of states with the final state being the smart start state)
         """
         if len(self.replay_buffer) == 0: # if buffer is emtpy, nothing to evaluate
             return None
@@ -331,12 +305,24 @@ class SmartStartContinuous(RLAgent):
         return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_parallel_index)
 
     def get_action(self, state):
+        """
+        Either asks the Neural Network Dynamics model to choose action (Smart STart)
+        or just lets the base agent go
+        :param state: State currently at
+        :return: action
+        """
         if self.smart_start_pathing:
             return self.nnd_mb_agent.get_action(state)
         else:
             return self.agent.get_action(state)
 
     def observe(self, state, action, reward, new_state, done):
+        """
+        Record observation to replay buffer,
+        Allow the base agent to observe the transition
+        If smart start pathing is on, check if the goal is reached
+        :return: Nothing
+        """
         # new_state added (maybe) to buffer
         self.replay_buffer.add(self, state, action, reward, done, new_state)
 
@@ -353,6 +339,14 @@ class SmartStartContinuous(RLAgent):
                     print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
+        """
+        FIRST reset smart start pathing stuffs
+        Then check if smart start will randomly happen, if so set it up (don't return)
+        Finally tell the base_agent that a new episode is happening
+        IMPORTANT: tell the replay buffer that a new episode is starting
+            (this allows the replay buffer to keep track of where episodes begin/end which is necessary in retrieving smart start PATHS)
+        :return: NOTHING
+        """
         self.smart_start_pathing = False
         self.smart_start_path = None
 

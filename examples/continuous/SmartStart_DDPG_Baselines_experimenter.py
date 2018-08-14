@@ -83,7 +83,7 @@ def task_run_ss_ddpg_baselines_mc(params):
                                                     eta = params['eta'],
                                                     eta_decay_factor = params['eta_decay_factor'],
                                                     n_ss = params['n_ss'],
-                                                    print_ss_stuff=False,
+                                                    print_ss_stuff=True,
                                                     # sigma=params['sigma'],
                                                     # smart_start_selection_modified_distance_function=params['smart_start_selection_modified_distance_function'],
                                                     nnd_mb_final_steps = params['nnd_mb_final_steps'],
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     #naming / display
     num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
-    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search'
+    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2'
 
     paramsGrid = {
         'task' : experiment_task,
@@ -197,9 +197,9 @@ if __name__ == "__main__":
         'lastLayerTanh': [lastLayerTanh],
 
         'exploitation_param': [1.],
-        'exploration_param': [1., 5.], #NOT CONSTANT
+        'exploration_param': [2.], #NOT CONSTANT
         'eta': [0.5],
-        'eta_decay_factor': [.99, .98], # NOT CONSTANT
+        'eta_decay_factor': [.99, .98, .95], # NOT CONSTANT
         'n_ss': [2000],
         # 'sigma': [1],
         # 'smart_start_selection_modified_distance_function': [True, False], #NOT CONSTANT

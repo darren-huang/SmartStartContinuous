@@ -1,13 +1,21 @@
-# SmartStart
+# SmartStartContinuous
 
 SmartStart is a novel exploration method for reinforcement learning algorithms.
 This work was done in collaboration with the Institute for Human and Machine
 Cognition ([IHMC](https://www.ihmc.us)).
 
+Previously this project was built for discrete state and action spaces. Smart Start Continuous (as the name implies) allows for continuous state and action spaces.
+
 ## Getting Started
 
-Full documentation can be found on the github pages for this project, click
+Documentation for the discrete part of this project can be found on the github pages of the base project, click
 [here](https://bartkeulen.github.io/smartstart/).
+
+For the Continuous part of the project, please look at the continuous examples in the `examples` folder. The formatting of using smart start is shown there, and the class `SmartStartContinuous` under `smartstart/smartexploration/smartexplorationcontinuous` has all the hyperparameter descriptions.
+
+## Using SmartStartContinuous
+
+The Smart Start Navigation uses a Neural Network Dynamics Estimator that relies on training data of the given environment. To generate new training data be sure to set the parameter `nnd_mb_load_existing_training_data` to `False`. To save this data set `nnd_mb_save_training_data` to `True` and be sure to set `nnd_mb_save_dir_name` to the name of the subdirectory (under `projectPath/models/NND_MB_agent/`) to save the training data.
 
 ## Windows Setup
 Before using pipenv to install the pipfile.lock requirements, we will need
@@ -27,10 +35,19 @@ Before using pipenv to install the pipfile.lock requirements, we will need
             
     2. Copy `Pipfile`/`Pipfile.lock` from `/projectDirectory/alternativePipfiles/tensorflowSelection/` to the `/projectDirectory/` replacing the current files
         
-2. Install MPI for Windows, currently I am able to get it to work with [Microsoft MPI v9.0.1](https://www.microsoft.com/en-us/download/details.aspx?id=56727)
+1. Install MPI for Windows, currently I am able to get it to work with [Microsoft MPI v9.0.1](https://www.microsoft.com/en-us/download/details.aspx?id=56727)
     
     1. NOTE: for whatever reason I had int install both the `msmpisetup.exe` and the `msmpisetup.msi`
 
+3. Install Python 3.6
+
+4. Open terminal in project directory and run `pipenv install`
+
+    * NOTE: pipenv currently has a bug, so it might say the dependencies conflict. To fix this:
+        * comment out the `baselines = "*"` and the `tensorflow = "*"`/`tensorflow-gpu = "*"` in the `Pipfile` you dragged into the project directory 
+        * run `pipenv install` again, it should resolve properly
+        * run `pipenv shell` to load into the virtual environment (this doesn't work in mingW but works with Cmder)
+        * run `pip install tensorflow`/`pip install tensorflow-gpu` and `pip install baselines`
     
 
 **Latest code can be found in Develop. The docs and gh-pages have not been updated yet.**

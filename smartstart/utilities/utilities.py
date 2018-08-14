@@ -26,6 +26,7 @@ def get_default_data_directory(foldername, create=True):
     :param foldername: name of the data folder
     :return: directory path
     """
+    #TODO make this a realtive path to current directory rather than absolut (if you want to make it a package)
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../',
                  'data/')
     path = os.path.join(path, foldername)

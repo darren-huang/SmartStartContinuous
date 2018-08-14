@@ -110,6 +110,13 @@ def get_hidden_layer_label(main_summaries, show_seed=False):
         retStr += "_seed-" + str(pd['zz_RANDOM_SEED'])
     return retStr
 
+def get_hyper_param_label(main_summaries, show_seed=False):
+    pd = main_summaries[0].param_dict
+    exploration_param_str = "_explorP-" + str(pd['exploration_param'])
+    eta_decay_str = "_etaDecay-" + str(pd['eta_decay_factor'])
+    wp_give_up_str = "_wpGiveUp-" + str(pd['nnd_mb_steps_before_giving_up_on_waypoint'])
+    seed_str = "_seed-" + str(pd['zz_RANDOM_SEED']) if show_seed else ""
+    return exploration_param_str + eta_decay_str + wp_give_up_str + seed_str
 
 def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
     print("\nBatch Begin" + "#" * 150)
@@ -120,18 +127,10 @@ def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
 if __name__ == "__main__":
     first_num_episodes = None
     # target_default_directory = "ddpg_baselines_summaries/hidden_layer_size_experiment"
-    target_default_directory = "ddpg_baselines_summaries/good_params"
+    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2"
     notSummary = True
 
-#     files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-64-32.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-64-32.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-128-64.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-128-64.0-0d001_c-128-64.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-128-64.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json
-# MountainCarContinuous-v0_a-200-100.0-0d001_c-200-100.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
-#     files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
-    files = """MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json""".split()
+    files = """MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json""".split()
 
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
     #COLOR PARAMETERS #################################################################################
@@ -156,6 +155,7 @@ if __name__ == "__main__":
     show_seed=False
     linewidth = 2
     scale_up = False
+    label_func = get_hyper_param_label
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length
@@ -181,7 +181,7 @@ if __name__ == "__main__":
             main_summaries = get_glob_summaries(file_path) # loads all summary files found by glob
 
             # legend for labelling different files that go on the same graphs
-            labels.append(get_hidden_layer_label(main_summaries, show_seed=show_seed))
+            labels.append(label_func(main_summaries, show_seed=show_seed))
 
             # plotting the best paths (and last path) on the first file found by glob
             if plot_path_bool:

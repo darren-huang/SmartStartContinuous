@@ -12,9 +12,13 @@ import numpy as np
 class ReplayBuffer(object):
     """
     A buffer with a First in First Out policy,
+
     Stores vectors of (state, action, reward, terminal, new_state),
+
     Upon calling the start_new_episode method creates a marker to mark where said episode begins
+
     Can create sample batches (random entries from the buffer)
+
     NOTE: the add method only allows the self.main_agent from adding entries, this way if multiple agents try to add
             to the replay buffer, only one state entry will add (this is the case with Smart Starts)
     """

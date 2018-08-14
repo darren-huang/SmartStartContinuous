@@ -27,8 +27,9 @@ plotting options
 
 
 Document Stuffs
-get_smart_start_path documentation
-Installation guide: -> explain how to setup pipenv stuffs
-Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
-
+                                                get_smart_start_path documentation
+                                                Installation guide: -> explain how to setup pipenv stuffs
+                                                Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
+                                                (could be better ^)
+fix paper references -> TODO's, these will reference the research papers
 Refactor it such that "get default data directory" uses relative paths, not absolute
