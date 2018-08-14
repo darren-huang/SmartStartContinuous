@@ -1,8 +1,7 @@
 import argparse
 
 import tensorflow as tf
-from baselines.ddpg.ddpg import DDPG
-# from baselines.ddpg.models import Actor, Critic
+from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.ddpg_editted import DDPG_editted
 from baselines.ddpg.noise import *
 
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
@@ -179,16 +178,16 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
             critic = Critic_Editted(layer_norm=layer_norm, h1=critic_h1, h2=critic_h2, lastLayerTanh=lastLayerTanh)
             actor = Actor_Editted(nb_actions, layer_norm=layer_norm, h1=actor_h1, h2=actor_h2, lastLayerTanh=lastLayerTanh)
 
-            self.inner_ddpg = DDPG(actor, critic, self.memory, env.observation_space.shape,
-                                   env.action_space.shape,
-                                   gamma=gamma, tau=tau, normalize_returns=normalize_returns,
-                                   normalize_observations=normalize_observations,
-                                   batch_size=batch_size, action_noise=self.decaying_ou_action_noise,
-                                   param_noise=param_noise,
-                                   critic_l2_reg=critic_l2_reg,
-                                   actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart,
-                                   clip_norm=clip_norm,
-                                   reward_scale=reward_scale)
+            self.inner_ddpg = DDPG_editted(actor, critic, self.memory, env.observation_space.shape,
+                                           env.action_space.shape,
+                                           gamma=gamma, tau=tau, normalize_returns=normalize_returns,
+                                           normalize_observations=normalize_observations,
+                                           batch_size=batch_size, action_noise=self.decaying_ou_action_noise,
+                                           param_noise=param_noise,
+                                           critic_l2_reg=critic_l2_reg,
+                                           actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart,
+                                           clip_norm=clip_norm,
+                                           reward_scale=reward_scale)
 
             self.inner_ddpg.initialize(self.sess)
             if finalizeGraph:
@@ -196,9 +195,13 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
             self.inner_ddpg.reset()
 
     def get_state_value(self, state):
-        raw_action, q = self.inner_ddpg.pi(state, apply_noise=True,
-                                           compute_Q=True)  # DDPG action is always [-1,1]
-        return q[0][0] #TODO undo [0][0] so u can parallelize
+        # raw_action, q = self.inner_ddpg.pi(state, apply_noise=True,
+        #                                    compute_Q=True)  # DDPG action is always [-1,1]
+        if len(state.shape) == 1:
+            q = self.inner_ddpg.get_q_value(state, single=True)[0]
+        else:
+            q = self.inner_ddpg.get_q_value(state, single=False)[0]
+        return q #TODO undo [0][0] so u can parallelize
 
     def get_action(self, state):
         """Returns action for obs

@@ -50,7 +50,7 @@ def plot_file_rewards(file_path_s, ma_window=1, dots=True, colors=None, linestyl
 
     return ax1, ax2, ax3, ax4, fig
 
-def plot_file_paths(summary):
+def plot_file_paths(summary, scale_up):
     # Settings##############################
     # waypoint size
     linewidth = 3
@@ -67,6 +67,8 @@ def plot_file_paths(summary):
     path_stds, path_means = path_deltas_stds_and_means_per_dim(path)  # Get State Statistics
     print("Last Traj: STD's: {}, Means: {}".format(path_stds, path_means))
     radii = (path_means + (path_stds * num_stds_per_step)) * num_steps_in_waypoint_radii  # radii for waypoints
+    if scale_up:
+        radii = radii * (len(radii) ** .5)
     ## Plot Paths/Trajectories
     plot_path(path,
               title=title,
@@ -85,6 +87,8 @@ def plot_file_paths(summary):
     path_stds, path_means = path_deltas_stds_and_means_per_dim(path) # Get State Statistics
     print("Best Traj: STD's: {}, Means: {}".format(path_stds, path_means))
     radii = radii_calc(path_means, path_stds, num_means_per_step, num_stds_per_step, num_steps_in_waypoint_radii) # radii for waypoints
+    if scale_up:
+        radii = radii * (len(radii) ** .5)
 
 
     ## Plot Paths/Trajectories
@@ -129,7 +133,6 @@ if __name__ == "__main__":
 #     files = """MountainCarContinuous-v0_a-64-32.0-0d001_c-64-32.0-0d001_1000ep_NoGPU_noNorm_LLTanh-decayingNoise_*.json""".split()
     files = """MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json""".split()
 
-
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
     #COLOR PARAMETERS #################################################################################
     # blue, red, cyan = '001FFF', '#FF0000',
@@ -152,6 +155,7 @@ if __name__ == "__main__":
     average_over_glob_wildcards=True
     show_seed=False
     linewidth = 2
+    scale_up = False
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length
@@ -181,7 +185,7 @@ if __name__ == "__main__":
 
             # plotting the best paths (and last path) on the first file found by glob
             if plot_path_bool:
-                plot_file_paths(main_summaries[0])
+                plot_file_paths(main_summaries[0], scale_up)
 
             # printing out the parameter dictionary of the first file found by glob
             if print_param_dict and main_summaries[0].param_dict:

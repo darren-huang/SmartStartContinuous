@@ -83,8 +83,9 @@ def task_run_ss_ddpg_baselines_mc(params):
                                                     eta = params['eta'],
                                                     eta_decay_factor = params['eta_decay_factor'],
                                                     n_ss = params['n_ss'],
+                                                    print_ss_stuff=False,
                                                     # sigma=params['sigma'],
-                                                    smart_start_selection_modified_distance_function=params['smart_start_selection_modified_distance_function'],
+                                                    # smart_start_selection_modified_distance_function=params['smart_start_selection_modified_distance_function'],
                                                     nnd_mb_final_steps = params['nnd_mb_final_steps'],
                                                     nnd_mb_steps_per_waypoint = params['nnd_mb_steps_per_waypoint'],
                                                     nnd_mb_mean_per_stepsize = params['nnd_mb_mean_per_stepsize'],
@@ -94,6 +95,7 @@ def task_run_ss_ddpg_baselines_mc(params):
                                                     nnd_mb_horizontal_penalty_factor = params['nnd_mb_horizontal_penalty_factor'],
                                                     nnd_mb_horizon = params['nnd_mb_horizon'],
                                                     nnd_mb_num_control_samples = params['nnd_mb_num_control_samples'],
+                                                    nnd_mb_path_shortcutting= params['nnd_mb_path_shortcutting'],
                                                     nnd_mb_load_dir_name = params['nnd_mb_load_dir_name'],
                                                     nnd_mb_load_existing_training_data = params['nnd_mb_load_existing_training_data'],
                                                     nnd_mb_num_fc_layers = params['nnd_mb_num_fc_layers'],
@@ -206,6 +208,7 @@ if __name__ == "__main__":
         'nnd_mb_horizontal_penalty_factor': [.5],
         'nnd_mb_horizon': [4],
         'nnd_mb_num_control_samples': [5000],
+        'nnd_mb_path_shortcutting' : [True],
         'nnd_mb_load_dir_name': ["default"],
         'nnd_mb_load_existing_training_data': [True],
         'nnd_mb_num_fc_layers': [1],
@@ -218,7 +221,7 @@ if __name__ == "__main__":
         'nnd_mb_make_aggregated_dataset_noisy': [True],
         'nnd_mb_make_training_dataset_noisy': [True],
         'nnd_mb_noise_actions_during_MPC_rollouts': [True],
-        'nnd_mb_verbose': [True],
+        'nnd_mb_verbose': [False],
 
         'get_extra_name' : [get_extra_name]
     }

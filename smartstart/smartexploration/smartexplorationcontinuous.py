@@ -95,6 +95,7 @@ class SmartStartContinuous(RLAgent):
                  eta=0.5,
                  eta_decay_factor=1,
                  n_ss=1000,
+                 print_ss_stuff=True,
                  # sigma=1, #used in silverman's rule of thumb?
                  # smart_start_selection_modified_distance_function=True,
 
@@ -108,6 +109,7 @@ class SmartStartContinuous(RLAgent):
                  nnd_mb_horizontal_penalty_factor=.5,
                  nnd_mb_horizon=20,
                  nnd_mb_num_control_samples=5000,
+                 nnd_mb_path_shortcutting=True,
 
                  nnd_mb_save_dir_name="save_untitled",
                  nnd_mb_load_dir_name="untitled_load",
@@ -184,6 +186,7 @@ class SmartStartContinuous(RLAgent):
 
 
         self.n_ss = n_ss # number of states in buffer to consider for being Smart Start State
+        self.print_ss_stuff = print_ss_stuff
 
         # keep track of SmartStartPathing vs. NormalAgentPathing
         self.smart_start_pathing = False
@@ -204,6 +207,7 @@ class SmartStartContinuous(RLAgent):
                                          horizontal_penalty_factor=nnd_mb_horizontal_penalty_factor,
                                          horizon=nnd_mb_horizon,
                                          num_control_samples=nnd_mb_num_control_samples,
+                                         path_shortcutting=nnd_mb_path_shortcutting,
 
                                          save_dir_name=nnd_mb_save_dir_name,
                                          load_dir_name=nnd_mb_load_dir_name,
@@ -271,22 +275,13 @@ class SmartStartContinuous(RLAgent):
         """
         if len(self.replay_buffer) == 0: # if buffer is emtpy, nothing to evaluate
             return None
-
         possible_start_indices = self.replay_buffer.get_possible_smart_start_indices(self.n_ss)
-
-        if not possible_start_indices: # no valid states then return None
+        if possible_start_indices is None: # no valid states then return None
             return None
-
-        smart_start_index = None
-        max_ucb = -float('inf')
-
-        # if self.nnd_mb_agent.stds is not None:
-        #     self.sigma = self.nnd_mb_agent.stds
-
-        #find the smart_start state TODO PARALLELEIZE WITH NUMPY (if self.agent.get_state_value can do states in parallel we can parallelize it)
+        #find the smart_start state
         all_states = self.replay_buffer.get_all_states()  # n x d matrix where n is the number of states and d is dim
 
-        ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ######################################################
+        ##################### KERNEL CALCULATIONS AND ELLIPSOID VOLUME ############################
         kernel = scipy.stats.gaussian_kde(all_states.T, bw_method='scott') #TODO options for what type of bandwith calc
         # plot_2d_density(all_states.T[0], all_states.T[1], kernel) #TODO remove plot
         if self.nnd_mb_agent.radii is not None:
@@ -297,23 +292,28 @@ class SmartStartContinuous(RLAgent):
         else:
             one_radii_volume = 1  # 100% arbitrary TODO: get std of last path maybe for both of these
 
+        ################### PARALLEL UCB CALC #########################################################
+        t1 = time.time()
+        possible_ss_steps = np.array(self.replay_buffer.buffer)[possible_start_indices]
+        possible_ss_states = np.asarray(self.replay_buffer.steps_to_s2(possible_ss_steps).tolist()) #use tolist, because it renders as a numpy array of objects (not of floats)
+        ss_state_values = self.agent.get_state_value(possible_ss_states).T # 1 x n matrix (equiv n long list)
+        probability_densities = (kernel(possible_ss_states.T) * one_radii_volume) # 1 x n matrix (equiv n long list)
+        C_hats = len(self.replay_buffer) * probability_densities
+        ucb_list = self.exploitation_param * ss_state_values + \
+              np.sqrt((self.exploration_param *
+                       np.log(len(self.replay_buffer))) / C_hats)
+        smart_start_parallel_index = possible_start_indices[np.argmax(ucb_list)]
+
+        ######### For loop setup #####################################################################
+        t2 = time.time()
+        smart_start_index = None
+        max_ucb = -float('inf')
+
         for main_step_index in possible_start_indices:
             # state value
             main_step = self.replay_buffer.buffer[main_step_index]
             state = self.replay_buffer.step_to_s2(main_step)
-            state_value = self.agent.get_state_value(state)
-
-
-            #MANUAL CALCULATION, seems wrong (univariate kernel density estimation was used, but i have multivariable data)
-            # # C_hat calculation###############
-            # # bandwith
-            # h = ((4 / (3 * len(self.replay_buffer))) ** (1 / 5)) * self.sigma  # silverman's rule of thumb
-            # if self.smart_start_selection_modified_distance_function and self.nnd_mb_agent.distance_function:
-            #     C_hat_temp_arr = self.K((self.nnd_mb_agent.distance_function(state / h, all_states / h)))
-            # else:
-            #     C_hat_temp_arr = self.K(np.linalg.norm((state / h) - (all_states / h), axis=1))
-            # C_hat = np.sum(C_hat_temp_arr / h)
-
+            state_value = self.agent.get_state_value(state)[0][0]
 
             #SCIPY Kernel Density Estimation TODO document what math was used and what resources
             probability_density = (kernel(state.T) * one_radii_volume)[0]
@@ -327,6 +327,7 @@ class SmartStartContinuous(RLAgent):
                 smart_start_index = main_step_index
                 max_ucb = ucb
 
+        print("Parallel took: " + str(t2 - t1) + "      |Iterative took: " + str(time.time() - t2) + " | " + str(smart_start_index == smart_start_parallel_index))
         return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_index)
 
     def get_action(self, state):
@@ -347,43 +348,39 @@ class SmartStartContinuous(RLAgent):
             self.nnd_mb_agent.observe(state, action, reward, new_state, done)
             if self.nnd_mb_agent.close_enough_to_goal(new_state):
                 self.smart_start_pathing = False
-                print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
-                print("END OF SMART START STUFFS")
+                if self.print_ss_stuff:
+                    print("distance to goal: " + str(self.nnd_mb_agent.distance_function(new_state,self.smart_start_path[-1])))
+                    print("END OF SMART START STUFFS")
 
     def start_new_episode(self, state):
-        #TO/DO REMOVE FOLLOWING THIS IS JUST FOR TESTING
-        # if True:
+        self.smart_start_pathing = False
+        self.smart_start_path = None
+
         if np.random.rand() <= self.eta: #eta is probability of using smartStart
 
             #TODO remove the random plotting
             start_time = time.time()
             self.smart_start_path = self.get_smart_start_path() # new state to navigate to
-
+            end_time = time.time()
             if self.smart_start_path: #ensure path exists
-                #TODO: remove the floowing plotting
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-                # self.times_for_smart_start.append(elapsed_time)
-                # if len(self.times_for_smart_start) % 10 == 0:
-                #     plt.title("Times for Calculating Smart Start Path")
-                #     plt.plot(self.times_for_smart_start)
-                #     plt.show()
-                print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
-
-
-                print("\npath exists")
+                if self.print_ss_stuff:
+                    elapsed_time = end_time - start_time
+                    print("Calculate Smart Start Path Time: " + str(elapsed_time), end='')
+                    print("\npath exists")
                 # let neural network dynamics model based controller load the path
                 self.nnd_mb_agent.start_new_episode_plan(state, self.smart_start_path)
                 if not self.nnd_mb_agent.close_enough_to_goal(state): #ensure goal hasn't already been reached
                     self.smart_start_pathing = True #this start smart start navigation
-                    print("SMART_START START!!!")
-                    return "smart_start"
+                    if self.print_ss_stuff:
+                        print("SMART_START START!!!")
 
         self.agent.start_new_episode(state)
         self.replay_buffer.start_new_episode(self)
 
     def end_episode(self):
         self.reduce_eta() #reduces the change of smart start
+        self.smart_start_pathing = False
+        self.smart_start_path = None
 
     def render(self, env, **kwargs):
         return env.render()
@@ -401,7 +398,7 @@ RANDOM_SEED = args.seed
 if __name__ == "__main__":
     import random
     import gym
-    from smartstart.reinforcementLearningCore.rlTrain import rlTrain
+    from smartstart.reinforcementLearningCore.rlTrain import rlTrain, rlTrainGraphSS
 
     episodes = 1000
     lastLayerTanh = True
@@ -460,7 +457,7 @@ if __name__ == "__main__":
                                                      eta=0.5,
                                                      eta_decay_factor=1,
                                                      n_ss=2000,
-                                                     # smart_start_selection_modified_distance_function=True,
+                                                     print_ss_stuff=True,
 
                                                      nnd_mb_final_steps=10,
                                                      nnd_mb_steps_per_waypoint=1,
@@ -471,13 +468,14 @@ if __name__ == "__main__":
                                                      nnd_mb_gamma=.75,
                                                      nnd_mb_horizontal_penalty_factor=.5,
                                                      nnd_mb_horizon=4,
-                                                     nnd_mb_num_control_samples=5000,
+                                                     nnd_mb_num_control_samples=500,
+                                                     nnd_mb_path_shortcutting=True,
 
                                                      nnd_mb_load_dir_name="default",
                                                      nnd_mb_load_existing_training_data=True,
 
                                                      nnd_mb_num_fc_layers=1,
-                                                     nnd_mb_depth_fc_layers=500,
+                                                     nnd_mb_depth_fc_layers=32,
                                                      nnd_mb_batchsize=512,
                                                      nnd_mb_lr=0.001,
                                                      nnd_mb_nEpoch=30,
@@ -487,13 +485,24 @@ if __name__ == "__main__":
                                                      nnd_mb_make_training_dataset_noisy=True,
                                                      nnd_mb_noise_actions_during_MPC_rollouts=True,
 
-                                                     nnd_mb_verbose=True)
+                                                     nnd_mb_verbose=False)
             sess.graph.finalize()
 
             # Train the agent, summary contains training data
-            summary = rlTrain(smart_start_agent, env, render=args.render,
-                              render_episode=False,
-                              print_results=True, num_episodes=episodes)  # type: Summary
+            # summary = rlTrain(smart_start_agent, env, render=args.render,
+            #                   render_episode=False,
+            #                   print_steps=False,
+            #                   print_results=False,
+            #                   num_episodes=episodes,
+            #                   print_time=True)  # type: Summary
+            summary = rlTrainGraphSS(smart_start_agent, env,
+                                     render=args.render,
+                                     render_episode=False,
+                                     print_steps=False,
+                                     print_results=False,
+                                     num_episodes=episodes,
+                                     plot_ss_stuff=True,
+                                     print_time=False)
 
             noGpu_str = "-NoGPU" if noGpu else ""
             llTanh_str = "-LLTanh" if lastLayerTanh else ""
