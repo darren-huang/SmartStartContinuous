@@ -126,10 +126,11 @@ def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
 
 if __name__ == "__main__":
     first_num_episodes = None
-    # target_default_directory = "ddpg_baselines_summaries/hidden_layer_size_experiment"
-    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2"
-    notSummary = True
+    # target_default_directory = "ddpg_baselines_summaries/good_params"
+    # files = "MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json".split()
 
+
+    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2"
     files = """MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json""".split()
 
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
@@ -147,15 +148,17 @@ if __name__ == "__main__":
 
     # OTHER PARAMETERS ################################################################################
     ma_window = 1
-    num_plots_per_graph = len(colors)
     plot_path_bool = False
     print_param_dict = False
-    smart_start_dots = False
-    average_over_glob_wildcards=True
+    smart_start_dots = True
+    average_over_glob_wildcards=False
     show_seed=False
     linewidth = 2
     scale_up = False
     label_func = get_hyper_param_label
+    # label_func = get_hidden_layer_label
+    num_plots_per_graph = 1  # len(colors)
+    max_num_windows = 5
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length
@@ -168,6 +171,8 @@ if __name__ == "__main__":
 
     num_plots_per_graph = min(num_plots_per_graph, len(file_path_s_all))
     colors, linestyles = colors[:num_plots_per_graph], linestyles[:num_plots_per_graph]
+
+    windows = 0
     #process the graph into chunks ('num_plots_per_graph' at a time)
     for file_path_s_batch in [file_path_s_all[i:i + num_plots_per_graph] for i in range(0, len(file_path_s_all), num_plots_per_graph)]:
 
@@ -197,4 +202,7 @@ if __name__ == "__main__":
         print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch)
 
         plot_set_legend_lines(colors, labels,linestyles=linestyles, axis=ax4)
-        show_plot()
+        windows += 1
+        if windows % max_num_windows == 0:
+            show_plot()
+    show_plot()
