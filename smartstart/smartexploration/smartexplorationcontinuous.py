@@ -110,6 +110,7 @@ class SmartStartContinuous(RLAgent):
                  nnd_mb_horizon=20,
                  nnd_mb_num_control_samples=5000,
                  nnd_mb_path_shortcutting=True,
+                 nnd_mb_steps_before_giving_up_on_waypoint=5,
 
                  nnd_mb_save_dir_name="save_untitled",
                  nnd_mb_load_dir_name="untitled_load",
@@ -208,6 +209,7 @@ class SmartStartContinuous(RLAgent):
                                          horizon=nnd_mb_horizon,
                                          num_control_samples=nnd_mb_num_control_samples,
                                          path_shortcutting=nnd_mb_path_shortcutting,
+                                         steps_before_giving_up_on_waypoint=nnd_mb_steps_before_giving_up_on_waypoint,
 
                                          save_dir_name=nnd_mb_save_dir_name,
                                          load_dir_name=nnd_mb_load_dir_name,
@@ -293,7 +295,7 @@ class SmartStartContinuous(RLAgent):
             one_radii_volume = 1  # 100% arbitrary TODO: get std of last path maybe for both of these
 
         ################### PARALLEL UCB CALC #########################################################
-        t1 = time.time()
+        # t1 = time.time()
         possible_ss_steps = np.array(self.replay_buffer.buffer)[possible_start_indices]
         possible_ss_states = np.asarray(self.replay_buffer.steps_to_s2(possible_ss_steps).tolist()) #use tolist, because it renders as a numpy array of objects (not of floats)
         ss_state_values = self.agent.get_state_value(possible_ss_states).T # 1 x n matrix (equiv n long list)
@@ -304,31 +306,30 @@ class SmartStartContinuous(RLAgent):
                        np.log(len(self.replay_buffer))) / C_hats)
         smart_start_parallel_index = possible_start_indices[np.argmax(ucb_list)]
 
-        ######### For loop setup #####################################################################
-        t2 = time.time()
-        smart_start_index = None
-        max_ucb = -float('inf')
-
-        for main_step_index in possible_start_indices:
-            # state value
-            main_step = self.replay_buffer.buffer[main_step_index]
-            state = self.replay_buffer.step_to_s2(main_step)
-            state_value = self.agent.get_state_value(state)[0][0]
-
-            #SCIPY Kernel Density Estimation TODO document what math was used and what resources
-            probability_density = (kernel(state.T) * one_radii_volume)[0]
-            C_hat = len(all_states) * probability_density
-
-            #ucb calculation
-            ucb = self.exploitation_param * state_value + \
-                  np.sqrt((self.exploration_param *
-                           np.log(len(self.replay_buffer))) / C_hat)
-            if ucb > max_ucb:
-                smart_start_index = main_step_index
-                max_ucb = ucb
-
-        print("Parallel took: " + str(t2 - t1) + "      |Iterative took: " + str(time.time() - t2) + " | " + str(smart_start_index == smart_start_parallel_index))
-        return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_index)
+        # ######### For loop setup #####################################################################
+        # t2 = time.time()
+        # smart_start_index = None
+        # max_ucb = -float('inf')
+        #
+        # for main_step_index in possible_start_indices:
+        #     # state value
+        #     main_step = self.replay_buffer.buffer[main_step_index]
+        #     state = self.replay_buffer.step_to_s2(main_step)
+        #     state_value = self.agent.get_state_value(state)[0][0]
+        #
+        #     #SCIPY Kernel Density Estimation TODO document what math was used and what resources
+        #     probability_density = (kernel(state.T) * one_radii_volume)[0]
+        #     C_hat = len(all_states) * probability_density
+        #
+        #     #ucb calculation
+        #     ucb = self.exploitation_param * state_value + \
+        #           np.sqrt((self.exploration_param *
+        #                    np.log(len(self.replay_buffer))) / C_hat)
+        #     if ucb > max_ucb:
+        #         smart_start_index = main_step_index
+        #         max_ucb = ucb
+        # print("Parallel took: " + str(t2 - t1) + "      |Iterative took: " + str(time.time() - t2) + " | " + str(smart_start_index == smart_start_parallel_index))
+        return self.replay_buffer.get_episodic_path_to_buffer_index(smart_start_parallel_index)
 
     def get_action(self, state):
         if self.smart_start_pathing:
@@ -470,6 +471,7 @@ if __name__ == "__main__":
                                                      nnd_mb_horizon=4,
                                                      nnd_mb_num_control_samples=500,
                                                      nnd_mb_path_shortcutting=True,
+                                                     nnd_mb_steps_before_giving_up_on_waypoint=5,
 
                                                      nnd_mb_load_dir_name="default",
                                                      nnd_mb_load_existing_training_data=True,

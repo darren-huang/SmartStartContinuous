@@ -18,14 +18,16 @@ Get Smart Start Tests running
                                                 adjust distance function (currently 1 step in one dimension = distance of 1, switch to 1 step in ALL dimensions = distance of 1)
                                                 Change distance function to take in multiple (from both sides, output matrix)
                                                 Path shortcuts
-    Fully switch to parallel smart start calc
+                                                Added Waypoint Give ups
+                                                Fully switch to parallel smart start calc
 
-
+    run experiments
 
 plotting options
 
 
 Document Stuffs
+get_smart_start_path documentation
 Installation guide: -> explain how to setup pipenv stuffs
 Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
 

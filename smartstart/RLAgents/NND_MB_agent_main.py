@@ -46,6 +46,7 @@ if __name__ == "__main__":
     horizontal_penalty_factor = .5
     N=500
     path_shortcutting = True
+    steps_before_giving_up_on_waypoint=5
 
     # trainer options
     num_episodes = 10
@@ -69,6 +70,7 @@ if __name__ == "__main__":
                              gamma=gamma, horizontal_penalty_factor=horizontal_penalty_factor,
                              horizon=horizon, num_control_samples=N,
                              path_shortcutting=path_shortcutting,
+                             steps_before_giving_up_on_waypoint=steps_before_giving_up_on_waypoint,
                              num_episodes_for_aggregation=num_episodes_for_aggregation,
                              save_dir_name=save_dir,
                              load_dir_name=load_dir,

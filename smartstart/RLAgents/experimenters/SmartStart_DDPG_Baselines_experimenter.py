@@ -96,6 +96,7 @@ def task_run_ss_ddpg_baselines_mc(params):
                                                     nnd_mb_horizon = params['nnd_mb_horizon'],
                                                     nnd_mb_num_control_samples = params['nnd_mb_num_control_samples'],
                                                     nnd_mb_path_shortcutting= params['nnd_mb_path_shortcutting'],
+                                                    nnd_mb_steps_before_giving_up_on_waypoint=params['nnd_mb_steps_before_giving_up_on_waypoint'],
                                                     nnd_mb_load_dir_name = params['nnd_mb_load_dir_name'],
                                                     nnd_mb_load_existing_training_data = params['nnd_mb_load_existing_training_data'],
                                                     nnd_mb_num_fc_layers = params['nnd_mb_num_fc_layers'],
@@ -193,7 +194,7 @@ if __name__ == "__main__":
         'lastLayerTanh': [lastLayerTanh],
 
         'exploitation_param': [1.],
-        'exploration_param': [1., 2., 5.], #NOT CONSTANT
+        'exploration_param': [1., 5.], #NOT CONSTANT
         'eta': [0.5],
         'eta_decay_factor': [.99, .98], # NOT CONSTANT
         'n_ss': [2000],
@@ -209,6 +210,7 @@ if __name__ == "__main__":
         'nnd_mb_horizon': [4],
         'nnd_mb_num_control_samples': [5000],
         'nnd_mb_path_shortcutting' : [True],
+        'nnd_mb_steps_before_giving_up_on_waypoint' : [3, 5, 8], #NOT CONSTANT
         'nnd_mb_load_dir_name': ["default"],
         'nnd_mb_load_existing_training_data': [True],
         'nnd_mb_num_fc_layers': [1],

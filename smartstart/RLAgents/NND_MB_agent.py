@@ -101,6 +101,8 @@ class NND_MB_agent(NavigationRLAgent):  # Neural Network Dynamics Model Based Ag
         :param num_control_samples: Path following generates this many random sequences of actions (each sequence is 'horizon' long)
                                     Controller will choose the action sequence with the best reward
         :param path_shortcutting: given a path to follow, whether or not to try to take shortcuts (based on numerical.py's 'path_shortcutter')
+        :param steps_before_giving_up_on_waypoint: when tracking a path, after doing this many steps and not advancing to the next waypoint,
+                                                    the agent will give up on current waypoint and move onto the next one (if it exists)
 
         ##################################    SAVING/LOADING STUFFS       #########################################################
         :param save_dir_name: the name of the directory the model will be saved
