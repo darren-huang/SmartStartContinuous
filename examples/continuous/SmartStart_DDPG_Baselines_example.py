@@ -3,6 +3,7 @@ import time
 import tensorflow as tf
 
 from RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
+from environments.continuous_mountain_car_editted import Continuous_MountainCarEnv_Editted
 from smartexploration.smartexplorationcontinuous import SmartStartContinuous
 from utilities.utilities import set_global_seeds, get_default_data_directory
 
@@ -15,16 +16,17 @@ noGpu = args.noGpu
 RANDOM_SEED = args.seed
 
 if __name__ == "__main__":
-    import random
-    import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain, rlTrainGraphSS
 
     episodes = 1000
     lastLayerTanh = True
 
     # configuring environment
-    ENV_NAME = 'MountainCarContinuous-v0'
-    env = gym.make(ENV_NAME)
+    # ENV_NAME = 'MountainCarContinuous-v0'
+    # env = gym.make(ENV_NAME)
+    env = Continuous_MountainCarEnv_Editted.make_timed_env(.33,
+                                                           max_episode_steps=1000,
+                                                           max_episode_seconds=None)
 
     if noGpu:
         tfConfig = tf.ConfigProto(device_count={'GPU': 0})
@@ -73,7 +75,7 @@ if __name__ == "__main__":
 
                                                      buffer_size=100000,
                                                      exploitation_param=1.,
-                                                     exploration_param=1.,
+                                                     exploration_param=2.,
                                                      eta=0.5,
                                                      eta_decay_factor=.99,
                                                      n_ss=2000,
@@ -122,7 +124,7 @@ if __name__ == "__main__":
                                      print_steps=False,
                                      print_results=False,
                                      num_episodes=episodes,
-                                     plot_ss_stuff=False,
+                                     plot_ss_stuff=True,
                                      print_time=True)
 
             #naming stuff

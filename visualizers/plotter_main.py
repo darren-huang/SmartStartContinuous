@@ -159,14 +159,14 @@ if __name__ == "__main__":
     target_default_directory = ""
     # files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/*.json""".split()
 # ddpg_baselines_summaries/good_params/*.json""".split()
-    files = """data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_0.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_1.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_2.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_3.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_4.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_5.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_6.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_7.json""".replace("data/","").split()
+    files = """data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_0.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_1.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_2.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_3.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_4.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_5.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_6.json
+data/smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.33-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_7.json""".replace("data/","").split()
 
     # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix"
     # files = """*.json""".split()
@@ -183,7 +183,7 @@ data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousA
     num_plots_per_graph = min(num_plots_per_graph, len(file_path_s_all))
     colors, linestyles = colors[:num_plots_per_graph], linestyles[:num_plots_per_graph]
 
-    windows = 0
+    windows_count = 0
     #process the graph into chunks ('num_plots_per_graph' at a time)
     for file_path_s_batch in [file_path_s_all[i:i + num_plots_per_graph] for i in range(0, len(file_path_s_all), num_plots_per_graph)]:
 
@@ -213,7 +213,7 @@ data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousA
         print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch)
 
         plot_set_legend_lines(colors, labels,linestyles=linestyles, axis=ax4)
-        windows += 1
-        if windows % max_num_windows == 0:
+        windows_count += 1
+        if windows_count % max_num_windows == 0:
             show_plot()
     show_plot()

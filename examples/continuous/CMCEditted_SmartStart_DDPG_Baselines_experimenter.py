@@ -1,6 +1,7 @@
 import gym
 import random
 
+from environments.continuous_mountain_car_editted import Continuous_MountainCarEnv_Editted
 from smartstart.RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
 from smartstart.smartexploration.smartexplorationcontinuous import SmartStartContinuous
 from smartstart.reinforcementLearningCore.rlTrain import rlTrain
@@ -29,8 +30,9 @@ def task_run_ss_ddpg_baselines_mc(params):
     get_extra_name = params['get_extra_name']
 
     # configuring environment
-    ENV_NAME = 'MountainCarContinuous-v0'
-    env = gym.make(ENV_NAME)
+    env = Continuous_MountainCarEnv_Editted.make_timed_env(params['power_scalar'],
+                                                           max_episode_steps=params['max_episode_steps'],
+                                                           max_episode_seconds=params['max_episode_seconds'])
 
     if noGpu:
         tfConfig = tf.ConfigProto(device_count={'GPU': 0})
@@ -148,7 +150,7 @@ if __name__ == "__main__":
     experiment_task = task_run_ss_ddpg_baselines_mc
 
     #changeable parameter
-    num_exp_per_param = 25
+    num_exp_per_param = 50
     episodes = 1000
     noGpu = True
     lastLayerTanh = True
@@ -157,7 +159,7 @@ if __name__ == "__main__":
     #naming / display
     num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
-    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix'
+    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted'
 
     paramsGrid = {
         'task' : experiment_task,
@@ -168,6 +170,9 @@ if __name__ == "__main__":
         'decayingNoise' : [decaying_noise],
         'dir_name' : [dir_name],
         'noGpu' : [noGpu],
+        'power_scalar': [.4],  # CONSTANT
+        'max_episode_steps': [1000],
+        'max_episode_seconds': [None],
 
         'buffer_size': [100000],
         'batch_size': [64],
@@ -199,7 +204,7 @@ if __name__ == "__main__":
         'exploitation_param': [1.],
         'exploration_param': [2.], #  CONSTANT
         'eta': [0.5],
-        'eta_decay_factor': [.99], #  CONSTANT
+        'eta_decay_factor': [.99, .995], #  NOT CONSTANT
         'n_ss': [2000],
         'nnd_mb_final_steps': [10],
         'nnd_mb_steps_per_waypoint': [1],
@@ -237,5 +242,5 @@ if __name__ == "__main__":
     else:
         fc_layer_str = ""
     create_experimeter_info_txt(paramsGrid, get_default_data_directory(dir_name),
-                                name_append= "_" + str(episodes) + "ep" + noGpu_str + llTanh_str + decayingNoise_str + fc_layer_str)
+                                name_append= "_MountainCarContEditted_" + str(episodes) + "ep" + noGpu_str + llTanh_str + decayingNoise_str + fc_layer_str)
     run_experiment(paramsGrid, n_processes=-1)
