@@ -102,7 +102,7 @@ def plot_file_paths(summary, scale_up):
               radii=radii,
               linewidth=linewidth)
 
-def get_hidden_layer_label(main_summaries, show_seed=False):
+def get_hidden_layer_label(file_path, main_summaries, show_seed=False):
     pd = main_summaries[0].param_dict
     retStr =  "a-" + str(pd['actor_h1']) + "-" + str(int(pd['actor_h2'])) + "-" + str(pd['actor_lr']) + "_" + \
               "c-" + str(pd['critic_h1']) + "-" + str(int(pd['critic_h2'])) + "-" + str(pd['critic_lr'])
@@ -110,13 +110,16 @@ def get_hidden_layer_label(main_summaries, show_seed=False):
         retStr += "_seed-" + str(pd['zz_RANDOM_SEED'])
     return retStr
 
-def get_hyper_param_label(main_summaries, show_seed=False):
+def get_hyper_param_label(file_path, main_summaries, show_seed=False):
     pd = main_summaries[0].param_dict
     exploration_param_str = "_explorP-" + str(pd['exploration_param'])
     eta_decay_str = "_etaDecay-" + str(pd['eta_decay_factor'])
     wp_give_up_str = "_wpGiveUp-" + str(pd['nnd_mb_steps_before_giving_up_on_waypoint'])
     seed_str = "_seed-" + str(pd['zz_RANDOM_SEED']) if show_seed else ""
     return exploration_param_str + eta_decay_str + wp_give_up_str + seed_str
+
+def get_file_path_label(file_path, main_summaries, show_seed=False):
+    return file_path.split("\\../../data/")[1]
 
 def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
     print("\nBatch Begin" + "#" * 150)
@@ -125,14 +128,6 @@ def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
     print("Batch END" + "#" * 150)
 
 if __name__ == "__main__":
-    first_num_episodes = None
-    # target_default_directory = "ddpg_baselines_summaries/good_params"
-    # files = "MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json".split()
-
-
-    target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search"
-    files = """*.json""".split()
-
     # files = [s for s in files if re.match("^.*0d001.*0d001.*$", s)]
     #COLOR PARAMETERS #################################################################################
     # blue, red, cyan = '001FFF', '#FF0000',
@@ -149,16 +144,24 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 1
     plot_path_bool = False
-    print_param_dict = True
+    print_param_dict = False
     smart_start_dots = True
     average_over_glob_wildcards=False
     show_seed=False
     linewidth = 2
     scale_up = False
-    label_func = get_hyper_param_label
+    # label_func = get_hyper_param_label
     # label_func = get_hidden_layer_label
-    num_plots_per_graph = 1  # len(colors)
+    label_func = get_file_path_label
+    num_plots_per_graph = 1#len(colors)
     max_num_windows = 1
+
+    target_default_directory = ""
+    files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/*.json""".split()
+# ddpg_baselines_summaries/good_params/*.json""".split()
+
+    # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix"
+    # files = """*.json""".split()
 
 
     # processing the file names into file paths, and ensuring the color/linstyle lists are the right length
@@ -186,7 +189,7 @@ if __name__ == "__main__":
             main_summaries = get_glob_summaries(file_path) # loads all summary files found by glob
 
             # legend for labelling different files that go on the same graphs
-            labels.append(label_func(main_summaries, show_seed=show_seed))
+            labels.append(label_func(file_path, main_summaries, show_seed=show_seed))
 
             # plotting the best paths (and last path) on the first file found by glob
             if plot_path_bool:
