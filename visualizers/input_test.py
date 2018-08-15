@@ -1,5 +1,6 @@
+from gym.envs.registration import EnvSpec
 from pynput.keyboard import Key, Listener, KeyCode
-from smartstart.environments.continuous_mountain_car_editted import Continuous_MountainCarEnv
+from smartstart.environments.continuous_mountain_car_editted import Continuous_MountainCarEnv_Editted
 from gym.wrappers.time_limit import TimeLimit
 import time
 
@@ -44,10 +45,7 @@ if __name__ == "__main__":
     # configuring environment
     # ENV_NAME = 'MountainCarContinuous-v0'
     # env = gym.make(ENV_NAME)
-    untimed_env = Continuous_MountainCarEnv(.4)
-    env = TimeLimit(untimed_env,
-                    max_episode_steps=None,
-                    max_episode_seconds=None)
+    env = Continuous_MountainCarEnv_Editted.make_timed_env(.3, max_episode_steps=None, max_episode_seconds=None)
 
     on_press, on_release, get_action = get_on_press_release()
     with Listener(

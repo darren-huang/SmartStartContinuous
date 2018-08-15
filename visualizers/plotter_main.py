@@ -145,7 +145,7 @@ if __name__ == "__main__":
     ma_window = 1
     plot_path_bool = False
     print_param_dict = False
-    smart_start_dots = True
+    smart_start_dots = False
     average_over_glob_wildcards=False
     show_seed=False
     linewidth = 2
@@ -153,12 +153,20 @@ if __name__ == "__main__":
     # label_func = get_hyper_param_label
     # label_func = get_hidden_layer_label
     label_func = get_file_path_label
-    num_plots_per_graph = 1#len(colors)
+    num_plots_per_graph = len(colors)
     max_num_windows = 1
 
     target_default_directory = ""
-    files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/*.json""".split()
+    # files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/*.json""".split()
 # ddpg_baselines_summaries/good_params/*.json""".split()
+    files = """data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_0.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_1.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_2.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_3.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_4.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_5.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_6.json
+data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_7.json""".replace("data/","").split()
 
     # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix"
     # files = """*.json""".split()

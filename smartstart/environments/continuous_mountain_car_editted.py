@@ -19,16 +19,21 @@ import math
 import gym
 import numpy as np
 from gym import spaces
+from gym.envs.registration import EnvSpec
 from gym.utils import seeding
+from gym.wrappers import TimeLimit
 
 
-class Continuous_MountainCarEnv(gym.Env):
+class Continuous_MountainCarEnv_Editted(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 30
     }
 
+    version = 0
+
     def __init__(self, power_scalar):
+        self.power_scalar = power_scalar
         self.min_action = -1.0
         self.max_action = 1.0
         self.min_position = -1.2
@@ -142,3 +147,13 @@ class Continuous_MountainCarEnv(gym.Env):
 
     def close(self):
         if self.viewer: self.viewer.close()
+
+    def get_name(self):
+        return "MountainCarContinuousActionX" + str(self.power_scalar) + "-v" + str(self.version)
+
+    @classmethod
+    def make_timed_env(cls, power_scalar, max_episode_steps=None, max_episode_seconds=None):
+        base_env = Continuous_MountainCarEnv_Editted(power_scalar)
+        base_env.spec = EnvSpec(base_env.get_name())
+        env = TimeLimit(base_env, max_episode_seconds=max_episode_seconds, max_episode_steps=max_episode_steps)
+        return env
