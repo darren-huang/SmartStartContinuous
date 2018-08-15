@@ -4,14 +4,23 @@ SmartStart is a novel exploration method for reinforcement learning algorithms.
 This work was done in collaboration with the Institute for Human and Machine
 Cognition ([IHMC](https://www.ihmc.us)).
 
-Previously this project was built for discrete state and action spaces. Smart Start Continuous (as the name implies) allows for continuous state and action spaces.
+Previously this project was built for discrete state and action spaces by **Bart Keulen** [here](https://github.com/BartKeulen/smartstart). The projected here has been refactored forcing the agent classes to follow different interfaces.
+
+Smart Start Continuous (as the name implies) allows for continuous state and action spaces.
 
 ## Getting Started
 
 Documentation for the discrete part of this project can be found on the github pages of the base project, click
 [here](https://bartkeulen.github.io/smartstart/).
 
-For the Continuous part of the project, please look at the continuous examples in the `examples` folder. The formatting of using smart start is shown there, and the class `SmartStartContinuous` under `smartstart/smartexploration/smartexplorationcontinuous` has all the hyperparameter descriptions.
+See **Windows Setup** for dependencies (outside of Python) and pipenv installation instructions.
+
+For the Continuous part of the project, please look at the continuous examples in the `examples` folder. 
+* `DDPG_Baselines_example.py` and `SmartStart_DDPG_Baselines_example.py` show the syntax for creating agents (under `smartstart/RLAgents`), training agents with the `rlTrain` method, and saving the summary of the training results
+
+* `DDPG_Baselines_experimenter.py` and `SmartStart_DDPG_Baselines_experimenter.py` show how to use the experimenter. For all possible combinations of parameters in `paramsGrid` in the main method the task will be run.
+
+* `SmartStartContinuous` under `smartstart/smartexploration/smartexplorationcontinuous.py` has all the hyperparameter descriptions for SmartStart.
 
 ## Using SmartStartContinuous
 
