@@ -157,20 +157,20 @@ if __name__ == "__main__":
     max_num_windows = 5
 
     target_default_directory = ""
-    files="""smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.4-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json
+    files="""smart_start_continuous_summaries/ddpg_baselines/good_params_cont_mc_editted/MountainCarContinuousActionX0.4-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json
 ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.4-v0_a-64-32-0d001_c-64-32-0d001_*.json""".split()
-    # files = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json".split()
-#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/*.json
+    # files = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search*/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json".split()
+#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search*/*.json
 # ddpg_baselines_summaries/good_params/*.json""".split()
-#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_9.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_21.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_18.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_22.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
-# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_23.json""".replace("data/","").split()
+#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_9.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_21.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_18.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_22.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_23.json""".replace("data/","").split()
 
-    # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix"
+    # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search"
     # files = """*.json""".split()
 
 

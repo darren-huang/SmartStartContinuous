@@ -159,7 +159,7 @@ if __name__ == "__main__":
     #naming / display
     num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
-    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted'
+    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/good_params_cont_mc_editted'
 
     paramsGrid = {
         'task' : experiment_task,
