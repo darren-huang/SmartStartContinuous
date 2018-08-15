@@ -59,4 +59,4 @@ Before using pipenv to install the pipfile.lock requirements, we will need
         * run `pip install tensorflow`/`pip install tensorflow-gpu` and `pip install baselines`
     
 
-**Latest code can be found in Develop. The docs and gh-pages have not been updated yet.**
+**Latest code can be found in `continuous_ss_framework`. The docs and gh-pages have not been updated yet.**
