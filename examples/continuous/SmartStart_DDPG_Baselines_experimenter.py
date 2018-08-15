@@ -57,10 +57,12 @@ def task_run_ss_ddpg_baselines_mc(params):
                                          ou_mu = params['ou_mu'],
                                          ou_sigma = params['ou_sigma'],
                                          ou_theta = params['ou_theta'],
-                                         actor_lr = params['actor_lr'],
+                                         # actor_lr = params['actor_lr'],
+                                              actor_lr=params['lr'],
                                          actor_h1 = params['actor_h1'],
                                          actor_h2 = params['actor_h2'],
-                                         critic_lr = params['critic_lr'],
+                                         # critic_lr = params['critic_lr'],
+                                              critic_lr=params['lr'],
                                          critic_h1 = params['critic_h1'],
                                          critic_h2 = params['critic_h2'],
                                          gamma = params['gamma'],
@@ -138,17 +140,19 @@ def task_print(params):
     # print(sorted(params.items(), key=lambda x: x[0]))
     print(params['get_extra_name'](params))
 
+# def get_extra_name(params):
+#     exploration_param_str = "_explorP-" + str(params['exploration_param'])
+#     eta_decay_str = "_etaDecay-" + str(params['eta_decay_factor'])
+#     wp_give_up_str = "_wpGiveUp-" + str(params['nnd_mb_steps_before_giving_up_on_waypoint'])
+#     return exploration_param_str + eta_decay_str + wp_give_up_str
 def get_extra_name(params):
-    exploration_param_str = "_explorP-" + str(params['exploration_param'])
-    eta_decay_str = "_etaDecay-" + str(params['eta_decay_factor'])
-    wp_give_up_str = "_wpGiveUp-" + str(params['nnd_mb_steps_before_giving_up_on_waypoint'])
-    return exploration_param_str + eta_decay_str + wp_give_up_str
+    return "-lr" + str(params['lr'])
 
 if __name__ == "__main__":
     experiment_task = task_run_ss_ddpg_baselines_mc
 
     #changeable parameter
-    num_exp_per_param = 25
+    num_exp_per_param = 20
     episodes = 1000
     noGpu = True
     lastLayerTanh = True
@@ -157,7 +161,7 @@ if __name__ == "__main__":
     #naming / display
     num_ticks = 200 #ticks to display while the process is running
     decaying_noise = True #must be the case that these match the parameters
-    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_2'
+    dir_name = 'smart_start_continuous_summaries/ddpg_baselines/ddpg_lr_experiment'
 
     paramsGrid = {
         'task' : experiment_task,
@@ -179,10 +183,11 @@ if __name__ == "__main__":
         'ou_mu': [0.4],
         'ou_sigma': [0.6],
         'ou_theta': [.15],
-        'actor_lr': [0.001], # these are the optimal critic and actor sizes : )
+        'lr' : [0.0001, 0.0005],
+        # 'actor_lr': [0.001], # these are the optimal critic and actor sizes : )
         'actor_h1': [64],
         'actor_h2': [32],
-        'critic_lr': [0.001],
+        # 'critic_lr': [0.001],
         'critic_h1': [64],
         'critic_h2': [32],
         'gamma': [0.99],
