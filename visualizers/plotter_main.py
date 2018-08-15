@@ -145,19 +145,20 @@ if __name__ == "__main__":
     plot_path_bool = False
     last_index_main = 2
     print_param_dict = True
-    smart_start_dots = True
-    average_over_glob_wildcards=False
+    smart_start_dots = False
+    average_over_glob_wildcards=True
     show_seed=False
     linewidth = 2
     scale_up = False
     # label_func = get_hyper_param_label
     # label_func = get_hidden_layer_label
     label_func = get_file_path_label
-    num_plots_per_graph = 1#len(colors)
+    num_plots_per_graph = len(colors)
     max_num_windows = 5
 
     target_default_directory = ""
-    files="ddpg_baselines_summaries/good_params/MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json".split()
+    files="""smart_start_continuous_summaries/ddpg_baselines/good_params_post_EE_fix_cont_mc_editted/MountainCarContinuousActionX0.4-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json
+ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.4-v0_a-64-32-0d001_c-64-32-0d001_*.json""".split()
     # files = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json".split()
 #     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/*.json
 # ddpg_baselines_summaries/good_params/*.json""".split()
