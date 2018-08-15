@@ -20,7 +20,6 @@ noGpu = args.noGpu
 RANDOM_SEED = args.seed
 
 if __name__ == "__main__":
-    import gym
     from smartstart.reinforcementLearningCore.rlTrain import rlTrain
 
     # configuring environment

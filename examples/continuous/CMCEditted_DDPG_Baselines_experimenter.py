@@ -155,7 +155,7 @@ if __name__ == "__main__":
         'decayingNoise' : [decaying_noise],
         'dir_name' : [dir_name],
         'noGpu': [noGpu],
-        'power_scalar': [.33, .66],  # NOT CONSTANT
+        'power_scalar': [.4],  # NOT CONSTANT
         'max_episode_steps': [1000],
         'max_episode_seconds': [None],
 
