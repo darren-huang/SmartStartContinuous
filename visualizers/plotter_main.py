@@ -50,7 +50,7 @@ def plot_file_rewards(file_path_s, ma_window=1, dots=True, colors=None, linestyl
 
     return ax1, ax2, ax3, ax4, fig
 
-def plot_file_paths(summary, scale_up):
+def plot_file_paths(summary, scale_up, last_index):
     # Settings##############################
     # waypoint size
     linewidth = 3
@@ -61,7 +61,6 @@ def plot_file_paths(summary, scale_up):
 
     #LAST Trajectory##   ########################################################
     # which "last" trajectory to show
-    last_index = 0
     path, reward, title = summary.get_last_path(last_index), summary.get_last_reward(last_index), str(last_index) + " From Last Path"
     waypoint_centers = get_start_waypoints_final_states_steps(path, steps_between_waypoints)
     path_stds, path_means = path_deltas_stds_and_means_per_dim(path)  # Get State Statistics
@@ -119,7 +118,7 @@ def get_hyper_param_label(file_path, main_summaries, show_seed=False):
     return exploration_param_str + eta_decay_str + wp_give_up_str + seed_str
 
 def get_file_path_label(file_path, main_summaries, show_seed=False):
-    return file_path.split("\\../../data/")[1]
+    return os.path.dirname(file_path.split("\\../../data/")[1]) + "\n" + os.path.basename(file_path.split("\\../../data/")[1])
 
 def print_color_linestyle_and_file_name(colors, linestyles, file_path_s_batch):
     print("\nBatch Begin" + "#" * 150)
@@ -144,8 +143,9 @@ if __name__ == "__main__":
     # OTHER PARAMETERS ################################################################################
     ma_window = 1
     plot_path_bool = False
-    print_param_dict = False
-    smart_start_dots = False
+    last_index_main = 2
+    print_param_dict = True
+    smart_start_dots = True
     average_over_glob_wildcards=False
     show_seed=False
     linewidth = 2
@@ -153,20 +153,21 @@ if __name__ == "__main__":
     # label_func = get_hyper_param_label
     # label_func = get_hidden_layer_label
     label_func = get_file_path_label
-    num_plots_per_graph = len(colors)
-    max_num_windows = 1
+    num_plots_per_graph = 1#len(colors)
+    max_num_windows = 5
 
     target_default_directory = ""
-    # files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/*.json""".split()
+    files="ddpg_baselines_summaries/good_params/MountainCarContinuous-v0_a-64-32-0d001_c-64-32-0d001_*.json".split()
+    # files = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_*.json".split()
+#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix*/*.json
 # ddpg_baselines_summaries/good_params/*.json""".split()
-    files = """data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_0.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_1.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_2.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_3.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_4.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_5.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_6.json
-data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousActionX0.33-v0_a-64-32-0d001_c-64-32-0d001_7.json""".replace("data/","").split()
+#     files = """smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_9.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_21.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_18.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_22.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_24.json
+# smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2/MountainCarContinuous-v0_explorP-2.0_etaDecay-0.99_wpGiveUp-5_23.json""".replace("data/","").split()
 
     # target_default_directory = "smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix"
     # files = """*.json""".split()
@@ -201,7 +202,7 @@ data/ddpg_baselines_summaries/good_params_cont_mc_editted/MountainCarContinuousA
 
             # plotting the best paths (and last path) on the first file found by glob
             if plot_path_bool:
-                plot_file_paths(main_summaries[0], scale_up)
+                plot_file_paths(main_summaries[0], scale_up, last_index_main)
 
             # printing out the parameter dictionary of the first file found by glob
             if print_param_dict and main_summaries[0].param_dict:

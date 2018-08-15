@@ -3,6 +3,7 @@ import time
 import tensorflow as tf
 
 from RLAgents.DDPG_Baselines_agent import DDPG_Baselines_agent
+from environments.continuous_mountain_car_editted import Continuous_MountainCarEnv_Editted
 from smartexploration.smartexplorationcontinuous import SmartStartContinuous
 from utilities.utilities import set_global_seeds, get_default_data_directory
 
@@ -23,8 +24,11 @@ if __name__ == "__main__":
     lastLayerTanh = True
 
     # configuring environment
-    ENV_NAME = 'MountainCarContinuous-v0'
-    env = gym.make(ENV_NAME)
+    # ENV_NAME = 'MountainCarContinuous-v0'
+    # env = gym.make(ENV_NAME)
+    env = Continuous_MountainCarEnv_Editted.make_timed_env(1,
+                                                           max_episode_steps=1000,
+                                                           max_episode_seconds=None)
 
     if noGpu:
         tfConfig = tf.ConfigProto(device_count={'GPU': 0})
@@ -88,7 +92,7 @@ if __name__ == "__main__":
                                                      nnd_mb_gamma=.75,
                                                      nnd_mb_horizontal_penalty_factor=.5,
                                                      nnd_mb_horizon=4,
-                                                     nnd_mb_num_control_samples=500,
+                                                     nnd_mb_num_control_samples=5000,
                                                      nnd_mb_path_shortcutting=True,
                                                      nnd_mb_steps_before_giving_up_on_waypoint=5,
 
@@ -122,8 +126,8 @@ if __name__ == "__main__":
                                      print_steps=False,
                                      print_results=False,
                                      num_episodes=episodes,
-                                     plot_ss_stuff=False,
-                                     print_time=True)
+                                     plot_ss_stuff=True,
+                                     print_time=False)
 
             #naming stuff
             noGpu_str = "-NoGPU" if noGpu else ""

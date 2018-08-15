@@ -155,8 +155,8 @@ def mean_reward_episode(summaries, ma_window=1, color=None, linestyle=None, dots
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
 
 
@@ -187,8 +187,8 @@ def steps_episode(summaries, ma_window=1, color=None, linestyle=None, dots=False
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
 
 
@@ -207,8 +207,8 @@ def total_rewards_episode(summaries, ma_window=1, color=None, linestyle=None, do
         smart_start_episodes = [i for i in summaries[0].smart_start_episodes if i < len(summaries[0].episodes)]
         not_smart_start_episodes = [i for i in range(len(mean)) if i not in smart_start_episodes]
         mean_array = np.array(mean)
-        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plt.plot(not_smart_start_episodes, mean_array[not_smart_start_episodes], 'bo', color='blue')
+        plt.plot(smart_start_episodes, mean_array[smart_start_episodes], 'ro', color='red')
         plot_set_legend_patches(['red', 'blue'], ['Smart Start', 'Regular'])
 
 
