@@ -7,6 +7,7 @@ from multiprocessing import Pool, cpu_count
 
 from sklearn.model_selection import ParameterGrid
 from tqdm import *
+import os
 
 
 def run_experiment(param_grid, n_processes=-1):
@@ -89,6 +90,34 @@ def run_experiment(param_grid, n_processes=-1):
     else:
         for single_param in params:
             process_task(single_param)
+
+
+def create_experimeter_info_txt(param_grid, path, name_append=''):
+    """
+
+    :type param_grid: dict
+    """
+    file_name = "_experiment_info" + name_append + ".txt"
+    introduction = \
+        "This file contains the parameters in the experiment, the first section contains all the values \n" + \
+        "that are constant throughout all the experiment runs, the second section contains all the values that\n" + \
+        "vary from run to run.\n"
+    with open(os.path.join(path,file_name), 'x') as f:
+        f.write(introduction)
+        not_constant = []
+        f.write("\nCONSTANTS:\n")
+        for key, value in param_grid.items():
+            if isinstance(value, list):
+                if len(value) == 1:
+                    f.write(str(key) + " = " + str(value[0]) + "\n")
+                else:
+                    not_constant.append((key,value))
+            else:
+                f.write(str(key) + " = " + str(value) + "\n")
+        f.write("\nNOT CONSTANT:\n")
+        for key, value in not_constant:
+            f.write(str(key) + " = " + str(value) + "\n")
+        f.flush()
 
 
 def process_task(params):

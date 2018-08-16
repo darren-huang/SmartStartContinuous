@@ -2,17 +2,23 @@
 Data structure for implementing experience replay
 Author: Patrick Emami
 """
-from collections import deque
-import random
-import numpy as np
 import pickle
+import random
+from collections import deque
+
+import numpy as np
+
 
 class ReplayBuffer(object):
     """
     A buffer with a First in First Out policy,
+
     Stores vectors of (state, action, reward, terminal, new_state),
+
     Upon calling the start_new_episode method creates a marker to mark where said episode begins
+
     Can create sample batches (random entries from the buffer)
+
     NOTE: the add method only allows the self.main_agent from adding entries, this way if multiple agents try to add
             to the replay buffer, only one state entry will add (this is the case with Smart Starts)
     """
@@ -137,13 +143,13 @@ class ReplayBuffer(object):
         :return: array of possible smart starts
         """
         if len(self.episode_starting_indices) == 0:
-            return []
+            return None
         #mainly has to ensure the whole episode containing the smartstart state is inside the buffer
         first_buffer_index = self.episode_number_to_buffer_index(self.episode_starting_indices[0])
         number_of_states = min(n_ss, len(self.buffer) - first_buffer_index) # max possible states to
 
         # sample WITHOUT replacement
-        return random.sample(range(first_buffer_index, len(self.buffer)), number_of_states)
+        return np.array(random.sample(range(first_buffer_index, len(self.buffer)), number_of_states))
 
     def get_episodic_path_to_buffer_index(self, buffer_index):
         """
@@ -170,19 +176,34 @@ class ReplayBuffer(object):
                [self.step_to_s2(self.buffer[buffer_index])]
 
     def step_to_s(self, step):
-        return step[0]
+        return np.array(step[0])
 
     def step_to_a(self, step):
-        return step[1]
+        return np.array(step[1])
 
     def step_to_r(self, step):
-        return step[2]
+        return np.array(step[2])
 
     def step_to_t(self, step):
-        return step[3]
+        return np.array(step[3])
 
     def step_to_s2(self, step):
-        return step[4]
+        return np.array(step[4])
+
+    def steps_to_s(self, step):
+        return np.array(step[:,0])
+
+    def steps_to_a(self, step):
+        return np.array(step[:,1])
+
+    def steps_to_r(self, step):
+        return np.array(step[:,2])
+
+    def steps_to_t(self, step):
+        return np.array(step[:,3])
+
+    def steps_to_s2(self, step):
+        return np.array(step[:,4])
 
     # PRIVATE
     def episode_number_to_buffer_index(self, episode_number):

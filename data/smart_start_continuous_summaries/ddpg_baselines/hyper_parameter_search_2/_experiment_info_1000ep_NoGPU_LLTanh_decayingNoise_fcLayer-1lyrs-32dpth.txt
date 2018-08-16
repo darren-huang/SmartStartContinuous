@@ -1,0 +1,70 @@
+This file contains the parameters in the experiment, the first section contains all the values 
+that are constant throughout all the experiment runs, the second section contains all the values that
+vary from run to run.
+
+CONSTANTS:
+task = <function task_run_ss_ddpg_baselines_mc at 0x0000026BBA134730>
+num_exp = 25
+num_ticks = 200
+episodes = 1000
+decayingNoise = True
+dir_name = smart_start_continuous_summaries/ddpg_baselines/hyper_parameter_search_post_EE_fix_2
+noGpu = True
+buffer_size = 100000
+batch_size = 64
+num_train_iterations = 1
+num_steps_before_train = 1
+ou_epsilon = 1.0
+ou_min_epsilon = 0.01
+ou_epsilon_decay_factor = 0.99
+ou_mu = 0.4
+ou_sigma = 0.6
+ou_theta = 0.15
+actor_lr = 0.001
+actor_h1 = 64
+actor_h2 = 32
+critic_lr = 0.001
+critic_h1 = 64
+critic_h2 = 32
+gamma = 0.99
+tau = 0.001
+layer_norm = False
+normalize_observations = False
+normalize_returns = False
+critic_l2_reg = 0
+enable_popart = False
+clip_norm = None
+reward_scale = 1.0
+lastLayerTanh = True
+exploitation_param = 1.0
+exploration_param = 2.0
+eta = 0.5
+eta_decay_factor = 0.99
+n_ss = 2000
+nnd_mb_final_steps = 10
+nnd_mb_steps_per_waypoint = 1
+nnd_mb_mean_per_stepsize = 1
+nnd_mb_std_per_stepsize = 1
+nnd_mb_stepsizes_in_waypoint_radii = 1
+nnd_mb_gamma = 0.75
+nnd_mb_horizontal_penalty_factor = 0.5
+nnd_mb_horizon = 4
+nnd_mb_num_control_samples = 5000
+nnd_mb_path_shortcutting = True
+nnd_mb_steps_before_giving_up_on_waypoint = 5
+nnd_mb_load_dir_name = default
+nnd_mb_load_existing_training_data = True
+nnd_mb_num_fc_layers = 1
+nnd_mb_depth_fc_layers = 32
+nnd_mb_batchsize = 512
+nnd_mb_lr = 0.001
+nnd_mb_nEpoch = 30
+nnd_mb_fraction_use_new = 0.9
+nnd_mb_num_episodes_for_aggregation = 4
+nnd_mb_make_aggregated_dataset_noisy = True
+nnd_mb_make_training_dataset_noisy = True
+nnd_mb_noise_actions_during_MPC_rollouts = True
+nnd_mb_verbose = False
+get_extra_name = <function get_extra_name at 0x0000026BF1E97510>
+
+NOT CONSTANT:

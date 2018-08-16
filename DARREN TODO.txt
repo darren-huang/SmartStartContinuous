@@ -1,0 +1,40 @@
+BIGGER POINT:                                   DONE
+                                                Get Smart Start Tests running
+                                                First need to refactor the NND_MB_agent
+                                                    add choosing save model directory
+                                                        add new model gen (always new directory) ? kinda already build in
+                                                    add choosing load model directory
+                                                    add turning off save model
+                                                    remove get_data_directory from utilities.py (i dont think its needed)
+                                                        maybe update the old experimenter and plotter examples while i'm at it :)
+                                                Move the current run0 files into the data directory
+                                                Change the main methods for NND_MB and smart start to defaultly load up the default training data
+                                                add options into Smartstart for setting the NND_MB stuffs
+                                                add options into Smartstart experimenter
+                                                RUN THEN WE GOOOOOOD!? (of course not)
+	WE GOOOOOOOD!
+                                                Decaying SmartStart change (eta) value -> exploration decay
+
+
+                                                adjust distance function (currently 1 step in one dimension = distance of 1, switch to 1 step in ALL dimensions = distance of 1)
+                                                Change distance function to take in multiple (from both sides, output matrix)
+                                                Path shortcuts
+                                                Added Waypoint Give ups
+                                                Fully switch to parallel smart start calc
+
+                                                run experiments
+
+                                                plotting options
+
+
+
+                                                get_smart_start_path documentation
+                                                Installation guide: -> explain how to setup pipenv stuffs
+                                                Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
+                                                (could be better ^)
+Document Stuffs
+Github Readme References (bart's stuff)
+Delete unused code
+fix paper references -> TODO's, these will reference the research papers
+Refactor it such that "get default data directory" uses relative paths, not absolute
+MERGE WITH MASTER :OOOOO

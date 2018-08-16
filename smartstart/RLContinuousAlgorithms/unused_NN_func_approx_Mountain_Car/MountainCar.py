@@ -1,5 +1,8 @@
-import numpy as  np
 import math
+
+import numpy as  np
+
+
 class MountainCar(object):
 	def __init__(self, start, goal, Xrange, Vrange):
 		self.start = start

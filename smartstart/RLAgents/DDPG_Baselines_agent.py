@@ -1,12 +1,11 @@
-import numpy as np
 import argparse
+
 import tensorflow as tf
-from baselines.ddpg.ddpg import DDPG
-# from baselines.ddpg.models import Actor, Critic
+from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.ddpg_editted import DDPG_editted
 from baselines.ddpg.noise import *
-from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models_editted import Actor_Editted, Critic_Editted
 
 from smartstart.RLAgents.replay_buffer import ReplayBuffer
+from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models_editted import Actor_Editted, Critic_Editted
 from smartstart.reinforcementLearningCore.agents_abstract_classes import ValueFuncRLAgent, ReplayBufferRLAgent
 from smartstart.utilities.datacontainers import Summary
 from smartstart.utilities.utilities import get_default_data_directory, set_global_seeds
@@ -51,7 +50,20 @@ class ReplayBufferWrapper:  # wraps a ReplayBuffer but has the same interface as
 
 
 class DecayingOrnsteinUhlenbeckActionNoise(OrnsteinUhlenbeckActionNoise):
+    """
+    https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process
+    """
     def __init__(self, epsilon, min_epsilon, epsilon_decay_factor, mu, sigma, theta=.15, dt=1e-2, x0=None):
+        """
+        :param epsilon: the noise given will always be noise * epsilon (if epsilon is positive)
+        :param min_epsilon: epsilon will not drop below this number
+        :param epsilon_decay_factor: after each call to (reduce epsilon), we epsilon *= decay_factor
+        :param mu: -> mean noise
+        :param sigma: -> how volatile the noise is
+        :param theta: -> how much it tries to return to the mean
+        :param dt:
+        :param x0:
+        """
         super().__init__(mu, sigma, theta=theta, dt=dt, x0=x0)
         self.epsilon = epsilon
         self.min_epsilon = min_epsilon
@@ -67,7 +79,6 @@ class DecayingOrnsteinUhlenbeckActionNoise(OrnsteinUhlenbeckActionNoise):
 
 
 class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
-    # TODO edit this description
     """
     Continuous RLAgent using the DDPG from the baselines library using OrnsteinUhlenbeckActionNoise
     """
@@ -78,38 +89,46 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
                  ou_mu=0.4, ou_sigma=0.2, ou_theta=.15, actor_lr=1e-4, actor_h1=64, actor_h2=64, critic_lr=1e-3,
                  critic_h1=64, critic_h2=64, gamma=0.99, tau=0.001, layer_norm=False, normalize_observations=False,
                  normalize_returns=False, critic_l2_reg=0, enable_popart=False, clip_norm=None, reward_scale=1.,
-                 lastLayerTanh=False):
+                 lastLayerTanh=False, finalizeGraph=True):
         """
 
         :param env:
         :param sess:
         :param replay_buffer:
         :param buffer_size:  # size of the replay buffer
-        :param layer_norm: adds a layer of normalization after fully connected layers (https://www.tensorflow.org/api_docs/python/tf/contrib/layers/layer_norm)
-                           Effects all layers in both Actor and Critic (4 layers total, 2 per network) and same for target networks i think
+
+        :param batch_size: #Training is done in batches, this determines how many samples from replay buffer is in each batch
+        :param num_train_iterations: When self.train() is called, it will run the train operation this many times (each train operations uses batch_size batches)
+        :param num_steps_before_train: Agent will keep taking this many steps, after which it will run self.train()
+
         :param ou_epsilon: Initial value of epsilon -> factor multiplied with the noise (MUST BE POSITIVE)
         :param ou_min_epsilon: over time (after each episode) epsilon keeps decreasing, this is the lowest amount it can decrease to (MUST BE POSITIVE)
         :param ou_epsilon_decay_factor: roughly the number of episodes b4 the epsilon reaches the minimum (each episode, reduces epsilon by (epsilon/ou_nb_explore_ep)
         :param ou_mu:  # OrnsteinUhlenbeckActionNoise MEAN https://yanpanlau.github.io/2016/10/11/Torcs-Keras.html
         :param ou_sigma: # OrnsteinUhlenbeckActionNoise degree of volatility
         :param ou_theta: # OrnsteinUhlenbeckActionNoise how much to pull back towards the mean
-        :param gamma: # discount factor -> used for the Critic network training
-        :param tau: # soft target updates (parameters of Target networks get updated by tau*parameters of real networks)
-        :param normalize_returns: # Normalizes inputs into the Target networks I think (maybe only target Critic) then denormalizes afterwards
-        :param normalize_observations: # Batch normalizations -> normalizes observations fed into Critic optimizer (actor network too)
-        :param batch_size: #Training is done in batches, this determines how many samples from replay buffer is in each batch
+
         :param actor_lr:  # Base learning rate for the Actor Network
         :param critic_lr: # Base learning rate for the Critic Network
-        :param critic_l2_reg: # Base learning rate for the Critic Regularization Network
         :param actor_h1: # size of hidden layer 1 for actor
         :param actor_h2: # size of hidden layer 2 for actor
         :param critic_h1: # size of hidden layer 1 for critic
         :param critic_h2: # size of hidden layer 2 for critic
+
+        :param gamma: # discount factor -> used for the Critic network training
+        :param tau: # soft target updates (parameters of Target networks get updated by tau*parameters of real networks)
+
+        :param layer_norm: adds a layer of normalization after fully connected layers (https://www.tensorflow.org/api_docs/python/tf/contrib/layers/layer_norm)
+                           Effects all layers in both Actor and Critic (4 layers total, 2 per network) and same for target networks i think
+        :param normalize_observations: # Batch normalizations -> normalizes observations fed into Critic optimizer (actor network too)
+        :param normalize_returns: # Normalizes inputs into the Target networks I think (maybe only target Critic) then denormalizes afterwards
+        :param critic_l2_reg: # penalty for large neural network parameters (uses L2 regularization element, as in parameter squared)
         :param enable_popart: # (Preserving Outputs Precisely, while Adaptively Rescaling Targets) see https://arxiv.org/pdf/1602.07714.pdf
         :param clip_norm: # normalizes some gradient (reduces the size below some max) see https://www.tensorflow.org/api_docs/python/tf/clip_by_norm
         :param reward_scale: # scales reward
-        :param num_steps_before_train: Agent will keep taking this many steps, after which it will run self.train()
-        :param num_train_iterations: When self.train() is called, it will run the train operation this many times (each train operations uses batch_size batches)
+        :param lastLayerTanh: #switches the last layer in actor and critic to a TanH activation instead of RELU activation function
+
+        :param finalizeGraph: whether or not to finalize the graph during setup
         """
 
         super().__init__()
@@ -159,25 +178,29 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
             critic = Critic_Editted(layer_norm=layer_norm, h1=critic_h1, h2=critic_h2, lastLayerTanh=lastLayerTanh)
             actor = Actor_Editted(nb_actions, layer_norm=layer_norm, h1=actor_h1, h2=actor_h2, lastLayerTanh=lastLayerTanh)
 
-            self.inner_ddpg_agent = DDPG(actor, critic, self.memory, env.observation_space.shape,
-                                         env.action_space.shape,
-                                         gamma=gamma, tau=tau, normalize_returns=normalize_returns,
-                                         normalize_observations=normalize_observations,
-                                         batch_size=batch_size, action_noise=self.decaying_ou_action_noise,
-                                         param_noise=param_noise,
-                                         critic_l2_reg=critic_l2_reg,
-                                         actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart,
-                                         clip_norm=clip_norm,
-                                         reward_scale=reward_scale)
+            self.inner_ddpg = DDPG_editted(actor, critic, self.memory, env.observation_space.shape,
+                                           env.action_space.shape,
+                                           gamma=gamma, tau=tau, normalize_returns=normalize_returns,
+                                           normalize_observations=normalize_observations,
+                                           batch_size=batch_size, action_noise=self.decaying_ou_action_noise,
+                                           param_noise=param_noise,
+                                           critic_l2_reg=critic_l2_reg,
+                                           actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=enable_popart,
+                                           clip_norm=clip_norm,
+                                           reward_scale=reward_scale)
 
-            self.inner_ddpg_agent.initialize(self.sess)
-            # TODO comment/uncomment
-            self.sess.graph.finalize()
-            self.inner_ddpg_agent.reset()
+            self.inner_ddpg.initialize(self.sess)
+            if finalizeGraph:
+                self.sess.graph.finalize()
+            self.inner_ddpg.reset()
 
     def get_state_value(self, state):
-        raw_action, q = self.inner_ddpg_agent.pi(state, apply_noise=True,
-                                                 compute_Q=True)  # DDPG action is always [-1,1]
+        # raw_action, q = self.inner_ddpg.pi(state, apply_noise=True,
+        #                                    compute_Q=True)  # DDPG action is always [-1,1]
+        if len(state.shape) == 1:
+            q = self.inner_ddpg.get_q_value(state, single=True)[0]
+        else:
+            q = self.inner_ddpg.get_q_value(state, single=False)[0]
         return q
 
     def get_action(self, state):
@@ -206,9 +229,8 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
 
         """
         # 1. get action with actor, and add noise
-        # TODO: see if we can add an epsilon to control how much noise is added (reduce noise overtime)
-        raw_action, q = self.inner_ddpg_agent.pi(state, apply_noise=True,
-                                                 compute_Q=True)  # DDPG action is always [-1,1]
+        raw_action, q = self.inner_ddpg.pi(state, apply_noise=True,
+                                           compute_Q=True)  # DDPG action is always [-1,1]
         return self.scale(self.scale(raw_action))
 
     def scale(self, actions):  # assume domain [-1,1]
@@ -218,7 +240,7 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
         return scaled_actions  # edit - DH.
 
     def observe(self, state, action, reward, new_state, done):
-        self.inner_ddpg_agent.store_transition(state, action, reward, new_state, done)
+        self.inner_ddpg.store_transition(state, action, reward, new_state, done)
         self.remaining_steps_before_train -= 1
 
         if self.remaining_steps_before_train <= 0:
@@ -231,7 +253,7 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
         return env.render()
 
     def end_episode(self):
-        self.inner_ddpg_agent.reset()
+        self.inner_ddpg.reset()
         self.decaying_ou_action_noise.reduce_epsilon()
         self.train()
 
@@ -247,8 +269,8 @@ class DDPG_Baselines_agent(ValueFuncRLAgent, ReplayBufferRLAgent):
                 # following segment is for the parameter noise (currently only using OrnsteinUhlenbeckActionNoise)
                 # if self.memory.nb_entries >= self.batch_size and t % param_noise_adaption_interval == 0:
                 #     distance = agent.adapt_param_noise()
-                cl, al = self.inner_ddpg_agent.train()
-                self.inner_ddpg_agent.update_target_net()
+                cl, al = self.inner_ddpg.train()
+                self.inner_ddpg.update_target_net()
             # TODO: have an option for printing this out
             # print("Critic Loss: " + str(cl) + ", Actor Loss: " + str(al), end='')
 
@@ -276,9 +298,7 @@ if __name__ == "__main__":
     else:
         tfConfig = None
 
-    file_location = None
     with tf.Session(config=tfConfig) as sess:
-        # with tf.Session() as sess:
         # Reset the seed for random number generation
         set_global_seeds(RANDOM_SEED)
         env.seed(RANDOM_SEED)

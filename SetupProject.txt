@@ -1,0 +1,1 @@
+Read Windows Setup in the README.md, everything should be similar except for installing MPI (try openMPI)

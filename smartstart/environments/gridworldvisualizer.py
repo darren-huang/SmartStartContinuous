@@ -4,10 +4,10 @@
 import math
 from collections import deque
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pygame
 from pygame.locals import *
-import numpy as np
-import matplotlib.pyplot as plt
 
 from smartstart.environments.environment import Visualizer
 

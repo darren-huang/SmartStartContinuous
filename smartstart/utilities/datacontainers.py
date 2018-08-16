@@ -9,9 +9,8 @@ import sys
 import numpy as np
 from google.cloud import storage
 
-from smartstart.utilities.utilities import DIR
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent
-from collections import deque
+from smartstart.utilities.utilities import DIR
 
 
 class Episode(object):
@@ -148,7 +147,7 @@ class Summary(object):
     """
     def __init__(self, name=None, last_x=5):
         super().__init__()
-        self.name = name
+        self.name = name #should contain both Agent and Environment name
         self.episodes = []
         self.best_path = None
         self.best_reward = -sys.maxsize
@@ -313,16 +312,13 @@ class Summary(object):
             name += "_" + str(post_fix)
             name += ".json"
             fp = os.path.join(directory, name)
-
-        name = make_name(self, last_name_section, extra_name_append, post_fix, directory)
+            return fp
 
         # ensure file doesn't exist yet, if it does, create a new name
+        fp = make_name(self, last_name_section, extra_name_append, post_fix, directory)
         while (os.path.exists(fp)):
             post_fix += 1
-            name = self.name + extra_name_append
-            name += "_" + str(post_fix)
-            name += ".json"
-            fp = os.path.join(directory, name)
+            fp = make_name(self, last_name_section, extra_name_append, post_fix, directory)
 
         with open(fp, 'x') as f:
             f.write(self.to_json())

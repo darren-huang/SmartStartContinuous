@@ -1,14 +1,13 @@
 import os
+import pickle
 import time
 from collections import deque
-import pickle
 
-from baselines.ddpg.ddpg import DDPG
 import baselines.common.tf_util as U
-
-from baselines import logger
 import numpy as np
 import tensorflow as tf
+from baselines import logger
+from baselines.ddpg.ddpg import DDPG
 from mpi4py import MPI
 
 

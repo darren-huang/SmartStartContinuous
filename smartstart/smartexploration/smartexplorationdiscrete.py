@@ -3,11 +3,15 @@
 Defines method for generating a SmartStart object from an algorithm object. The
 SmartStart object will be a subclass of the original algorithm object.
 """
+import random
+
 import numpy as np
 
+from RLDiscreteAlgorithms import QLearning
+from reinforcementLearningCore.rlTrain import rlTrain
 from smartstart.RLDiscreteAlgorithms import ValueIteration
-from smartstart.utilities.datacontainers import Episode, Summary
 from smartstart.reinforcementLearningCore.agents_abstract_classes import RLAgent, ValueFuncAndCountRLAgent
+from utilities.plot import plot_summary, show_plot, mean_reward_episode, steps_episode
 
 
 class SmartStartDiscrete(RLAgent):
@@ -250,30 +254,39 @@ class SmartStartDiscrete(RLAgent):
 if __name__ == "__main__":
     from smartstart.environments.gridworld import GridWorld
     from smartstart.environments.gridworldvisualizer import GridWorldVisualizer
-    from smartstart.RLDiscreteAlgorithms import SARSALambda
 
-    directory = '/home/bartkeulen/repositories/smartstart/data/tmp'
-
+    # Reset the seed for random number generation
+    random.seed()
     np.random.seed()
 
-    env = GridWorld.generate(GridWorld.EASY)
-    visualizer = GridWorldVisualizer(env)
+    # Create environment and visualizer
+    grid_world = GridWorld.generate(GridWorld.MEDIUM)
+    visualizer = GridWorldVisualizer(grid_world)
     visualizer.add_visualizer(GridWorldVisualizer.LIVE_AGENT,
                               GridWorldVisualizer.CONSOLE,
                               GridWorldVisualizer.VALUE_FUNCTION,
-                              GridWorldVisualizer.DENSITY)
-    env.visualizer = visualizer
-    # env.T_prob = 0.1
+                              GridWorldVisualizer.DENSITY,
+                              GridWorldVisualizer.SMART_STATE_DENSITY)
 
-    # env.wall_reset = True
+    # Initialize agent, see class for available parameters
+    agent = QLearning(grid_world,
+                      alpha=0.1,
+                      epsilon=0.05,
+                      exploration=QLearning.E_GREEDY)
 
-    # agent = generate_smartstart_object(SARSALambda, env, eta=0.75, alpha=0.3,
-    #                                    num_episodes=1000, max_steps=1000,
-    #                                    exploitation_param=0.)
-    agent = SmartStartDiscrete(SARSALambda(env, ta=0.75, alpha=0.3,
-                                       num_episodes=1000, max_steps=1000), env,
-                                       exploitation_param=0.)
+    smartStartAgent = SmartStartDiscrete(agent, grid_world)
 
-    summary = agent.train(render=False, render_episode=True)
+    # Train the agent, summary contains training data
+    summary = rlTrain(smartStartAgent, grid_world,
+                      render=True,
+                      render_episode=True,
+                      print_results=True,
+                      num_episodes=500,
+                      # num_episodes=50,
+                      max_steps=1000)
 
-    summary.save(directory=directory)
+    # Plot results
+    plot_summary(summary, mean_reward_episode, ma_window=5,
+                 title="Easy GridWorld Q-Learning Average Reward per Episode")
+    plot_summary(summary, steps_episode, ma_window=5, title="Easy GridWorld Q-Learning Steps per Episode")
+    show_plot()

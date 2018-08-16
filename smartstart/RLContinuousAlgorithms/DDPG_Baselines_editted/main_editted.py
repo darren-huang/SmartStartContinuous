@@ -1,23 +1,22 @@
 import argparse
-import time
 import os
-import logging
+import time
+
+import gym
+import tensorflow as tf
 from baselines import logger, bench
 from baselines.common.misc_util import (
     set_global_seeds,
     boolean_flag,
 )
+from baselines.ddpg.memory import Memory
+from baselines.ddpg.noise import *
+from mpi4py import MPI
+
 import smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.training_editted as training_editted
 from smartstart.RLContinuousAlgorithms.DDPG_Baselines_editted.models_editted import Actor_Editted, Critic_Editted
 from smartstart.utilities.utilities import get_default_data_directory
 
-
-from baselines.ddpg.memory import Memory
-from baselines.ddpg.noise import *
-
-import gym
-import tensorflow as tf
-from mpi4py import MPI
 
 def run(env_id, seed, noise_type, layer_norm, evaluation, **kwargs):
     # Configure things.
