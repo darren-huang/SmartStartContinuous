@@ -1,3 +1,0 @@
-#/bin/bash
-
-python experiment.py --environment Humanoid-v2 Reacher-v2 Pendulum-v0 MountainCarContinuous-v0 InvertedDoublePendulum-v2 InvertedPendulum-v2 --learning_rate 0.01 --episodes 2000 --hidden_size 16 32 200 --output results.txt
