@@ -8,6 +8,8 @@ Previously this project was built for discrete state and action spaces by **Bart
 
 Smart Start Continuous (as the name implies) allows for continuous state and action spaces.
 
+For a detailed notes of the stuff in the project, please see `SmartStartContinuous.pdf`. It contains notes on the algorithms used, some insights in to what can be changed, and covers some of the design decision of Smart Start Continuous
+
 ## Getting Started
 
 Documentation for the discrete part of this project can be found on the github pages of the base project, click
