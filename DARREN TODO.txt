@@ -33,8 +33,9 @@ BIGGER POINT:                                   DONE
                                                 Explain how to run SmartStarts, especially how Neural Network Dynamics Agent works (Training data and such)
                                                 (could be better ^)
 Document Stuffs
-Github Readme References (bart's stuff)
+                                                Github Readme References (bart's stuff)
 Delete unused code
-fix paper references -> TODO's, these will reference the research papers
+fix paper references -> TODO's, these will reference the research papers (readme too)
 Refactor it such that "get default data directory" uses relative paths, not absolute
+
 MERGE WITH MASTER :OOOOO
